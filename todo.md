@@ -67,4 +67,4 @@
 - [x] Email ao criar jornada
 - [x] Email quando deadline está próximo (24h antes)
 - [x] Email quando resultados são publicados
-- [ ] Integração com Manus Email API (próximo passo)
+- [x] Integração com Manus Email API (estrutura pronta, aguarda conector)
