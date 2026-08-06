@@ -25,4 +25,51 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Rounds (Jornadas) - Each round contains 6 matches
+ */
+export const rounds = mysqlTable("rounds", {
+  id: int("id").autoincrement().primaryKey(),
+  roundNumber: int("roundNumber").notNull().unique(),
+  prize: text("prize"), // Informational prize description
+  bettingDeadline: timestamp("bettingDeadline").notNull(),
+  winnerId: int("winnerId"), // User ID of the round winner (null if no winner)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Round = typeof rounds.$inferSelect;
+export type InsertRound = typeof rounds.$inferInsert;
+
+/**
+ * Matches (Jogos) - 6 matches per round
+ */
+export const matches = mysqlTable("matches", {
+  id: int("id").autoincrement().primaryKey(),
+  roundId: int("roundId").notNull(),
+  homeTeam: varchar("homeTeam", { length: 100 }).notNull(),
+  awayTeam: varchar("awayTeam", { length: 100 }).notNull(),
+  result: mysqlEnum("result", ["1", "X", "2"]), // Official result (null until entered)
+  matchOrder: int("matchOrder").notNull(), // Order within the round (1-6)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Match = typeof matches.$inferSelect;
+export type InsertMatch = typeof matches.$inferInsert;
+
+/**
+ * Predictions (Apostas) - Each bettor's prediction for each match
+ */
+export const predictions = mysqlTable("predictions", {
+  id: int("id").autoincrement().primaryKey(),
+  matchId: int("matchId").notNull(),
+  userId: int("userId").notNull(),
+  prediction: mysqlEnum("prediction", ["1", "X", "2"]).notNull(),
+  isCorrect: mysqlEnum("isCorrect", ["true", "false", "pending"]).default("pending").notNull(), // Calculated after result is entered
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Prediction = typeof predictions.$inferSelect;
+export type InsertPrediction = typeof predictions.$inferInsert;

@@ -1,0 +1,239 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { useLocation } from "wouter";
+import { trpc } from "@/lib/trpc";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+import { Clock, Trophy, AlertCircle } from "lucide-react";
+import { useState } from "react";
+
+export default function BettorDashboard() {
+  const { user, loading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
+
+  // Fetch rounds
+  const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
+  
+  // Fetch current round with matches
+  const { data: roundData, isLoading: roundDataLoading } = trpc.rounds.getWithMatches.useQuery(
+    { roundId: selectedRoundId || 0 },
+    { enabled: selectedRoundId !== null }
+  );
+
+  // Fetch user's predictions for the selected round
+  const { data: predictions } = trpc.predictions.getByRound.useQuery(
+    { roundId: selectedRoundId || 0 },
+    { enabled: selectedRoundId !== null }
+  );
+
+  // Submit prediction mutation
+  const submitPredictionMutation = trpc.predictions.submit.useMutation({
+    onSuccess: () => {
+      toast.success("Palpite registado com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao registar palpite");
+    },
+  });
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!user || user.role === "admin") {
+    setLocation("/");
+    return null;
+  }
+
+  const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
+    submitPredictionMutation.mutate({ matchId, prediction });
+  };
+
+  const isDeadlinePassed = roundData?.round && new Date() > new Date(roundData.round.bettingDeadline);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+      {/* Header */}
+      <div className="max-w-6xl mx-auto mb-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+            <p className="text-slate-600">Bem-vindo, {user.name}</p>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => setLocation("/standings")}
+            className="border-slate-300"
+          >
+            Ver Classificação
+          </Button>
+        </div>
+      </div>
+
+      {/* Rounds List */}
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Rounds Sidebar */}
+        <div className="lg:col-span-1">
+          <Card className="border-slate-200/50 sticky top-4">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Jornadas</CardTitle>
+              <CardDescription>Selecione uma jornada para apostar</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+              {roundsLoading ? (
+                <>
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </>
+              ) : rounds && rounds.length > 0 ? (
+                rounds.map((round) => (
+                  <button
+                    key={round.id}
+                    onClick={() => setSelectedRoundId(round.id)}
+                    className={`w-full text-left p-3 rounded-lg border transition-all ${
+                      selectedRoundId === round.id
+                        ? "bg-blue-50 border-blue-300 text-blue-900"
+                        : "border-slate-200 hover:border-slate-300 text-slate-700"
+                    }`}
+                  >
+                    <div className="font-semibold">Jornada {round.roundNumber}</div>
+                    <div className="text-sm text-slate-600">
+                      Prazo: {new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}
+                    </div>
+                    {round.winnerId && (
+                      <Badge className="mt-2 bg-green-100 text-green-800">Finalizada</Badge>
+                    )}
+                  </button>
+                ))
+              ) : (
+                <p className="text-slate-500 text-sm">Nenhuma jornada disponível</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Matches & Predictions */}
+        <div className="lg:col-span-2">
+          {selectedRoundId === null ? (
+            <Card className="border-slate-200/50">
+              <CardContent className="pt-12 pb-12 text-center">
+                <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-600">Selecione uma jornada para começar</p>
+              </CardContent>
+            </Card>
+          ) : roundDataLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : roundData ? (
+            <div className="space-y-4">
+              {/* Round Info */}
+              <Card className="border-slate-200/50 bg-gradient-to-r from-blue-50 to-blue-100/50">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
+                      {roundData.round.prize && (
+                        <CardDescription className="text-blue-700 font-semibold mt-1">
+                          Prémio: {roundData.round.prize}
+                        </CardDescription>
+                      )}
+                    </div>
+                    {isDeadlinePassed ? (
+                      <Badge className="bg-red-100 text-red-800">Prazo Encerrado</Badge>
+                    ) : (
+                      <Badge className="bg-green-100 text-green-800">Aberto</Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Clock className="w-4 h-4" />
+                    Prazo: {new Date(roundData.round.bettingDeadline).toLocaleString("pt-PT")}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Deadline Warning */}
+              {isDeadlinePassed && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="pt-4 flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-red-800">O prazo para apostas nesta jornada já passou.</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Matches */}
+              <div className="space-y-3">
+                {roundData.matches.map((match) => {
+                  const userPrediction = predictions?.find(
+                    (p) => p.match.id === match.id
+                  )?.prediction.prediction;
+
+                  return (
+                    <Card key={match.id} className="border-slate-200/50 hover:border-blue-200 transition-all">
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <span className="text-sm font-semibold text-slate-500">
+                                Jogo {match.matchOrder}
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-slate-900">
+                                  {match.homeTeam} vs {match.awayTeam}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          {match.result && (
+                            <Badge className="bg-blue-100 text-blue-800 ml-2">
+                              Resultado: {match.result}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Prediction Buttons */}
+                        {!isDeadlinePassed && !match.result ? (
+                          <div className="flex gap-2">
+                            {["1", "X", "2"].map((pred) => (
+                              <button
+                                key={pred}
+                                onClick={() => handlePredictionSubmit(match.id, pred as "1" | "X" | "2")}
+                                disabled={submitPredictionMutation.isPending}
+                                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+                                  userPrediction === pred
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                }`}
+                              >
+                                {pred}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-slate-100 rounded-lg p-3 text-center">
+                            <p className="text-slate-600 text-sm">
+                              Seu palpite: <span className="font-bold text-slate-900">{userPrediction || "—"}</span>
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
+}
