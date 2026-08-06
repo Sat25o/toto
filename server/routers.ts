@@ -14,37 +14,38 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
+    login: publicProcedure
+      .input(z.object({ email: z.string().email(), password: z.string() }))
+      .mutation(async ({ input }) => {
+        const user = await db.getUserByEmail(input.email);
+        if (!user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou password invalidos" });
+        const valid = await db.verifyPassword(input.password, user.passwordHash);
+        if (!valid) throw new TRPCError({ code: "UNAUTHORIZED", message: "Email ou password invalidos" });
+        await db.updateLastSignedIn(user.id);
+        return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+      }),
+    register: publicProcedure
+      .input(z.object({ name: z.string().min(2), email: z.string().email(), password: z.string().min(6) }))
+      .mutation(async ({ input }) => {
+        await db.createUser({ name: input.name, email: input.email, password: input.password });
+        return { success: true };
+      }),
   }),
 
-  // ============ ROUNDS ============
   rounds: router({
-    // Get all rounds
     list: publicProcedure.query(async () => {
       return await db.getAllRounds();
     }),
-
-    // Get a specific round with its matches
     getWithMatches: publicProcedure
       .input(z.object({ roundId: z.number() }))
       .query(async ({ input }) => {
         const round = await db.getRound(input.roundId);
-        if (!round) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Round not found" });
-        }
-
+        if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Round not found" });
         const roundMatches = await db.getMatchesByRound(input.roundId);
-
-        return {
-          round,
-          matches: roundMatches,
-        };
+        return { round, matches: roundMatches };
       }),
-
-    // Create a new round (admin only)
     create: adminProcedure
       .input(z.object({
         roundNumber: z.number().min(1).max(34),
@@ -57,42 +58,26 @@ export const appRouter = router({
         })).length(6),
       }))
       .mutation(async ({ input }) => {
-        // Check if round already exists
         const existing = await db.getRoundByNumber(input.roundNumber);
-        if (existing) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Round already exists" });
-        }
-
-        // Create round
+        if (existing) throw new TRPCError({ code: "BAD_REQUEST", message: "Round already exists" });
         await db.createRound({
           roundNumber: input.roundNumber,
           prize: input.prize,
           bettingDeadline: input.bettingDeadline,
         });
-
-        // Get the created round
         const round = await db.getRoundByNumber(input.roundNumber);
-        if (!round) {
-          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create round" });
-        }
-
-        // Create matches
+        if (!round) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to create round" });
         await db.createMatches(round.id, input.matches);
-
         return round;
       }),
   }),
 
-  // ============ MATCHES ============
   matches: router({
-    // Get matches for a round
     getByRound: publicProcedure
       .input(z.object({ roundId: z.number() }))
       .query(async ({ input }) => {
         return await db.getMatchesByRound(input.roundId);
       }),
-
-    // Update match result (admin only)
     updateResult: adminProcedure
       .input(z.object({
         matchId: z.number(),
@@ -104,16 +89,12 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ PREDICTIONS ============
   predictions: router({
-    // Get user's predictions for a round
     getByRound: protectedProcedure
       .input(z.object({ roundId: z.number() }))
       .query(async ({ input, ctx }) => {
         return await db.getPredictionsByRoundAndUser(input.roundId, ctx.user.id);
       }),
-
-    // Submit or update a prediction
     submit: protectedProcedure
       .input(z.object({
         matchId: z.number(),
@@ -124,14 +105,9 @@ export const appRouter = router({
           await db.createOrUpdatePrediction(input.matchId, ctx.user.id, input.prediction);
           return { success: true };
         } catch (error) {
-          throw new TRPCError({ 
-            code: "INTERNAL_SERVER_ERROR", 
-            message: "Failed to submit prediction" 
-          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to submit prediction" });
         }
       }),
-
-    // Get all predictions for a round (admin only)
     getByRoundAdmin: adminProcedure
       .input(z.object({ roundId: z.number() }))
       .query(async ({ input }) => {
@@ -139,17 +115,13 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ STANDINGS ============
   standings: router({
-    // Get season standings
     list: publicProcedure.query(async () => {
       return await db.getStandings();
     }),
   }),
 
-  // ============ WINNER CALCULATION ============
   winner: router({
-    // Calculate and set round winner (admin only)
     calculate: adminProcedure
       .input(z.object({ roundId: z.number() }))
       .mutation(async ({ input }) => {
@@ -165,9 +137,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ============ EMAIL NOTIFICATIONS ============
   notifications: router({
-    // Send email notification (admin only)
     send: adminProcedure
       .input(z.object({
         userId: z.number(),
@@ -177,78 +147,46 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         try {
-          // Create notification record
           await db.createEmailNotification({
             userId: input.userId,
             roundId: input.roundId,
             type: input.type,
             subject: input.subject,
           });
-
-          // In production, integrate with email service (SendGrid, Mailgun, etc.)
-          // For now, we just log it
           console.log(`[Email] Notification queued for user ${input.userId}: ${input.subject}`);
-
-          return { success: true, message: "Notificação criada" };
+          return { success: true, message: "Notificacao criada" };
         } catch (error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao criar notificação",
-          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao criar notificacao" });
         }
       }),
-
-    // Notify all users about a new round
     notifyRoundCreated: adminProcedure
-      .input(z.object({
-        roundId: z.number(),
-        roundNumber: z.number(),
-      }))
+      .input(z.object({ roundId: z.number(), roundNumber: z.number() }))
       .mutation(async ({ input }) => {
         try {
           console.log(`[Email] Round created notification for round ${input.roundNumber}`);
-          return { success: true, message: "Notificações enviadas" };
+          return { success: true, message: "Notificacoes enviadas" };
         } catch (error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao enviar notificações",
-          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao enviar notificacoes" });
         }
       }),
-
-    // Notify all users about deadline reminder
     notifyDeadlineReminder: adminProcedure
-      .input(z.object({
-        roundId: z.number(),
-        roundNumber: z.number(),
-      }))
+      .input(z.object({ roundId: z.number(), roundNumber: z.number() }))
       .mutation(async ({ input }) => {
         try {
           console.log(`[Email] Deadline reminder for round ${input.roundNumber}`);
           return { success: true, message: "Lembretes enviados" };
         } catch (error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao enviar lembretes",
-          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao enviar lembretes" });
         }
       }),
-
-    // Notify all users about results
     notifyResultsPublished: adminProcedure
-      .input(z.object({
-        roundId: z.number(),
-        roundNumber: z.number(),
-      }))
+      .input(z.object({ roundId: z.number(), roundNumber: z.number() }))
       .mutation(async ({ input }) => {
         try {
           console.log(`[Email] Results published for round ${input.roundNumber}`);
-          return { success: true, message: "Notificações de resultados enviadas" };
+          return { success: true, message: "Notificacoes de resultados enviadas" };
         } catch (error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Erro ao enviar notificações de resultados",
-          });
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao enviar notificacoes de resultados" });
         }
       }),
   }),
