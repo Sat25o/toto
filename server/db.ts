@@ -1,6 +1,6 @@
 import { eq, and, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, rounds, matches, predictions } from "../drizzle/schema";
+import { InsertUser, users, rounds, matches, predictions, emailNotifications } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -295,4 +295,47 @@ export async function calculateRoundWinner(roundId: number) {
   }
   
   return winnerId;
+}
+
+
+// ============ EMAIL NOTIFICATIONS ============
+export async function createEmailNotification(data: {
+  userId: number;
+  roundId?: number;
+  type: "round_created" | "deadline_reminder" | "results_published";
+  subject: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.insert(emailNotifications).values({
+    userId: data.userId,
+    roundId: data.roundId,
+    type: data.type,
+    subject: data.subject,
+  });
+}
+
+export async function markEmailAsSent(notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db
+    .update(emailNotifications)
+    .set({ sent: "true", sentAt: new Date() })
+    .where(eq(emailNotifications.id, notificationId));
+}
+
+export async function getUnsentNotifications() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select({
+      notification: emailNotifications,
+      user: users,
+    })
+    .from(emailNotifications)
+    .innerJoin(users, eq(emailNotifications.userId, users.id))
+    .where(eq(emailNotifications.sent, "false"));
 }

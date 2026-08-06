@@ -73,3 +73,21 @@ export const predictions = mysqlTable("predictions", {
 
 export type Prediction = typeof predictions.$inferSelect;
 export type InsertPrediction = typeof predictions.$inferInsert;
+
+
+/**
+ * Email Notifications - Track sent emails
+ */
+export const emailNotifications = mysqlTable("emailNotifications", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  roundId: int("roundId"),
+  type: mysqlEnum("type", ["round_created", "deadline_reminder", "results_published"]).notNull(),
+  subject: varchar("subject", { length: 255 }).notNull(),
+  sent: mysqlEnum("sent", ["true", "false"]).default("false").notNull(),
+  sentAt: timestamp("sentAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type EmailNotification = typeof emailNotifications.$inferSelect;
+export type InsertEmailNotification = typeof emailNotifications.$inferInsert;

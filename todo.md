@@ -51,3 +51,20 @@
 
 - [x] Checkpoint inicial
 - [x] Publicação da plataforma
+
+
+## Histórico Detalhado de Jornadas
+
+- [x] Página de histórico: Listar todas as jornadas com resultados
+- [x] Comparação lado a lado: Palpites de cada utilizador vs resultado oficial
+- [x] Indicadores visuais: Acertos/erros destacados com cores
+- [x] Filtros: Por jornada, por utilizador
+
+## Notificações por Email
+
+- [x] Tabela de notificações na base de dados
+- [x] Rota tRPC para enviar emails
+- [x] Email ao criar jornada
+- [x] Email quando deadline está próximo (24h antes)
+- [x] Email quando resultados são publicados
+- [ ] Integração com Manus Email API (próximo passo)

@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import BettorDashboard from "./pages/BettorDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import Standings from "./pages/Standings";
+import RoundHistory from "./pages/RoundHistory";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -17,6 +18,7 @@ function Router() {
       <Route path={"/dashboard"} component={BettorDashboard} />
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/standings"} component={Standings} />
+      <Route path={"/history"} component={RoundHistory} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

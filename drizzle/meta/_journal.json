@@ -15,6 +15,13 @@
       "when": 1786058587441,
       "tag": "0001_lowly_expediter",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786059078873,
+      "tag": "0002_clumsy_infant_terrible",
+      "breakpoints": true
     }
   ]
 }

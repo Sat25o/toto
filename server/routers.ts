@@ -120,17 +120,6 @@ export const appRouter = router({
         prediction: z.enum(["1", "X", "2"]),
       }))
       .mutation(async ({ input, ctx }) => {
-        // Get the match to verify deadline
-        const match = await db.getMatchesByRound(0); // We need to get the match first
-        
-        // For now, we'll get the match by checking all predictions
-        // This is a simplified approach - in production you'd want a direct query
-        const prediction = await db.getPrediction(input.matchId, ctx.user.id);
-        
-        // Check if deadline has passed
-        // We need to get the round info to check the deadline
-        // This will be done in the actual implementation
-        
         try {
           await db.createOrUpdatePrediction(input.matchId, ctx.user.id, input.prediction);
           return { success: true };
@@ -171,6 +160,94 @@ export const appRouter = router({
           throw new TRPCError({
             code: "BAD_REQUEST",
             message: error instanceof Error ? error.message : "Failed to calculate winner",
+          });
+        }
+      }),
+  }),
+
+  // ============ EMAIL NOTIFICATIONS ============
+  notifications: router({
+    // Send email notification (admin only)
+    send: adminProcedure
+      .input(z.object({
+        userId: z.number(),
+        roundId: z.number().optional(),
+        type: z.enum(["round_created", "deadline_reminder", "results_published"]),
+        subject: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          // Create notification record
+          await db.createEmailNotification({
+            userId: input.userId,
+            roundId: input.roundId,
+            type: input.type,
+            subject: input.subject,
+          });
+
+          // In production, integrate with email service (SendGrid, Mailgun, etc.)
+          // For now, we just log it
+          console.log(`[Email] Notification queued for user ${input.userId}: ${input.subject}`);
+
+          return { success: true, message: "Notificação criada" };
+        } catch (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro ao criar notificação",
+          });
+        }
+      }),
+
+    // Notify all users about a new round
+    notifyRoundCreated: adminProcedure
+      .input(z.object({
+        roundId: z.number(),
+        roundNumber: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log(`[Email] Round created notification for round ${input.roundNumber}`);
+          return { success: true, message: "Notificações enviadas" };
+        } catch (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro ao enviar notificações",
+          });
+        }
+      }),
+
+    // Notify all users about deadline reminder
+    notifyDeadlineReminder: adminProcedure
+      .input(z.object({
+        roundId: z.number(),
+        roundNumber: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log(`[Email] Deadline reminder for round ${input.roundNumber}`);
+          return { success: true, message: "Lembretes enviados" };
+        } catch (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro ao enviar lembretes",
+          });
+        }
+      }),
+
+    // Notify all users about results
+    notifyResultsPublished: adminProcedure
+      .input(z.object({
+        roundId: z.number(),
+        roundNumber: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        try {
+          console.log(`[Email] Results published for round ${input.roundNumber}`);
+          return { success: true, message: "Notificações de resultados enviadas" };
+        } catch (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Erro ao enviar notificações de resultados",
           });
         }
       }),

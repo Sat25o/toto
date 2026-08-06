@@ -143,7 +143,16 @@ export default function AdminPanel() {
             <h1 className="text-3xl font-bold text-slate-900">Painel de Administração</h1>
             <p className="text-slate-600">Gerencie jornadas, resultados e vencedores</p>
           </div>
-          <Settings className="w-6 h-6 text-slate-400" />
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/history")}
+              className="border-slate-300"
+            >
+              Histórico
+            </Button>
+            <Settings className="w-6 h-6 text-slate-400" />
+          </div>
         </div>
       </div>
 

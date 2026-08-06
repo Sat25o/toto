@@ -63,13 +63,22 @@ export default function BettorDashboard() {
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-slate-600">Bem-vindo, {user.name}</p>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/standings")}
-            className="border-slate-300"
-          >
-            Ver Classificação
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/history")}
+              className="border-slate-300"
+            >
+              Histórico
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/standings")}
+              className="border-slate-300"
+            >
+              Classificação
+            </Button>
+          </div>
         </div>
       </div>
 
