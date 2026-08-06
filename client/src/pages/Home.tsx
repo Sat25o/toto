@@ -36,7 +36,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Liga Portugal Betclic</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
           </div>
           <Button
             onClick={() => startLogin()}
