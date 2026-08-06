@@ -54,7 +54,7 @@ export default function Home() {
             Prognósticos da <span className="text-blue-600">Liga Portugal</span>
           </h2>
           <p className="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
-            Participe na maior competição de palpites da Liga Portugal Betclic. 34 jornadas, 6 jogos por jornada, e prémios incríveis à espera.
+            
           </p>
           <Button
             onClick={() => startLogin()}
@@ -154,7 +154,7 @@ export default function Home() {
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-12 text-center text-white">
           <h3 className="text-3xl font-bold mb-4">Pronto para começar?</h3>
           <p className="text-blue-100 mb-8 text-lg">
-            Junte-se aos 34 melhores apostadores da Liga Portugal Betclic.
+            Junte-se aos 34 melhores apostadores da Liga Toto Talho
           </p>
           <Button
             onClick={() => startLogin()}
@@ -169,7 +169,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200/50 bg-slate-50/50 mt-20 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-600">
-          <p>© 2026 Liga Portugal Betclic. Todos os direitos reservados.</p>
+          <p>© 2026 Liga Toto Talho. Todos os direitos reservados.</p>
         </div>
       </footer>
     </div>
