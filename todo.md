@@ -50,4 +50,4 @@
 ## Deployment
 
 - [x] Checkpoint inicial
-- [ ] Publicação da plataforma
+- [x] Publicação da plataforma
