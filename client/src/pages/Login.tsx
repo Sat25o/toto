@@ -47,7 +47,7 @@ export default function Login() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Trophy className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Liga Portugal Betclic</h1>
+            <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
           </div>
           <p className="text-slate-600">Prognósticos 34 Jornadas</p>
         </div>
@@ -115,7 +115,7 @@ export default function Login() {
 
         {/* Footer */}
         <p className="text-center text-slate-500 text-sm mt-8">
-          © 2026 Liga Portugal Betclic. Todos os direitos reservados.
+          © 2026 Liga Toto Talho. Todos os direitos reservados.
         </p>
       </div>
     </div>
