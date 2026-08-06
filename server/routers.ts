@@ -113,6 +113,11 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getPredictionsByRound(input.roundId);
       }),
+    getPublic: publicProcedure
+      .input(z.object({ roundId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getPredictionsByRound(input.roundId);
+      }),
   }),
 
   standings: router({
@@ -188,6 +193,22 @@ export const appRouter = router({
         } catch (error) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Erro ao enviar notificacoes de resultados" });
         }
+      }),
+  }),
+
+  users: router({
+    list: adminProcedure.query(async () => {
+      return [];
+    }),
+    updateRole: adminProcedure
+      .input(z.object({ userId: z.number(), role: z.enum(["user", "admin"]) }))
+      .mutation(async ({ input }) => {
+        return { success: true };
+      }),
+    deactivate: adminProcedure
+      .input(z.object({ userId: z.number() }))
+      .mutation(async ({ input }) => {
+        return { success: true, message: "Utilizador desativado" };
       }),
   }),
 });

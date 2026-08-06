@@ -11,6 +11,8 @@ import BettorDashboard from "./pages/BettorDashboard";
 import AdminPanel from "./pages/AdminPanel";
 import Standings from "./pages/Standings";
 import RoundHistory from "./pages/RoundHistory";
+import UsersManagement from "./pages/UsersManagement";
+import PublicPredictions from "./pages/PublicPredictions";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -23,6 +25,8 @@ function Router() {
       <Route path={"/admin"} component={AdminPanel} />
       <Route path={"/standings"} component={Standings} />
       <Route path={"/history"} component={RoundHistory} />
+      <Route path={"/users"} component={UsersManagement} />
+      <Route path={"/public-predictions"} component={PublicPredictions} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
