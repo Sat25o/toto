@@ -180,3 +180,10 @@
 - [x] Impedir alterações de prazo após a jornada estar fechada
 - [x] Atualizar imediatamente o prazo apresentado aos apostadores
 - [x] Testar validação de prazo futuro e bloqueio após fecho
+
+## Instalação da App
+
+- [x] Criar manifesto e ícone de instalação para Liga Toto Talho
+- [x] Registar o serviço de instalação PWA
+- [x] Adicionar botão Instalar App com instruções para iPhone
+- [x] Testar o botão e a apresentação mobile

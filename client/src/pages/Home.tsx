@@ -1,6 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
+import { InstallAppButton } from "@/components/InstallAppButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Target, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
@@ -38,12 +39,15 @@ export default function Home() {
             <Trophy className="w-8 h-8 text-blue-600" />
             <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
           </div>
-          <Button
-            onClick={() => startLogin()}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            Entrar
-          </Button>
+          <div className="flex items-center gap-2">
+            <InstallAppButton className="hidden sm:inline-flex" />
+            <Button
+              onClick={() => startLogin()}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Entrar
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -63,6 +67,7 @@ export default function Home() {
           >
             Começar Agora
           </Button>
+          <div className="mt-4 flex justify-center"><InstallAppButton /></div>
         </div>
 
         {/* Features Grid */}

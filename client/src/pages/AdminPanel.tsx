@@ -14,6 +14,7 @@ import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { splitRoundParticipation } from "@/lib/roundParticipation";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
@@ -205,6 +206,7 @@ export default function AdminPanel() {
             >
               Os meus palpites
             </Button>
+            <InstallAppButton className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm" />
             <Button
               variant="outline"
               onClick={() => setLocation("/users")}

@@ -1,0 +1,19 @@
+{
+  "name": "Liga Toto Talho",
+  "short_name": "Liga Toto",
+  "description": "Palpites e classificação da Liga Toto Talho.",
+  "id": "/",
+  "start_url": "/login",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/manus-storage/liga-toto-talhao-app-icon_f641087a.png",
+      "sizes": "1920x1920",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

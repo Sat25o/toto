@@ -13,6 +13,7 @@ import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
 import { getDashboardMessages } from "@/lib/dashboardMessages";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -135,6 +136,7 @@ export default function BettorDashboard() {
             >
               Apostas Públicas
             </Button>
+            <InstallAppButton />
             <Button
               variant="outline"
               onClick={() => setLocation("/standings")}
