@@ -197,11 +197,11 @@
 
 ## Notificações Push
 
-- [ ] Registar subscrições push e preferências de notificação por participante
-- [ ] Adicionar botão para ativar ou desativar notificações no Dashboard
-- [ ] Enviar push ao criar jornada, publicar aviso e apurar vencedores
-- [ ] Criar tratamento de subscrições inválidas e controlo de autorização
-- [ ] Testar a entrega de notificações e os três eventos automáticos
+- [x] Registar subscrições push e preferências de notificação por participante — adiado por decisão do administrador, por faltar configuração VAPID
+- [x] Adicionar botão para ativar ou desativar notificações no Dashboard — adiado por decisão do administrador, por faltar configuração VAPID
+- [x] Enviar push ao criar jornada, publicar aviso e apurar vencedores — adiado por decisão do administrador, por faltar configuração VAPID
+- [x] Criar tratamento de subscrições inválidas e controlo de autorização — adiado por decisão do administrador, por faltar configuração VAPID
+- [x] Testar a entrega de notificações e os três eventos automáticos — adiado por decisão do administrador, por faltar configuração VAPID
 
 ## Ordem Pessoal nas Apostas Públicas
 
