@@ -203,8 +203,6 @@ export async function registerUserFromInvitation(data: {
   }
 
   const existingUser = await getUserByEmail(email);
-  if (existingUser) throw new Error("Já existe uma conta com este email");
-
   const passwordHash = await bcrypt.hash(data.password, 12);
   const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
   if (isSuperAdmin && !invitation.isSuperAdmin) {
@@ -212,14 +210,29 @@ export async function registerUserFromInvitation(data: {
   }
 
   await db.transaction(async tx => {
-    await tx.insert(users).values({
-      name: data.name.trim(),
-      email,
-      passwordHash,
-      role: isSuperAdmin ? "admin" : invitation.role,
-      isActive: true,
-      isSuperAdmin,
-    });
+    if (existingUser) {
+      // A valid personal invitation can activate a legacy account with the same email.
+      await tx
+        .update(users)
+        .set({
+          name: data.name.trim(),
+          passwordHash,
+          role: isSuperAdmin ? "admin" : invitation.role,
+          isActive: true,
+          isSuperAdmin: isSuperAdmin || existingUser.isSuperAdmin,
+          lastSignedIn: new Date(),
+        })
+        .where(eq(users.id, existingUser.id));
+    } else {
+      await tx.insert(users).values({
+        name: data.name.trim(),
+        email,
+        passwordHash,
+        role: isSuperAdmin ? "admin" : invitation.role,
+        isActive: true,
+        isSuperAdmin,
+      });
+    }
 
     await tx
       .update(invitations)

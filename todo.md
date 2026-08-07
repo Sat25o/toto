@@ -77,3 +77,4 @@
 - [x] Proteger ricardodonascimento@gmail.com como super administrador não removível
 - [x] Atualizar gestão de utilizadores para listar contas, roles, estado e convites
 - [x] Cobrir registo por convite, login e proteção do super administrador com testes
+- [x] Permitir que um convite válido ative uma conta antiga existente sem duplicar o email
