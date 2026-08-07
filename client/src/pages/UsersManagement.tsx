@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Copy, Edit2, MailPlus, RefreshCw, Shield, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
+import { Copy, Edit2, MailPlus, RefreshCw, Shield, ShieldCheck, Trash2, UserCheck, UserX, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Role = "user" | "admin";
@@ -25,6 +26,7 @@ export default function UsersManagement() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("user");
   const [latestInviteUrl, setLatestInviteUrl] = useState("");
+  const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
 
   const { data: users, isLoading: usersLoading, refetch: refetchUsers } = trpc.users.list.useQuery(
     undefined,
@@ -53,6 +55,14 @@ export default function UsersManagement() {
   const reactivateMutation = trpc.users.reactivate.useMutation({
     onSuccess: () => {
       toast.success("Conta reativada.");
+      void refetchUsers();
+    },
+    onError: error => toast.error(error.message),
+  });
+  const deleteUserMutation = trpc.users.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Conta e dados associados apagados.");
+      setUserToDelete(null);
       void refetchUsers();
     },
     onError: error => toast.error(error.message),
@@ -201,6 +211,7 @@ export default function UsersManagement() {
                                 ) : (
                                   <Button variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" title="Reativar conta" onClick={() => reactivateMutation.mutate({ userId: account.id })}><UserCheck className="h-4 w-4" /></Button>
                                 )}
+                                <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-50" title="Apagar conta definitivamente" onClick={() => setUserToDelete({ id: account.id, name: account.name })}><Trash2 className="h-4 w-4" /></Button>
                               </div>
                             )}
                           </TableCell>
@@ -229,6 +240,23 @@ export default function UsersManagement() {
           </CardContent>
         </Card>
       )}
+
+      <AlertDialog open={Boolean(userToDelete)} onOpenChange={open => !open && setUserToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apagar conta definitivamente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {userToDelete ? `A conta de ${userToDelete.name}, os seus palpites, registos de vitória e notificações serão apagados de forma permanente.` : "Esta ação é irreversível."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-red-600 hover:bg-red-700" disabled={deleteUserMutation.isPending} onClick={() => userToDelete && deleteUserMutation.mutate({ userId: userToDelete.id })}>
+              {deleteUserMutation.isPending ? "A apagar…" : "Apagar definitivamente"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

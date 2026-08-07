@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
 import { calculateEqualPrizeShare } from "./settlement";
+import { assertUserCanBeDeleted } from "./userDeletion";
 import {
   emailNotifications,
   invitations,
@@ -109,6 +110,25 @@ export async function setUserActive(userId: number, isActive: boolean) {
   }
 
   await db.update(users).set({ isActive }).where(eq(users.id, userId));
+}
+
+/** Removes an account and its personal competition data. This operation is irreversible. */
+export async function deleteUser(userId: number, actorUserId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+  assertUserCanBeDeleted(target, actorUserId, SUPER_ADMIN_EMAIL);
+
+  await db.transaction(async tx => {
+    await tx.delete(predictions).where(eq(predictions.userId, userId));
+    await tx.delete(roundWinners).where(eq(roundWinners.userId, userId));
+    await tx.delete(emailNotifications).where(eq(emailNotifications.userId, userId));
+    await tx.delete(invitations).where(eq(invitations.email, target.email));
+    await tx.update(rounds).set({ winnerId: null }).where(eq(rounds.winnerId, userId));
+    await tx.delete(users).where(eq(users.id, userId));
+  });
 }
 
 // ============ INVITATIONS ============

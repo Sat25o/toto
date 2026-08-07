@@ -165,6 +165,16 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });
         }
       }),
+    delete: adminProcedure
+      .input(z.object({ userId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          await db.deleteUser(input.userId, ctx.user.id);
+          return { success: true };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });
+        }
+      }),
   }),
 
   rounds: router({

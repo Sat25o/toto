@@ -143,3 +143,10 @@
 - [x] Forçar novos links de convite a usar o domínio público tototalho.me
 - [x] Permitir reemitir no painel um convite pendente ou expirado
 - [x] Validar diretamente a rota de registo por convite no domínio público
+
+## Eliminação de Apostadores
+
+- [x] Adicionar remoção definitiva de conta e dados associados no servidor
+- [x] Proteger super administrador e impedir eliminação da própria conta
+- [x] Adicionar confirmação antes de apagar no painel de utilizadores
+- [x] Testar a proteção e a remoção segura de dados associados
