@@ -173,3 +173,10 @@
 - [x] Permitir ao administrador criar, editar, fixar e remover mensagens
 - [x] Adicionar acessos a Regras e Mensagens nas áreas de administração e apostador
 - [x] Testar a gestão e a apresentação de regras e avisos
+
+## Edição do Prazo de Apostas
+
+- [x] Permitir ao administrador editar a data e a hora limite de uma jornada aberta
+- [x] Impedir alterações de prazo após a jornada estar fechada
+- [x] Atualizar imediatamente o prazo apresentado aos apostadores
+- [x] Testar validação de prazo futuro e bloqueio após fecho

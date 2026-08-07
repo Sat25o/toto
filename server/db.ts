@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { calculateEqualPrizeShare } from "./settlement";
 import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
+import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
 import {
   adminMessages,
   emailNotifications,
@@ -310,6 +311,18 @@ export async function getAllRounds() {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(rounds).orderBy(rounds.roundNumber);
+}
+
+export async function updateRoundDeadline(roundId: number, bettingDeadline: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const round = await getRound(roundId);
+  if (!round) throw new Error("Jornada não encontrada");
+  assertRoundDeadlineCanBeUpdated(round.isSettled, bettingDeadline);
+
+  await db.update(rounds).set({ bettingDeadline }).where(eq(rounds.id, roundId));
+  return getRound(roundId);
 }
 
 // ============ MATCHES ============

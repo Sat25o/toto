@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -18,6 +18,7 @@ import { splitRoundParticipation } from "@/lib/roundParticipation";
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
 
   // Fetch rounds
@@ -43,6 +44,7 @@ export default function AdminPanel() {
   });
 
   const [resultForm, setResultForm] = useState<Record<number, "1" | "X" | "2">>({});
+  const [deadlineDraft, setDeadlineDraft] = useState("");
 
   // Create round mutation
   const createRoundMutation = trpc.rounds.create.useMutation({
@@ -71,6 +73,15 @@ export default function AdminPanel() {
       setResultForm({});
       toast.error(error.message || "Erro ao atualizar resultado");
     },
+  });
+
+  const updateDeadlineMutation = trpc.rounds.updateDeadline.useMutation({
+    onSuccess: () => {
+      toast.success("Data e hora limite atualizadas.");
+      void refetchRoundData();
+      void utils.rounds.list.invalidate();
+    },
+    onError: error => toast.error(error.message || "Não foi possível atualizar o prazo"),
   });
 
   // Calculate winner mutation
@@ -152,6 +163,25 @@ export default function AdminPanel() {
   const handleCalculateWinner = () => {
     if (!selectedRoundId) return;
     calculateWinnerMutation.mutate({ roundId: selectedRoundId });
+  };
+
+  useEffect(() => {
+    if (!roundData?.round) return;
+    const deadline = new Date(roundData.round.bettingDeadline);
+    const localDeadline = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60_000)
+      .toISOString()
+      .slice(0, 16);
+    setDeadlineDraft(localDeadline);
+  }, [roundData?.round?.bettingDeadline, selectedRoundId]);
+
+  const handleDeadlineUpdate = () => {
+    if (!selectedRoundId || !deadlineDraft) return;
+    const nextDeadline = new Date(deadlineDraft);
+    if (Number.isNaN(nextDeadline.getTime()) || nextDeadline <= new Date()) {
+      toast.error("Indique uma data e hora futuras.");
+      return;
+    }
+    updateDeadlineMutation.mutate({ roundId: selectedRoundId, bettingDeadline: nextDeadline });
   };
 
   const totalMatches = roundData?.matches.length ?? 6;
@@ -414,6 +444,22 @@ export default function AdminPanel() {
                       <CardHeader>
                         <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
                       </CardHeader>
+                    </Card>
+
+                    <Card className="border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="text-base text-slate-900">Data e hora limite das apostas</CardTitle>
+                        <CardDescription>Altere o prazo enquanto a jornada estiver aberta. Os palpites passam a respeitar o novo limite imediatamente.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                        <div className="w-full flex-1">
+                          <Label htmlFor="deadline-update">Novo prazo</Label>
+                          <Input id="deadline-update" type="datetime-local" value={deadlineDraft} disabled={roundData.round.isSettled} onChange={event => setDeadlineDraft(event.target.value)} className="mt-1" />
+                        </div>
+                        <Button className="bg-blue-600 hover:bg-blue-700" disabled={roundData.round.isSettled || !deadlineDraft || updateDeadlineMutation.isPending} onClick={handleDeadlineUpdate} title="Guardar a nova data e hora limite">
+                          {roundData.round.isSettled ? "Jornada fechada" : updateDeadlineMutation.isPending ? "A guardar…" : "Atualizar prazo"}
+                        </Button>
+                      </CardContent>
                     </Card>
 
                     <Card className="border-slate-200/70">

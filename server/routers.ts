@@ -243,6 +243,16 @@ export const appRouter = router({
         if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Jornada não encontrada" });
         return db.getRoundParticipation(input.roundId);
       }),
+    updateDeadline: adminProcedure
+      .input(z.object({ roundId: z.number().int().positive(), bettingDeadline: z.date() }))
+      .mutation(async ({ input }) => {
+        try {
+          const round = await db.updateRoundDeadline(input.roundId, input.bettingDeadline);
+          return { success: true, round };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar o prazo" });
+        }
+      }),
     create: adminProcedure
       .input(
         z.object({
