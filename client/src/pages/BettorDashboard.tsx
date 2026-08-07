@@ -8,11 +8,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Clock, Trophy, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
+  const utils = trpc.useUtils();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
+  const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
+  const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -33,11 +37,21 @@ export default function BettorDashboard() {
   const submitPredictionMutation = trpc.predictions.submit.useMutation({
     onSuccess: () => {
       toast.success("Palpite registado com sucesso!");
+      if (selectedRoundId !== null) {
+        void utils.predictions.getByRound.invalidate({ roundId: selectedRoundId });
+      }
     },
-    onError: (error) => {
+    onError: (error, variables) => {
+      setOptimisticPredictions(current => clearSelectedPrediction(current, variables.matchId));
       toast.error(error.message || "Erro ao registar palpite");
     },
+    onSettled: () => setPendingMatchId(null),
   });
+
+  useEffect(() => {
+    setOptimisticPredictions({});
+    setPendingMatchId(null);
+  }, [selectedRoundId]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -54,10 +68,15 @@ export default function BettorDashboard() {
   }
 
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
+    if (isDeadlinePassed) return;
+    setOptimisticPredictions(current => selectPrediction(current, matchId, prediction));
+    setPendingMatchId(matchId);
     submitPredictionMutation.mutate({ matchId, prediction });
   };
 
   const isDeadlinePassed = roundData?.round && new Date() > new Date(roundData.round.bettingDeadline);
+  const formatDeadline = (deadline: Date | string) =>
+    new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(deadline));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -126,9 +145,9 @@ export default function BettorDashboard() {
                   >
                     <div className="font-semibold">Jornada {round.roundNumber}</div>
                     <div className="text-sm text-slate-600">
-                      Prazo: {new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}
+                      Limite: {formatDeadline(round.bettingDeadline)}
                     </div>
-                    {round.winnerId && (
+                    {round.isSettled && (
                       <Badge className="mt-2 bg-green-100 text-green-800">Finalizada</Badge>
                     )}
                   </button>
@@ -179,7 +198,7 @@ export default function BettorDashboard() {
                 <CardContent>
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Clock className="w-4 h-4" />
-                    Prazo: {new Date(roundData.round.bettingDeadline).toLocaleString("pt-PT")}
+                    Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
                   </div>
                 </CardContent>
               </Card>
@@ -197,9 +216,10 @@ export default function BettorDashboard() {
               {/* Matches */}
               <div className="space-y-3">
                 {roundData.matches.map((match) => {
-                  const userPrediction = predictions?.find(
+                  const savedPrediction = predictions?.find(
                     (p) => p.match.id === match.id
                   )?.prediction.prediction;
+                  const userPrediction = optimisticPredictions[match.id] ?? savedPrediction;
 
                   return (
                     <Card key={match.id} className="border-slate-200/50 hover:border-blue-200 transition-all">
@@ -231,7 +251,7 @@ export default function BettorDashboard() {
                               <button
                                 key={pred}
                                 onClick={() => handlePredictionSubmit(match.id, pred as "1" | "X" | "2")}
-                                disabled={submitPredictionMutation.isPending}
+                                disabled={pendingMatchId === match.id}
                                 className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
                                   userPrediction === pred
                                     ? "bg-blue-600 text-white"

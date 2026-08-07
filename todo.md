@@ -92,3 +92,11 @@
 - [x] Calcular e guardar uma parte igual do prémio para cada apostador com seis acertos
 - [x] Mostrar vencedores, divisão e jornadas sem vencedor no painel e histórico
 - [x] Testar o cenário de dois ou mais vencedores
+
+## Correção de Dados de Teste e Palpites
+
+- [x] Remover a Jornada 1 e os palpites fictícios de teste
+- [x] Mostrar data e hora completas do limite de aposta em todas as jornadas
+- [x] Atualizar 1/X/2 imediatamente sem refresh e sem seleção fictícia
+- [x] Mostrar os nomes reais das equipas em vez de Team A / Team B
+- [x] Validar a criação da primeira jornada real
