@@ -216,3 +216,9 @@
 - [x] Adicionar pesquisa por nome de apostador
 - [x] Adicionar filtros Em jogo, Eliminado e Vencedor
 - [x] Testar filtros e experiência de telemóvel
+
+## Eliminação por Palpites Incompletos
+
+- [x] Marcar como eliminados participantes com menos de seis palpites após o prazo
+- [x] Diferenciar visualmente a eliminação por falta de palpites
+- [x] Testar participantes completos, incompletos e sem palpites

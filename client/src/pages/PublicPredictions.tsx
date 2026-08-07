@@ -68,7 +68,7 @@ export default function PublicPredictions() {
     ? putCurrentParticipantFirst(publicRound.participants, user.id)
     : [];
   const participantCards = publicRound
-    ? orderedParticipants.map(participant => ({ participant, progress: getParticipantProgress(publicRound.matches, participant.predictions) }))
+    ? orderedParticipants.map(participant => ({ participant, progress: getParticipantProgress(publicRound.matches, participant.predictions, Number.POSITIVE_INFINITY, true) }))
     : [];
   const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
 
@@ -143,7 +143,7 @@ export default function PublicPredictions() {
                   <CardTitle className="text-slate-900">Estado dos apostadores</CardTitle>
                   <CardDescription>
                     <span className="font-semibold text-amber-800">Amarelo</span> = continua em jogo; {" "}
-                    <span className="font-semibold text-red-800">vermelho</span> = falhou um resultado; {" "}
+                    <span className="font-semibold text-red-800">vermelho</span> = falhou um resultado ou não completou os seis palpites; {" "}
                     <span className="font-semibold text-emerald-800">verde</span> = acertou os seis jogos.
                   </CardDescription>
                 </CardHeader>
@@ -163,15 +163,18 @@ export default function PublicPredictions() {
                   const appearance = statusAppearance[progress.status];
                   const StatusIcon = appearance.icon;
                   const isCurrentParticipant = participant.id === user.id;
+                  const description = progress.eliminationReason === "incomplete_predictions"
+                    ? `Não completou os 6 palpites (${6 - progress.missingMatchIds.length}/6 preenchidos)`
+                    : appearance.description;
 
                   return (
                     <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card} ${isCurrentParticipant ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold text-slate-900">{participant.name}</h2>{isCurrentParticipant && <Badge className="bg-blue-600 text-white" title="Este é o seu cartão de palpites">Os meus palpites</Badge>}</div>
-                          <p className="mt-1 text-xs text-slate-600">{appearance.description}</p>
+                          <p className="mt-1 text-xs text-slate-600">{description}</p>
                         </div>
-                        <Badge title={appearance.description} className={`shrink-0 ${appearance.badge}`}>
+                        <Badge title={description} className={`shrink-0 ${appearance.badge}`}>
                           <StatusIcon className="mr-1 h-3.5 w-3.5" />
                           {appearance.label}
                         </Badge>

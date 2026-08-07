@@ -29,4 +29,20 @@ describe("progresso público acumulado", () => {
     expect(progress.status).toBe("winner");
     expect(progress.correctCount).toBe(6);
   });
+
+  it("elimina a vermelho quem não completou os seis palpites depois do fecho", () => {
+    const progress = getParticipantProgress(allMatches, [
+      { matchId: 1, prediction: "1" },
+      { matchId: 2, prediction: "X" },
+    ], Number.POSITIVE_INFINITY, true);
+
+    expect(progress.status).toBe("eliminated");
+    expect(progress.eliminationReason).toBe("incomplete_predictions");
+    expect(progress.missingMatchIds).toEqual([3, 4, 5, 6]);
+  });
+
+  it("mantém os incompletos elegíveis antes de ser aplicado o fecho", () => {
+    const matchesWithoutResults = allMatches.map(match => ({ ...match, result: null }));
+    expect(getParticipantProgress(matchesWithoutResults, [{ matchId: 1, prediction: "1" }]).status).toBe("eligible");
+  });
 });
