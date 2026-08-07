@@ -106,3 +106,17 @@
 - [x] Evitar que a limpeza assíncrona da jornada apague a seleção feita pelo utilizador
 - [x] Atualizar visualmente o 1/X/2 no próprio clique e manter a seleção após a resposta do servidor
 - [x] Testar seleção imediata depois de abrir uma jornada
+
+## Apostas Públicas e Mobile
+
+- [x] Mostrar todos os participantes com progresso acumulado por jogo
+- [x] Marcar elegíveis a amarelo, eliminados a vermelho e vencedores a verde
+- [x] Incluir participantes sem palpites na visão pública
+- [x] Adaptar a visualização de apostas públicas para telemóvel
+- [x] Testar a lógica de estados acumulados e os pontos de quebra mobile
+
+## Revisão Mobile
+
+- [x] Verificar página inicial, login e registo em ecrã de 375 px
+- [x] Usar cartões responsivos de uma coluna no telemóvel e grelha progressiva nas Apostas Públicas
+- [x] Manter botões, áreas de toque e textos de prazo legíveis em ecrã estreito

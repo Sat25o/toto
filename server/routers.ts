@@ -262,7 +262,7 @@ export const appRouter = router({
         if (new Date() < round.bettingDeadline) {
           throw new TRPCError({ code: "FORBIDDEN", message: "As apostas só ficam visíveis após o fecho do prazo" });
         }
-        return db.getPredictionsByRound(input.roundId);
+        return db.getPublicRoundProgress(input.roundId);
       }),
   }),
 

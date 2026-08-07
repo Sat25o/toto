@@ -375,6 +375,35 @@ export async function getPredictionsByRound(roundId: number) {
     .where(eq(matches.roundId, roundId));
 }
 
+export async function getPublicRoundProgress(roundId: number) {
+  const [roundMatches, participants, roundPredictions] = await Promise.all([
+    getMatchesByRound(roundId),
+    listUsers(),
+    getPredictionsByRound(roundId),
+  ]);
+
+  const predictionByParticipantAndMatch = new Map(
+    roundPredictions.map(entry => [
+      `${entry.prediction.userId}:${entry.match.id}`,
+      entry.prediction.prediction,
+    ]),
+  );
+
+  return {
+    matches: roundMatches,
+    participants: participants
+      .filter(participant => participant.isActive)
+      .map(participant => ({
+        id: participant.id,
+        name: participant.name,
+        predictions: roundMatches.map(match => ({
+          matchId: match.id,
+          prediction: predictionByParticipantAndMatch.get(`${participant.id}:${match.id}`) ?? null,
+        })),
+      })),
+  };
+}
+
 export async function getRoundWinners(roundId: number) {
   const db = await getDb();
   if (!db) return [];

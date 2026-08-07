@@ -82,7 +82,7 @@ export default function RoundHistory() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Histórico de Jornadas</h1>
             <p className="text-slate-600">Análise detalhada de palpites e resultados</p>

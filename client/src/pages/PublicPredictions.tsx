@@ -1,195 +1,199 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { getParticipantProgress } from "@/lib/publicProgress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Trophy } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, CircleDotDashed, Trophy, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+
+const statusAppearance = {
+  eligible: {
+    card: "border-amber-300 bg-amber-50",
+    badge: "bg-amber-200 text-amber-950",
+    label: "Em jogo",
+    description: "Continua elegível para acertar os 6 jogos",
+    icon: CircleDotDashed,
+  },
+  eliminated: {
+    card: "border-red-300 bg-red-50",
+    badge: "bg-red-200 text-red-950",
+    label: "Eliminado",
+    description: "Falhou pelo menos um resultado oficial",
+    icon: XCircle,
+  },
+  winner: {
+    card: "border-emerald-400 bg-emerald-50",
+    badge: "bg-emerald-200 text-emerald-950",
+    label: "Vencedor",
+    description: "Acertou os 6 resultados",
+    icon: Trophy,
+  },
+} as const;
+
+function formatDeadline(deadline: Date | string) {
+  return new Intl.DateTimeFormat("pt-PT", { dateStyle: "medium", timeStyle: "short" }).format(new Date(deadline));
+}
 
 export default function PublicPredictions() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
 
-  // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
-
-  // Fetch public predictions for the round
-  const { data: predictions, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
+  const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
     { roundId: selectedRoundId || 0 },
-    { enabled: selectedRoundId !== null }
+    { enabled: selectedRoundId !== null },
   );
 
+  useEffect(() => {
+    if (!authLoading && !user) setLocation("/login");
+  }, [authLoading, setLocation, user]);
+
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+    return <div className="min-h-screen flex items-center justify-center">A carregar...</div>;
   }
 
-  if (!user) {
-    setLocation("/login");
-    return null;
-  }
+  if (!user) return null;
 
-  // Filter rounds where deadline has passed
-  const closedRounds = rounds?.filter(r => new Date(r.bettingDeadline) < new Date()) || [];
-
-  const getPredictionStatus = (prediction: string | undefined, result: string | null) => {
-    if (!result) return "pending";
-    if (!prediction) return "missing";
-    return prediction === result ? "correct" : "incorrect";
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "correct":
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
-      case "incorrect":
-        return <XCircle className="w-5 h-5 text-red-600" />;
-      case "missing":
-        return <XCircle className="w-5 h-5 text-gray-400" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "correct":
-        return "bg-green-50 border-green-200";
-      case "incorrect":
-        return "bg-red-50 border-red-200";
-      case "missing":
-        return "bg-gray-50 border-gray-200";
-      default:
-        return "bg-slate-50 border-slate-200";
-    }
-  };
+  const closedRounds = rounds?.filter(round => new Date(round.bettingDeadline) < new Date()) || [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Apostas Públicas</h1>
-            <p className="text-slate-600">Veja as apostas de todos os participantes após o prazo fechar</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")}
-            className="border-slate-300"
-          >
-            Voltar
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
+      <header className="max-w-7xl mx-auto mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Apostas Públicas</h1>
+          <p className="mt-1 text-sm sm:text-base text-slate-600">Acompanhamento acumulado após o fecho das apostas</p>
         </div>
-      </div>
+        <Button
+          variant="outline"
+          onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")}
+          className="border-slate-300 self-start sm:self-auto"
+        >
+          Voltar
+        </Button>
+      </header>
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Rounds Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="border-slate-200/50 sticky top-4">
+      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 sm:gap-6">
+        <aside>
+          <Card className="border-slate-200/50 lg:sticky lg:top-4">
             <CardHeader>
               <CardTitle className="text-slate-900">Jornadas Fechadas</CardTitle>
-              <CardDescription>Selecione para ver apostas</CardDescription>
+              <CardDescription>Selecione uma jornada para acompanhar os palpites</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+            <CardContent className="space-y-2 max-h-72 overflow-y-auto">
               {roundsLoading ? (
                 <>
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
                 </>
               ) : closedRounds.length > 0 ? (
-                closedRounds.map((round) => (
+                closedRounds.map(round => (
                   <button
                     key={round.id}
                     onClick={() => setSelectedRoundId(round.id)}
-                    className={`w-full text-left p-3 rounded-lg border transition-all ${
+                    className={`w-full rounded-lg border p-3 text-left transition-colors ${
                       selectedRoundId === round.id
-                        ? "bg-blue-50 border-blue-300 text-blue-900"
-                        : "border-slate-200 hover:border-slate-300 text-slate-700"
+                        ? "border-blue-300 bg-blue-50 text-blue-900"
+                        : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                     }`}
                   >
                     <div className="font-semibold">Jornada {round.roundNumber}</div>
-                    <div className="text-sm text-slate-600">
-                      {new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}
-                    </div>
+                    <div className="mt-1 text-xs text-slate-600">Prazo: {formatDeadline(round.bettingDeadline)}</div>
                   </button>
                 ))
               ) : (
-                <p className="text-slate-500 text-sm">Nenhuma jornada fechada</p>
+                <p className="text-sm text-slate-500">Nenhuma jornada fechada.</p>
               )}
             </CardContent>
           </Card>
-        </div>
+        </aside>
 
-        {/* Details */}
-        <div className="lg:col-span-3">
+        <section>
           {selectedRoundId === null ? (
             <Card className="border-slate-200/50">
-              <CardContent className="pt-12 pb-12 text-center">
+              <CardContent className="py-16 text-center">
                 <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600">Selecione uma jornada para ver as apostas públicas</p>
+                <p className="text-slate-600">Selecione uma jornada para ver o estado de cada apostador.</p>
               </CardContent>
             </Card>
           ) : predictionsLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
             </div>
-          ) : predictions && predictions.length > 0 ? (
-            <div className="space-y-4">
-              {/* Predictions Table */}
+          ) : publicRound ? (
+            <div className="space-y-5">
               <Card className="border-slate-200/50">
                 <CardHeader>
-                  <CardTitle className="text-slate-900">Todas as Apostas</CardTitle>
-                  <CardDescription>Comparação de palpites de todos os apostadores</CardDescription>
+                  <CardTitle className="text-slate-900">Estado dos apostadores</CardTitle>
+                  <CardDescription>
+                    <span className="font-semibold text-amber-800">Amarelo</span> = continua em jogo; {" "}
+                    <span className="font-semibold text-red-800">vermelho</span> = falhou um resultado; {" "}
+                    <span className="font-semibold text-emerald-800">verde</span> = acertou os seis jogos.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-200 bg-slate-50">
-                          <th className="px-4 py-3 text-left font-semibold text-slate-600">Jogo</th>
-                          <th className="px-4 py-3 text-center font-semibold text-slate-600">Resultado</th>
-                          <th className="px-4 py-3 text-center font-semibold text-slate-600">Apostas (1/X/2)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {predictions.map((pred: any, idx: number) => (
-                          <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50">
-                            <td className="px-4 py-3 text-slate-900 font-medium">
-                              {pred.match.homeTeam} vs {pred.match.awayTeam}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              {pred.match.result ? (
-                                <Badge className="bg-blue-100 text-blue-800 text-lg font-bold">
-                                  {pred.match.result}
-                                </Badge>
-                              ) : (
-                                <span className="text-slate-400">—</span>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <div className="flex items-center justify-center gap-2">
-                                {getStatusIcon(getPredictionStatus(pred.prediction.prediction, pred.match.result))}
-                                <span className="font-semibold">{pred.prediction.prediction}</span>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
               </Card>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                {publicRound.participants.map(participant => {
+                  const progress = getParticipantProgress(publicRound.matches, participant.predictions);
+                  const appearance = statusAppearance[progress.status];
+                  const StatusIcon = appearance.icon;
+
+                  return (
+                    <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <h2 className="truncate font-bold text-slate-900">{participant.name}</h2>
+                          <p className="mt-1 text-xs text-slate-600">{appearance.description}</p>
+                        </div>
+                        <Badge title={appearance.description} className={`shrink-0 ${appearance.badge}`}>
+                          <StatusIcon className="mr-1 h-3.5 w-3.5" />
+                          {appearance.label}
+                        </Badge>
+                      </div>
+
+                      <div className="mt-4 grid gap-2">
+                        {publicRound.matches.map(match => {
+                          const prediction = participant.predictions.find(item => item.matchId === match.id)?.prediction ?? null;
+                          const resultKnown = match.result !== null;
+                          const correct = resultKnown && prediction === match.result;
+                          const failed = resultKnown && !correct;
+                          const cellClass = !resultKnown
+                            ? "border-slate-200 bg-white/70 text-slate-600"
+                            : correct
+                              ? "border-emerald-200 bg-emerald-100 text-emerald-950"
+                              : "border-red-200 bg-red-100 text-red-950";
+
+                          return (
+                            <div key={match.id} className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${cellClass}`}>
+                              <span className="truncate">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
+                              <span className="shrink-0 font-bold" title={resultKnown ? `Resultado: ${match.result}` : "Resultado por confirmar"}>
+                                {prediction ?? "—"}{resultKnown ? ` / ${match.result}` : ""}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      <div className="mt-3 text-xs font-medium text-slate-700">
+                        {progress.correctCount} acerto(s) em {progress.evaluatedCount} resultado(s) oficial(is)
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              {publicRound.participants.length === 0 && (
+                <Card><CardContent className="py-10 text-center text-slate-600">Ainda não há participantes ativos.</CardContent></Card>
+              )}
             </div>
           ) : null}
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
