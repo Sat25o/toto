@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { Clock, Trophy, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
+import { getPredictionProgress } from "@/lib/predictionProgress";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -81,6 +83,11 @@ export default function BettorDashboard() {
   const isDeadlinePassed = roundData?.round && new Date() > new Date(roundData.round.bettingDeadline);
   const formatDeadline = (deadline: Date | string) =>
     new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(deadline));
+  const predictionProgress = getPredictionProgress(
+    predictions?.map(entry => entry.match.id) ?? [],
+    optimisticPredictions,
+    roundData?.matches.length ?? 6,
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -211,6 +218,18 @@ export default function BettorDashboard() {
                   <div className="flex items-center gap-2 text-sm text-slate-600">
                     <Clock className="w-4 h-4" />
                     Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
+                  </div>
+                  <div className="mt-4 rounded-lg border border-blue-100 bg-white/70 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
+                      <Badge className={predictionProgress.completed === predictionProgress.total ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
+                        {predictionProgress.completed}/{predictionProgress.total}
+                      </Badge>
+                    </div>
+                    <Progress value={predictionProgress.percentage} className="h-2" />
+                    <p className="mt-2 text-xs text-slate-600">
+                      {predictionProgress.completed === predictionProgress.total ? "Palpites completos." : `Faltam ${predictionProgress.total - predictionProgress.completed} palpite(s) para concluir a jornada.`}
+                    </p>
                   </div>
                 </CardContent>
               </Card>

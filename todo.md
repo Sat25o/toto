@@ -156,3 +156,11 @@
 - [x] Fechar uma jornada de resultados ao tocar novamente no respetivo cartão
 - [x] Reutilizar a lógica de alternância já validada no Dashboard
 - [x] Validar a seleção de resultados em telemóvel após a alteração
+
+## Gestão de Resultados e Participação
+
+- [x] Permitir alterar um resultado oficial antes de fechar a jornada
+- [x] Bloquear alterações de resultado depois de calcular os vencedores
+- [x] Mostrar o progresso individual de palpites de 0/6 a 6/6 no Dashboard
+- [x] Mostrar ao administrador quem completou os seis palpites e quem ainda falta apostar
+- [x] Testar correção de resultados, progresso e estados de participação

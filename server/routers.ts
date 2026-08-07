@@ -190,6 +190,13 @@ export const appRouter = router({
           winners: await db.getRoundWinners(input.roundId),
         };
       }),
+    getParticipation: adminProcedure
+      .input(z.object({ roundId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const round = await db.getRound(input.roundId);
+        if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Jornada não encontrada" });
+        return db.getRoundParticipation(input.roundId);
+      }),
     create: adminProcedure
       .input(
         z.object({
@@ -232,8 +239,12 @@ export const appRouter = router({
     updateResult: adminProcedure
       .input(z.object({ matchId: z.number().int().positive(), result: z.enum(["1", "X", "2"]) }))
       .mutation(async ({ input }) => {
-        await db.updateMatchResult(input.matchId, input.result);
-        return { success: true };
+        try {
+          await db.updateMatchResult(input.matchId, input.result);
+          return { success: true };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar o resultado" });
+        }
       }),
   }),
 

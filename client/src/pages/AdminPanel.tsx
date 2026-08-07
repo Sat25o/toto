@@ -13,6 +13,7 @@ import { useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
+import { splitRoundParticipation } from "@/lib/roundParticipation";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
@@ -26,6 +27,10 @@ export default function AdminPanel() {
   const { data: roundData, isLoading: roundDataLoading, refetch: refetchRoundData } = trpc.rounds.getWithMatches.useQuery(
     { roundId: selectedRoundId || 0 },
     { enabled: selectedRoundId !== null }
+  );
+  const { data: participation } = trpc.rounds.getParticipation.useQuery(
+    { roundId: selectedRoundId || 0 },
+    { enabled: selectedRoundId !== null },
   );
 
   // Form states
@@ -60,8 +65,10 @@ export default function AdminPanel() {
   const updateResultMutation = trpc.matches.updateResult.useMutation({
     onSuccess: () => {
       toast.success("Resultado atualizado!");
+      void refetchRoundData();
     },
     onError: (error) => {
+      setResultForm({});
       toast.error(error.message || "Erro ao atualizar resultado");
     },
   });
@@ -146,6 +153,9 @@ export default function AdminPanel() {
     if (!selectedRoundId) return;
     calculateWinnerMutation.mutate({ roundId: selectedRoundId });
   };
+
+  const totalMatches = roundData?.matches.length ?? 6;
+  const { completed: completedParticipants, pending: pendingParticipants } = splitRoundParticipation(participation ?? [], totalMatches);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -398,6 +408,23 @@ export default function AdminPanel() {
                       </CardHeader>
                     </Card>
 
+                    <Card className="border-slate-200/70">
+                      <CardHeader>
+                        <CardTitle className="text-base text-slate-900">Estado dos palpites</CardTitle>
+                        <CardDescription>Participantes ativos: {participation?.length ?? 0}</CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+                          <p className="font-semibold text-emerald-900">Concluíram os 6/6 ({completedParticipants.length})</p>
+                          {completedParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-emerald-800">{completedParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/6)</span></p>)}</div> : <p className="mt-2 text-sm text-emerald-800">Ainda ninguém completou os seis palpites.</p>}
+                        </div>
+                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                          <p className="font-semibold text-amber-900">Faltam completar ({pendingParticipants.length})</p>
+                          {pendingParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-amber-800">{pendingParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/6)</span></p>)}</div> : <p className="mt-2 text-sm text-amber-800">Todos os participantes completaram a jornada.</p>}
+                        </div>
+                      </CardContent>
+                    </Card>
+
                     {/* Matches Results */}
                     <div className="space-y-3">
                       {roundData.matches.map((match) => (
@@ -410,24 +437,28 @@ export default function AdminPanel() {
                               <p className="text-sm text-slate-600">Jogo {match.matchOrder}</p>
                             </div>
 
-                            {match.result ? (
+                            {roundData.round.isSettled && match.result ? (
                               <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                                 <p className="text-green-800 font-semibold">
                                   Resultado: <span className="text-lg">{match.result}</span>
                                 </p>
                               </div>
                             ) : (
-                              <div className="flex gap-2">
-                                {["1", "X", "2"].map((result) => (
-                                  <button
-                                    key={result}
-                                    onClick={() => handleUpdateResult(match.id, result as "1" | "X" | "2")}
-                                    disabled={updateResultMutation.isPending}
-                                    className="flex-1 py-2 px-4 rounded-lg font-semibold border-2 border-slate-300 hover:border-blue-400 hover:bg-blue-50 transition-all"
-                                  >
-                                    {result}
-                                  </button>
-                                ))}
+                              <div>
+                                <p className="mb-2 text-sm font-medium text-slate-700">{match.result ? `Resultado atual: ${match.result}. Toque numa opção para corrigir.` : "Selecione o resultado oficial."}</p>
+                                <div className="flex gap-2">
+                                  {["1", "X", "2"].map((result) => {
+                                    const selectedResult = resultForm[match.id] ?? match.result;
+                                    return <button
+                                      key={result}
+                                      onClick={() => handleUpdateResult(match.id, result as "1" | "X" | "2")}
+                                      disabled={updateResultMutation.isPending}
+                                      className={`flex-1 rounded-lg border-2 px-4 py-2 font-semibold transition-all ${selectedResult === result ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 hover:border-blue-400 hover:bg-blue-50"}`}
+                                    >
+                                      {result}
+                                    </button>;
+                                  })}
+                                </div>
                               </div>
                             )}
                           </CardContent>

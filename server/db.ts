@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
 import { calculateEqualPrizeShare } from "./settlement";
 import { assertUserCanBeDeleted } from "./userDeletion";
+import { assertRoundResultsAreEditable } from "./resultEditing";
 import {
   emailNotifications,
   invitations,
@@ -329,6 +330,16 @@ export async function getMatchesByRound(roundId: number) {
 export async function updateMatchResult(matchId: number, result: "1" | "X" | "2") {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
+
+  const matchRound = await db
+    .select({ isSettled: rounds.isSettled })
+    .from(matches)
+    .innerJoin(rounds, eq(matches.roundId, rounds.id))
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  if (!matchRound[0]) throw new Error("Jogo não encontrado");
+  assertRoundResultsAreEditable(matchRound[0].isSettled);
+
   return db.update(matches).set({ result }).where(eq(matches.id, matchId));
 }
 
@@ -393,6 +404,25 @@ export async function getPredictionsByRound(roundId: number) {
     .innerJoin(matches, eq(predictions.matchId, matches.id))
     .innerJoin(users, eq(predictions.userId, users.id))
     .where(eq(matches.roundId, roundId));
+}
+
+export async function getRoundParticipation(roundId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({
+      userId: users.id,
+      userName: users.name,
+      userEmail: users.email,
+      predictionCount: sql<number>`COUNT(${matches.id})`,
+    })
+    .from(users)
+    .leftJoin(predictions, eq(predictions.userId, users.id))
+    .leftJoin(matches, and(eq(matches.id, predictions.matchId), eq(matches.roundId, roundId)))
+    .where(eq(users.isActive, true))
+    .groupBy(users.id)
+    .orderBy(users.name);
 }
 
 export async function getPublicRoundProgress(roundId: number) {
