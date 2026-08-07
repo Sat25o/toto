@@ -67,7 +67,7 @@ export default function Home() {
           >
             Começar Agora
           </Button>
-          <div className="mt-4 flex justify-center"><InstallAppButton /></div>
+          <div className="mt-4 flex flex-col items-center gap-2"><InstallAppButton /><p className="text-xs text-slate-500">Instalação segura pelo navegador — não descarrega ficheiros APK.</p></div>
         </div>
 
         {/* Features Grid */}

@@ -208,3 +208,11 @@
 - [x] Mostrar o próprio apostador em primeiro lugar
 - [x] Manter os restantes apostadores numa ordem consistente
 - [x] Testar a ordenação para utilizadores diferentes
+
+## Instalação Segura e Consulta Pública
+
+- [x] Explicar que a instalação é uma app web e não requer APK
+- [x] Destacar o cartão Os meus palpites nas Apostas Públicas
+- [x] Adicionar pesquisa por nome de apostador
+- [x] Adicionar filtros Em jogo, Eliminado e Vencedor
+- [x] Testar filtros e experiência de telemóvel

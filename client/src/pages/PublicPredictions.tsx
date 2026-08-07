@@ -3,11 +3,13 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { getParticipantProgress } from "@/lib/publicProgress";
 import { putCurrentParticipantFirst } from "@/lib/participantOrder";
+import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, CircleDotDashed, Trophy, XCircle } from "lucide-react";
+import { CheckCircle2, CircleDotDashed, Search, Trophy, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const statusAppearance = {
@@ -42,6 +44,8 @@ export default function PublicPredictions() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | PublicParticipantStatus>("all");
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
@@ -63,6 +67,10 @@ export default function PublicPredictions() {
   const orderedParticipants = publicRound
     ? putCurrentParticipantFirst(publicRound.participants, user.id)
     : [];
+  const participantCards = publicRound
+    ? orderedParticipants.map(participant => ({ participant, progress: getParticipantProgress(publicRound.matches, participant.predictions) }))
+    : [];
+  const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
@@ -139,19 +147,28 @@ export default function PublicPredictions() {
                     <span className="font-semibold text-emerald-800">verde</span> = acertou os seis jogos.
                   </CardDescription>
                 </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Procurar apostador" className="pl-9" /></div>
+                  <div className="flex flex-wrap gap-2" aria-label="Filtrar apostadores por estado">
+                    {(["all", "eligible", "eliminated", "winner"] as const).map(filter => {
+                      const labels = { all: "Todos", eligible: "Em jogo", eliminated: "Eliminado", winner: "Vencedor" };
+                      return <Button key={filter} size="sm" variant={statusFilter === filter ? "default" : "outline"} onClick={() => setStatusFilter(filter)} title={`Mostrar ${labels[filter].toLocaleLowerCase()}`}>{labels[filter]}</Button>;
+                    })}
+                  </div>
+                </CardContent>
               </Card>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {orderedParticipants.map(participant => {
-                  const progress = getParticipantProgress(publicRound.matches, participant.predictions);
+                {visibleParticipantCards.map(({ participant, progress }) => {
                   const appearance = statusAppearance[progress.status];
                   const StatusIcon = appearance.icon;
+                  const isCurrentParticipant = participant.id === user.id;
 
                   return (
-                    <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card}`}>
+                    <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card} ${isCurrentParticipant ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h2 className="truncate font-bold text-slate-900">{participant.name}</h2>
+                          <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold text-slate-900">{participant.name}</h2>{isCurrentParticipant && <Badge className="bg-blue-600 text-white" title="Este é o seu cartão de palpites">Os meus palpites</Badge>}</div>
                           <p className="mt-1 text-xs text-slate-600">{appearance.description}</p>
                         </div>
                         <Badge title={appearance.description} className={`shrink-0 ${appearance.badge}`}>
@@ -193,6 +210,9 @@ export default function PublicPredictions() {
 
               {publicRound.participants.length === 0 && (
                 <Card><CardContent className="py-10 text-center text-slate-600">Ainda não há participantes ativos.</CardContent></Card>
+              )}
+              {publicRound.participants.length > 0 && visibleParticipantCards.length === 0 && (
+                <Card><CardContent className="py-10 text-center text-slate-600">Nenhum apostador encontrado com estes filtros.</CardContent></Card>
               )}
             </div>
           ) : null}
