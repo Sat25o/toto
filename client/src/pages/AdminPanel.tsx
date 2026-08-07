@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus, Settings } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
@@ -147,19 +147,19 @@ export default function AdminPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Painel de Administração</h1>
-            <p className="text-slate-600">Gerencie jornadas, resultados e vencedores</p>
+            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Painel de Administração</h1>
+            <p className="text-sm text-slate-600 sm:text-base">Gerencie jornadas, resultados e vencedores</p>
           </div>
-          <div className="flex gap-2">
+          <nav aria-label="Ações de administração" className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
             <Button
               variant="outline"
               onClick={() => setLocation("/dashboard")}
-              className="border-slate-300"
+              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
               title="Submeter os seus próprios palpites como participante"
             >
               Os meus palpites
@@ -167,7 +167,7 @@ export default function AdminPanel() {
             <Button
               variant="outline"
               onClick={() => setLocation("/users")}
-              className="border-slate-300"
+              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
               title="Gerir apostadores, estados de conta e convites"
             >
               Utilizadores
@@ -175,7 +175,7 @@ export default function AdminPanel() {
             <Button
               variant="outline"
               onClick={() => setLocation("/public-predictions")}
-              className="border-slate-300"
+              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
               title="Consultar as apostas publicadas depois do fim do prazo"
             >
               Apostas públicas
@@ -183,12 +183,11 @@ export default function AdminPanel() {
             <Button
               variant="outline"
               onClick={() => setLocation("/history")}
-              className="border-slate-300"
+              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
             >
               Histórico
             </Button>
-            <Settings className="w-6 h-6 text-slate-400" />
-          </div>
+          </nav>
         </div>
       </div>
 

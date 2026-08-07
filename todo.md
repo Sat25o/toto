@@ -120,3 +120,9 @@
 - [x] Verificar página inicial, login e registo em ecrã de 375 px
 - [x] Usar cartões responsivos de uma coluna no telemóvel e grelha progressiva nas Apostas Públicas
 - [x] Manter botões, áreas de toque e textos de prazo legíveis em ecrã estreito
+
+## Menu Administrativo Mobile
+
+- [x] Reorganizar ações administrativas em grelha de dois botões por linha no telemóvel
+- [x] Remover corte horizontal e adaptar título e subtítulo para ecrãs estreitos
+- [x] Validar o menu administrativo a 375 px por inspeção responsiva e compilação sem erros
