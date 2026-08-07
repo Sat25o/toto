@@ -6,8 +6,10 @@ import { calculateEqualPrizeShare } from "./settlement";
 import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
 import {
+  adminMessages,
   emailNotifications,
   invitations,
+  leagueRules,
   matches,
   predictions,
   rounds,
@@ -561,4 +563,84 @@ export async function markEmailAsSent(notificationId: number) {
     .update(emailNotifications)
     .set({ sent: "true", sentAt: new Date() })
     .where(eq(emailNotifications.id, notificationId));
+}
+
+// ============ LEAGUE RULES =========
+
+export async function listLeagueRules(includeInactive = false) {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(leagueRules);
+  return includeInactive
+    ? query.orderBy(leagueRules.displayOrder)
+    : query.where(eq(leagueRules.isActive, true)).orderBy(leagueRules.displayOrder);
+}
+
+export async function createLeagueRule(content: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  const existingRules = await listLeagueRules(true);
+  const displayOrder = existingRules.reduce((highestOrder, rule) => Math.max(highestOrder, rule.displayOrder), 0) + 1;
+  await db.insert(leagueRules).values({ content: content.trim(), displayOrder });
+}
+
+export async function updateLeagueRule(ruleId: number, data: { content: string; isActive: boolean }) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  await db.update(leagueRules).set({ content: data.content.trim(), isActive: data.isActive }).where(eq(leagueRules.id, ruleId));
+}
+
+export async function deleteLeagueRule(ruleId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  await db.delete(leagueRules).where(eq(leagueRules.id, ruleId));
+}
+
+// ============ ADMIN MESSAGES =========
+
+export async function listAdminMessages(includeInactive = false) {
+  const db = await getDb();
+  if (!db) return [];
+  const query = db.select().from(adminMessages);
+  return includeInactive
+    ? query.orderBy(desc(adminMessages.isPinned), desc(adminMessages.createdAt))
+    : query.where(eq(adminMessages.isActive, true)).orderBy(desc(adminMessages.isPinned), desc(adminMessages.createdAt));
+}
+
+export async function createAdminMessage(data: {
+  title: string;
+  content: string;
+  isPinned: boolean;
+  createdByUserId: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  await db.insert(adminMessages).values({
+    title: data.title.trim(),
+    content: data.content.trim(),
+    isPinned: data.isPinned,
+    createdByUserId: data.createdByUserId,
+  });
+}
+
+export async function updateAdminMessage(messageId: number, data: {
+  title: string;
+  content: string;
+  isPinned: boolean;
+  isActive: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  await db.update(adminMessages).set({
+    title: data.title.trim(),
+    content: data.content.trim(),
+    isPinned: data.isPinned,
+    isActive: data.isActive,
+  }).where(eq(adminMessages.id, messageId));
+}
+
+export async function deleteAdminMessage(messageId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  await db.delete(adminMessages).where(eq(adminMessages.id, messageId));
 }

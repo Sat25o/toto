@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { Clock, Trophy, AlertCircle } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
+import { getDashboardMessages } from "@/lib/dashboardMessages";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -35,6 +36,7 @@ export default function BettorDashboard() {
     { roundId: selectedRoundId || 0 },
     { enabled: selectedRoundId !== null }
   );
+  const { data: adminMessages } = trpc.messages.list.useQuery(undefined, { enabled: Boolean(user) });
 
   // Submit prediction mutation
   const submitPredictionMutation = trpc.predictions.submit.useMutation({
@@ -88,6 +90,7 @@ export default function BettorDashboard() {
     optimisticPredictions,
     roundData?.matches.length ?? 6,
   );
+  const dashboardMessages = getDashboardMessages(adminMessages ?? []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -118,6 +121,14 @@ export default function BettorDashboard() {
             </Button>
             <Button
               variant="outline"
+              onClick={() => setLocation("/rules")}
+              className="border-slate-300"
+              title="Consultar regras e avisos da Liga Toto Talho"
+            >
+              <BookOpen className="mr-2 h-4 w-4" /> Regras
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setLocation("/public-predictions")}
               className="border-slate-300"
               title="Consultar as apostas de todos os participantes após o fecho do prazo"
@@ -134,6 +145,19 @@ export default function BettorDashboard() {
           </div>
         </div>
       </div>
+
+      {dashboardMessages.length > 0 && (
+        <section className="mx-auto mb-6 max-w-6xl">
+          <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-amber-600" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {dashboardMessages.map(message => (
+              <Card key={message.id} className={message.isPinned ? "border-amber-200 bg-amber-50" : "border-slate-200/70"}>
+                <CardContent className="pt-4"><div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p></CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Rounds List */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">

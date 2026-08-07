@@ -127,3 +127,29 @@ export const emailNotifications = mysqlTable("emailNotifications", {
 
 export type EmailNotification = typeof emailNotifications.$inferSelect;
 export type InsertEmailNotification = typeof emailNotifications.$inferInsert;
+
+/** Regras da liga, apresentadas a todos os participantes e geridas pelo administrador. */
+export const leagueRules = mysqlTable("leagueRules", {
+  id: int("id").autoincrement().primaryKey(),
+  content: text("content").notNull(),
+  displayOrder: int("displayOrder").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LeagueRule = typeof leagueRules.$inferSelect;
+
+/** Avisos publicados pelo administrador que aparecem no Dashboard dos apostadores. */
+export const adminMessages = mysqlTable("adminMessages", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 180 }).notNull(),
+  content: text("content").notNull(),
+  isPinned: boolean("isPinned").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AdminMessage = typeof adminMessages.$inferSelect;

@@ -164,3 +164,12 @@
 - [x] Mostrar o progresso individual de palpites de 0/6 a 6/6 no Dashboard
 - [x] Mostrar ao administrador quem completou os seis palpites e quem ainda falta apostar
 - [x] Testar correção de resultados, progresso e estados de participação
+
+## Regras e Mensagens Administrativas
+
+- [x] Criar regras editáveis e visíveis a todos os apostadores
+- [x] Guardar as regras iniciais da Liga Toto Talho
+- [x] Criar mensagens administrativas publicadas no Dashboard
+- [x] Permitir ao administrador criar, editar, fixar e remover mensagens
+- [x] Adicionar acessos a Regras e Mensagens nas áreas de administração e apostador
+- [x] Testar a gestão e a apresentação de regras e avisos

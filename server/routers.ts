@@ -177,6 +177,52 @@ export const appRouter = router({
       }),
   }),
 
+  rules: router({
+    list: protectedProcedure.query(() => db.listLeagueRules()),
+    listAdmin: adminProcedure.query(() => db.listLeagueRules(true)),
+    create: adminProcedure
+      .input(z.object({ content: z.string().trim().min(3).max(2_000) }))
+      .mutation(async ({ input }) => {
+        await db.createLeagueRule(input.content);
+        return { success: true };
+      }),
+    update: adminProcedure
+      .input(z.object({ id: z.number().int().positive(), content: z.string().trim().min(3).max(2_000), isActive: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.updateLeagueRule(input.id, { content: input.content, isActive: input.isActive });
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        await db.deleteLeagueRule(input.id);
+        return { success: true };
+      }),
+  }),
+
+  messages: router({
+    list: protectedProcedure.query(() => db.listAdminMessages()),
+    listAdmin: adminProcedure.query(() => db.listAdminMessages(true)),
+    create: adminProcedure
+      .input(z.object({ title: z.string().trim().min(3).max(180), content: z.string().trim().min(3).max(5_000), isPinned: z.boolean().default(false) }))
+      .mutation(async ({ input, ctx }) => {
+        await db.createAdminMessage({ ...input, createdByUserId: ctx.user.id });
+        return { success: true };
+      }),
+    update: adminProcedure
+      .input(z.object({ id: z.number().int().positive(), title: z.string().trim().min(3).max(180), content: z.string().trim().min(3).max(5_000), isPinned: z.boolean(), isActive: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await db.updateAdminMessage(input.id, input);
+        return { success: true };
+      }),
+    delete: adminProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        await db.deleteAdminMessage(input.id);
+        return { success: true };
+      }),
+  }),
+
   rounds: router({
     list: protectedProcedure.query(async () => db.getAllRounds()),
     getWithMatches: protectedProcedure
