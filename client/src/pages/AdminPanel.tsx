@@ -22,7 +22,7 @@ export default function AdminPanel() {
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
 
   // Fetch current round with matches
-  const { data: roundData, isLoading: roundDataLoading } = trpc.rounds.getWithMatches.useQuery(
+  const { data: roundData, isLoading: roundDataLoading, refetch: refetchRoundData } = trpc.rounds.getWithMatches.useQuery(
     { roundId: selectedRoundId || 0 },
     { enabled: selectedRoundId !== null }
   );
@@ -31,6 +31,7 @@ export default function AdminPanel() {
   const [newRoundForm, setNewRoundForm] = useState({
     roundNumber: "",
     prize: "",
+    prizeAmount: "",
     deadline: "",
     matches: createEmptyMatches(),
   });
@@ -44,6 +45,7 @@ export default function AdminPanel() {
       setNewRoundForm({
         roundNumber: "",
         prize: "",
+        prizeAmount: "",
         deadline: "",
         matches: createEmptyMatches(),
       });
@@ -66,11 +68,13 @@ export default function AdminPanel() {
   // Calculate winner mutation
   const calculateWinnerMutation = trpc.winner.calculate.useMutation({
     onSuccess: (data) => {
-      toast.success(
-        data.winnerId
-          ? `Vencedor identificado! (ID: ${data.winnerId})`
-          : "Nenhum vencedor nesta jornada"
-      );
+      if (data.winnerCount === 0) {
+        toast.success("Jornada fechada sem vencedores com seis acertos.");
+      } else {
+        const shareMessage = data.prizeShare === null ? "" : ` €${data.prizeShare.toFixed(2)} para cada vencedor.`;
+        toast.success(`${data.winnerCount} vencedor(es) identificado(s).${shareMessage}`);
+      }
+      void refetchRoundData();
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao calcular vencedor");
@@ -92,6 +96,7 @@ export default function AdminPanel() {
     try {
       const roundNumber = parseInt(newRoundForm.roundNumber);
       const deadline = new Date(newRoundForm.deadline);
+      const prizeAmount = newRoundForm.prizeAmount === "" ? undefined : Number(newRoundForm.prizeAmount);
 
       if (isNaN(roundNumber) || roundNumber < 1 || roundNumber > 34) {
         toast.error("Número da jornada deve estar entre 1 e 34");
@@ -100,6 +105,11 @@ export default function AdminPanel() {
 
       if (deadline <= new Date()) {
         toast.error("Prazo deve ser no futuro");
+        return;
+      }
+
+      if (prizeAmount !== undefined && (!Number.isFinite(prizeAmount) || prizeAmount < 0)) {
+        toast.error("O valor do prémio deve ser um número positivo ou zero");
         return;
       }
 
@@ -117,6 +127,7 @@ export default function AdminPanel() {
       createRoundMutation.mutate({
         roundNumber,
         prize: newRoundForm.prize || undefined,
+        prizeAmount,
         bettingDeadline: deadline,
         matches,
       });
@@ -218,20 +229,37 @@ export default function AdminPanel() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="prize" className="text-slate-700">
-                        Prémio (Informativo)
+                      <Label htmlFor="prizeAmount" className="text-slate-700">
+                        Valor do Prémio (€)
                       </Label>
                       <Input
-                        id="prize"
-                        type="text"
-                        placeholder="ex: €100 em vouchers"
-                        value={newRoundForm.prize}
+                        id="prizeAmount"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="ex: 100"
+                        value={newRoundForm.prizeAmount}
                         onChange={(e) =>
-                          setNewRoundForm({ ...newRoundForm, prize: e.target.value })
+                          setNewRoundForm({ ...newRoundForm, prizeAmount: e.target.value })
                         }
                         className="mt-1 border-slate-300"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="prize" className="text-slate-700">
+                      Descrição do Prémio (opcional)
+                    </Label>
+                    <Input
+                      id="prize"
+                      type="text"
+                      placeholder="ex: voucher de restaurante"
+                      value={newRoundForm.prize}
+                      onChange={(e) => setNewRoundForm({ ...newRoundForm, prize: e.target.value })}
+                      className="mt-1 border-slate-300"
+                    />
+                    <p className="mt-1 text-xs text-slate-500">Se houver vários vencedores, o valor indicado é dividido igualmente.</p>
                   </div>
 
                   {/* Deadline */}
@@ -335,7 +363,7 @@ export default function AdminPanel() {
                           }`}
                         >
                           <div className="font-semibold text-slate-900">Jornada {round.roundNumber}</div>
-                          {round.winnerId && (
+                          {round.isSettled && (
                             <div className="text-xs text-green-600 font-semibold mt-1">
                               ✓ Finalizada
                             </div>
@@ -408,7 +436,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* Calculate Winner Button */}
-                    {roundData.matches.every(m => m.result) && !roundData.round.winnerId && (
+                    {roundData.matches.every(m => m.result) && !roundData.round.isSettled && (
                       <Button
                         onClick={handleCalculateWinner}
                         disabled={calculateWinnerMutation.isPending}
@@ -418,12 +446,20 @@ export default function AdminPanel() {
                       </Button>
                     )}
 
-                    {roundData.round.winnerId && (
+                    {roundData.round.isSettled && (
                       <Card className="border-green-200 bg-green-50">
                         <CardContent className="pt-4">
-                          <p className="text-green-800 font-semibold">
-                            ✓ Vencedor identificado (ID: {roundData.round.winnerId})
-                          </p>
+                          {roundData.winners.length > 0 ? (
+                            <div className="space-y-1 text-green-800">
+                              <p className="font-semibold">✓ {roundData.winners.length} vencedor(es) com seis acertos</p>
+                              <p className="text-sm">{roundData.winners.map(winner => winner.userName).join(", ")}</p>
+                              {roundData.winners[0]?.prizeShare && (
+                                <p className="text-sm font-semibold">Prémio por vencedor: €{Number(roundData.winners[0].prizeShare).toFixed(2)}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <p className="font-semibold text-green-800">Jornada fechada sem vencedores.</p>
+                          )}
                         </CardContent>
                       </Card>
                     )}

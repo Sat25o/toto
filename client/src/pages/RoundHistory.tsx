@@ -32,7 +32,7 @@ export default function RoundHistory() {
   // Fetch user's predictions for the round
   const { data: userPredictions } = trpc.predictions.getByRound.useQuery(
     { roundId: selectedRoundId || 0 },
-    { enabled: selectedRoundId !== null && user?.role !== "admin" }
+    { enabled: selectedRoundId !== null }
   );
 
   if (authLoading) {
@@ -44,7 +44,7 @@ export default function RoundHistory() {
     return null;
   }
 
-  const completedRounds = rounds?.filter(r => r.winnerId !== null) || [];
+  const completedRounds = rounds?.filter(r => r.isSettled) || [];
 
   const getPredictionStatus = (prediction: string | undefined, result: string | null) => {
     if (!result) return "pending";
@@ -128,10 +128,10 @@ export default function RoundHistory() {
                     <div className="text-sm text-slate-600">
                       {new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}
                     </div>
-                    {round.winnerId && (
+                    {round.isSettled && (
                       <Badge className="mt-2 bg-yellow-100 text-yellow-800 text-xs">
                         <Trophy className="w-3 h-3 mr-1" />
-                        Vencedor
+                        Finalizada
                       </Badge>
                     )}
                   </button>
@@ -171,7 +171,7 @@ export default function RoundHistory() {
                         </CardDescription>
                       )}
                     </div>
-                    {roundData.round.winnerId && (
+                    {roundData.round.isSettled && (
                       <Badge className="bg-yellow-100 text-yellow-800">
                         <Trophy className="w-4 h-4 mr-1" />
                         Finalizada
@@ -180,6 +180,22 @@ export default function RoundHistory() {
                   </div>
                 </CardHeader>
               </Card>
+
+              {roundData.round.isSettled && (
+                <Card className="border-yellow-200 bg-yellow-50">
+                  <CardContent className="pt-4">
+                    {roundData.winners.length > 0 ? (
+                      <div className="space-y-1">
+                        <p className="flex items-center gap-2 font-semibold text-yellow-900"><Trophy className="h-4 w-4" /> Vencedores: {roundData.winners.map(winner => winner.userName).join(", ")}</p>
+                        <p className="text-sm text-yellow-800">{roundData.winners.length} participante(s) acertaram os seis jogos.</p>
+                        {roundData.winners[0]?.prizeShare && <p className="text-sm font-semibold text-yellow-900">Parte do prémio por vencedor: €{Number(roundData.winners[0].prizeShare).toFixed(2)}</p>}
+                      </div>
+                    ) : (
+                      <p className="font-semibold text-yellow-900">Não houve vencedores nesta jornada.</p>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Matches */}
               <div className="space-y-3">
@@ -202,7 +218,7 @@ export default function RoundHistory() {
                       </div>
 
                       {/* User's Prediction */}
-                      {user.role !== "admin" && (
+                      {userPredictions && (
                         <div className="mt-3 pt-3 border-t border-slate-200">
                           <p className="text-sm text-slate-600 mb-2">Seu palpite:</p>
                           {userPredictions && userPredictions.length > 0 ? (

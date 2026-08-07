@@ -184,13 +184,18 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const round = await db.getRound(input.roundId);
         if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Jornada não encontrada" });
-        return { round, matches: await db.getMatchesByRound(input.roundId) };
+        return {
+          round,
+          matches: await db.getMatchesByRound(input.roundId),
+          winners: await db.getRoundWinners(input.roundId),
+        };
       }),
     create: adminProcedure
       .input(
         z.object({
           roundNumber: z.number().int().min(1).max(34),
           prize: z.string().max(500).optional(),
+          prizeAmount: z.number().nonnegative().max(99_999_999).optional(),
           bettingDeadline: z.date(),
           matches: z
             .array(
@@ -213,6 +218,7 @@ export const appRouter = router({
         await db.createRound({
           roundNumber: input.roundNumber,
           prize: input.prize,
+          prizeAmount: input.prizeAmount,
           bettingDeadline: input.bettingDeadline,
         });
         const round = await db.getRoundByNumber(input.roundNumber);
@@ -269,8 +275,8 @@ export const appRouter = router({
       .input(z.object({ roundId: z.number().int().positive() }))
       .mutation(async ({ input }) => {
         try {
-          const winnerId = await db.calculateRoundWinner(input.roundId);
-          return { success: true, winnerId };
+          const settlement = await db.calculateRoundWinner(input.roundId);
+          return { success: true, ...settlement };
         } catch (error) {
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível calcular o vencedor" });
         }

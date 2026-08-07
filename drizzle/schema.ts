@@ -1,4 +1,4 @@
-import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -49,14 +49,33 @@ export const rounds = mysqlTable("rounds", {
   id: int("id").autoincrement().primaryKey(),
   roundNumber: int("roundNumber").notNull().unique(),
   prize: text("prize"), // Informational prize description
+  prizeAmount: decimal("prizeAmount", { precision: 10, scale: 2 }), // Informational monetary value for equal split
   bettingDeadline: timestamp("bettingDeadline").notNull(),
-  winnerId: int("winnerId"), // User ID of the round winner (null if no winner)
+  winnerId: int("winnerId"), // Legacy first winner ID for backwards compatibility
+  isSettled: boolean("isSettled").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Round = typeof rounds.$inferSelect;
 export type InsertRound = typeof rounds.$inferInsert;
+
+/**
+ * A jornada can have multiple winners. Each winner receives the same recorded share.
+ */
+export const roundWinners = mysqlTable(
+  "roundWinners",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    roundId: int("roundId").notNull(),
+    userId: int("userId").notNull(),
+    prizeShare: decimal("prizeShare", { precision: 10, scale: 2 }),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [uniqueIndex("roundWinners_round_user_unique").on(table.roundId, table.userId)],
+);
+
+export type RoundWinner = typeof roundWinners.$inferSelect;
 
 /**
  * Matches (Jogos) - 6 matches per round

@@ -85,3 +85,10 @@
 - [x] Permitir que administradores submetam palpites e participem nas 34 vagas
 - [x] Adicionar acesso aos palpites pessoais a partir do painel administrativo
 - [x] Validar criação de jogos e participação administrativa com testes
+
+## Prémio Dividido por Vencedores
+
+- [x] Registar valor informativo do prémio e vários vencedores por jornada
+- [x] Calcular e guardar uma parte igual do prémio para cada apostador com seis acertos
+- [x] Mostrar vencedores, divisão e jornadas sem vencedor no painel e histórico
+- [x] Testar o cenário de dois ou mais vencedores

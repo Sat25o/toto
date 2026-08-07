@@ -2,12 +2,14 @@ import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
+import { calculateEqualPrizeShare } from "./settlement";
 import {
   emailNotifications,
   invitations,
   matches,
   predictions,
   rounds,
+  roundWinners,
   users,
 } from "../drizzle/schema";
 
@@ -250,11 +252,17 @@ export async function registerUserFromInvitation(data: {
 export async function createRound(data: {
   roundNumber: number;
   prize?: string;
+  prizeAmount?: number;
   bettingDeadline: Date;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
-  return db.insert(rounds).values(data);
+  return db.insert(rounds).values({
+    roundNumber: data.roundNumber,
+    prize: data.prize,
+    prizeAmount: data.prizeAmount?.toFixed(2),
+    bettingDeadline: data.bettingDeadline,
+  });
 }
 
 export async function getRound(roundId: number) {
@@ -367,6 +375,22 @@ export async function getPredictionsByRound(roundId: number) {
     .where(eq(matches.roundId, roundId));
 }
 
+export async function getRoundWinners(roundId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select({
+      userId: roundWinners.userId,
+      userName: users.name,
+      userEmail: users.email,
+      prizeShare: roundWinners.prizeShare,
+    })
+    .from(roundWinners)
+    .innerJoin(users, eq(roundWinners.userId, users.id))
+    .where(eq(roundWinners.roundId, roundId))
+    .orderBy(users.name);
+}
+
 // ============ STANDINGS AND WINNERS ============
 
 export async function getStandings() {
@@ -390,6 +414,8 @@ export async function calculateRoundWinner(roundId: number) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
 
+  const round = await getRound(roundId);
+  if (!round) throw new Error("Jornada não encontrada");
   const roundMatches = await db.select().from(matches).where(eq(matches.roundId, roundId));
   if (roundMatches.length !== 6 || roundMatches.some(match => match.result === null)) {
     throw new Error("Introduza os resultados dos seis jogos antes de calcular o vencedor");
@@ -410,9 +436,30 @@ export async function calculateRoundWinner(roundId: number) {
     );
   }
 
-  const winnerId = Array.from(correctByUser.entries()).find(([, correct]) => correct === 6)?.[0] ?? null;
-  await db.update(rounds).set({ winnerId }).where(eq(rounds.id, roundId));
-  return winnerId;
+  const winnerIds = Array.from(correctByUser.entries())
+    .filter(([, correct]) => correct === 6)
+    .map(([userId]) => userId);
+  const prizeAmount = round.prizeAmount === null ? null : Number(round.prizeAmount);
+  const prizeShare = calculateEqualPrizeShare(prizeAmount, winnerIds.length);
+
+  await db.transaction(async tx => {
+    await tx.delete(roundWinners).where(eq(roundWinners.roundId, roundId));
+    if (winnerIds.length > 0) {
+      await tx.insert(roundWinners).values(
+        winnerIds.map(userId => ({
+          roundId,
+          userId,
+          prizeShare: prizeShare?.toFixed(2),
+        })),
+      );
+    }
+    await tx
+      .update(rounds)
+      .set({ winnerId: winnerIds[0] ?? null, isSettled: true })
+      .where(eq(rounds.id, roundId));
+  });
+
+  return { winnerIds, winnerCount: winnerIds.length, prizeAmount, prizeShare };
 }
 
 // ============ EMAIL NOTIFICATIONS ============
