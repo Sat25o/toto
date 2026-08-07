@@ -153,3 +153,21 @@ export const adminMessages = mysqlTable("adminMessages", {
 });
 
 export type AdminMessage = typeof adminMessages.$inferSelect;
+
+/** Subscrições de browser autorizadas pelos participantes para receber notificações push. */
+export const pushSubscriptions = mysqlTable(
+  "pushSubscriptions",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    userId: int("userId").notNull(),
+    endpoint: text("endpoint").notNull(),
+    endpointHash: varchar("endpointHash", { length: 64 }).notNull(),
+    p256dh: varchar("p256dh", { length: 255 }).notNull(),
+    auth: varchar("auth", { length: 255 }).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [uniqueIndex("pushSubscriptions_endpoint_hash_unique").on(table.endpointHash)],
+);
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;

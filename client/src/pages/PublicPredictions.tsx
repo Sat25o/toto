@@ -2,6 +2,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { getParticipantProgress } from "@/lib/publicProgress";
+import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +60,9 @@ export default function PublicPredictions() {
   if (!user) return null;
 
   const closedRounds = rounds?.filter(round => new Date(round.bettingDeadline) < new Date()) || [];
+  const orderedParticipants = publicRound
+    ? putCurrentParticipantFirst(publicRound.participants, user.id)
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
@@ -138,7 +142,7 @@ export default function PublicPredictions() {
               </Card>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {publicRound.participants.map(participant => {
+                {orderedParticipants.map(participant => {
                   const progress = getParticipantProgress(publicRound.matches, participant.predictions);
                   const appearance = statusAppearance[progress.status];
                   const StatusIcon = appearance.icon;

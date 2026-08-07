@@ -194,3 +194,17 @@
 - [x] Atualizar o service worker sem reutilizar ficheiros antigos
 - [x] Permitir recuperar a app limpando cache e recarregando em caso de erro
 - [x] Testar a atualização segura após nova versão publicada
+
+## Notificações Push
+
+- [ ] Registar subscrições push e preferências de notificação por participante
+- [ ] Adicionar botão para ativar ou desativar notificações no Dashboard
+- [ ] Enviar push ao criar jornada, publicar aviso e apurar vencedores
+- [ ] Criar tratamento de subscrições inválidas e controlo de autorização
+- [ ] Testar a entrega de notificações e os três eventos automáticos
+
+## Ordem Pessoal nas Apostas Públicas
+
+- [x] Mostrar o próprio apostador em primeiro lugar
+- [x] Manter os restantes apostadores numa ordem consistente
+- [x] Testar a ordenação para utilizadores diferentes
