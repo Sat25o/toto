@@ -7,6 +7,7 @@ import { sdk } from "./_core/sdk";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import * as db from "./db";
+import { buildInvitationUrl } from "./invitationUrl";
 
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITATION_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000;
@@ -36,16 +37,6 @@ function requireSuperAdmin(isSuperAdmin: boolean) {
       message: "Apenas o super administrador pode executar esta ação",
     });
   }
-}
-
-function originFromRequest(req: { protocol: string; get: (name: string) => string | undefined; headers: Record<string, unknown> }) {
-  const forwarded = req.headers["x-forwarded-proto"];
-  const protocol =
-    (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.toString().split(",")[0]?.trim() ||
-    req.protocol ||
-    "https";
-  const host = req.get("host");
-  return host ? `${protocol}://${host}` : "";
 }
 
 export const appRouter = router({
@@ -133,12 +124,11 @@ export const appRouter = router({
           });
         }
 
-        const origin = originFromRequest(ctx.req);
         return {
           success: true,
           email: input.email.trim().toLowerCase(),
           expiresAt,
-          inviteUrl: `${origin}/register?email=${encodeURIComponent(input.email.trim().toLowerCase())}&token=${invitationToken}`,
+          inviteUrl: buildInvitationUrl(input.email, invitationToken),
         };
       }),
   }),

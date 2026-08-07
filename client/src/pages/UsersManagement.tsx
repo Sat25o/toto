@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Copy, Edit2, MailPlus, Shield, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
+import { Copy, Edit2, MailPlus, RefreshCw, Shield, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Role = "user" | "admin";
@@ -85,6 +85,12 @@ export default function UsersManagement() {
     } catch {
       toast.error("Não foi possível copiar automaticamente. Selecione o link e copie-o manualmente.");
     }
+  };
+
+  const reissueInvite = (email: string, role: Role) => {
+    setInviteEmail(email);
+    setInviteRole(role);
+    createInviteMutation.mutate({ email, role });
   };
 
   return (
@@ -213,11 +219,11 @@ export default function UsersManagement() {
         <Card className="mx-auto mt-6 max-w-6xl border-slate-200/70">
           <CardHeader><CardTitle className="text-slate-900">Convites emitidos</CardTitle><CardDescription>Acompanhe os convites pendentes, usados e expirados.</CardDescription></CardHeader>
           <CardContent>
-            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Acesso</TableHead><TableHead>Estado</TableHead><TableHead>Validade</TableHead></TableRow></TableHeader><TableBody>
+            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Acesso</TableHead><TableHead>Estado</TableHead><TableHead>Validade</TableHead><TableHead className="text-right">Ação</TableHead></TableRow></TableHeader><TableBody>
               {invitations.map(invitation => {
                 const expired = !invitation.usedAt && new Date(invitation.expiresAt) < new Date();
                 const status = invitation.usedAt ? "Usado" : expired ? "Expirado" : "Pendente";
-                return <TableRow key={invitation.id}><TableCell>{invitation.email}</TableCell><TableCell>{invitation.role === "admin" ? "Administrador" : "Apostador"}</TableCell><TableCell><Badge className={status === "Usado" ? "bg-slate-200 text-slate-700" : status === "Expirado" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>{status}</Badge></TableCell><TableCell>{new Date(invitation.expiresAt).toLocaleString("pt-PT")}</TableCell></TableRow>;
+                return <TableRow key={invitation.id}><TableCell>{invitation.email}</TableCell><TableCell>{invitation.role === "admin" ? "Administrador" : "Apostador"}</TableCell><TableCell><Badge className={status === "Usado" ? "bg-slate-200 text-slate-700" : status === "Expirado" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>{status}</Badge></TableCell><TableCell>{new Date(invitation.expiresAt).toLocaleString("pt-PT")}</TableCell><TableCell className="text-right">{status === "Usado" ? <span className="text-xs text-slate-500">Sem ação</span> : <Button variant="outline" size="sm" className="whitespace-nowrap" disabled={createInviteMutation.isPending} onClick={() => reissueInvite(invitation.email, invitation.role)} title="Criar um novo link válido durante 7 dias"><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Reemitir</Button>}</TableCell></TableRow>;
               })}
             </TableBody></Table></div>
           </CardContent>

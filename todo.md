@@ -137,3 +137,9 @@
 - [x] Fechar a jornada quando o utilizador volta a clicar no mesmo cartão
 - [x] Limpar apenas o estado temporário ao fechar a jornada
 - [x] Testar alternância abrir/fechar em telemóvel
+
+## Correção de Convites
+
+- [x] Forçar novos links de convite a usar o domínio público tototalho.me
+- [x] Permitir reemitir no painel um convite pendente ou expirado
+- [x] Validar diretamente a rota de registo por convite no domínio público
