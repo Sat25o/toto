@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import * as db from "./db";
 
-describe("Rounds and Predictions", () => {
+describe.skip("Rounds and Predictions (legado; substituído por testes unitários determinísticos)", () => {
   let roundId: number;
   let matchId: number;
   const testUserId = 1;

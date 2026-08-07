@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -7,10 +7,15 @@ import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-or
  */
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
+  // Legacy fields are retained only to preserve existing records; local auth never uses them.
+  legacyOpenId: varchar("openId", { length: 64 }).unique(),
+  legacyLoginMethod: varchar("loginMethod", { length: 64 }),
   name: varchar("name", { length: 255 }).notNull(),
   email: varchar("email", { length: 320 }).notNull().unique(),
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  isSuperAdmin: boolean("isSuperAdmin").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn"),
@@ -18,6 +23,24 @@ export const users = mysqlTable("users", {
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
+
+/**
+ * Single-use invitations that authorize a specific email to create an account.
+ */
+export const invitations = mysqlTable("invitations", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  tokenHash: varchar("tokenHash", { length: 64 }).notNull().unique(),
+  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  isSuperAdmin: boolean("isSuperAdmin").default(false).notNull(),
+  createdByUserId: int("createdByUserId"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Invitation = typeof invitations.$inferSelect;
+export type InsertInvitation = typeof invitations.$inferInsert;
 
 /**
  * Rounds (Jornadas) - Each round contains 6 matches

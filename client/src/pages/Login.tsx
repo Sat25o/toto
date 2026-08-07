@@ -17,10 +17,6 @@ export default function Login() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Login realizado com sucesso!");
-      // Store token if returned
-      if (data.token) {
-        localStorage.setItem("authToken", data.token);
-      }
       // Redirect based on role
       if (data.user.role === "admin") {
         setLocation("/admin");
@@ -35,9 +31,7 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     loginMutation.mutate({ email, password });
-    setIsLoading(false);
   };
 
   return (
@@ -101,13 +95,7 @@ export default function Login() {
 
             <div className="mt-6 text-center">
               <p className="text-slate-600 text-sm">
-                Não tem conta?{" "}
-                <button
-                  onClick={() => setLocation("/register")}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Registar-se aqui
-                </button>
+                Para criar uma conta, peça um convite ao administrador.
               </p>
             </div>
           </CardContent>

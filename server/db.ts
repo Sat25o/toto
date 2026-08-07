@@ -1,67 +1,47 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, rounds, matches, predictions, emailNotifications } from "../drizzle/schema";
-import { ENV } from './_core/env';
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
+import { createHash } from "node:crypto";
+import {
+  emailNotifications,
+  invitations,
+  matches,
+  predictions,
+  rounds,
+  users,
+} from "../drizzle/schema";
+
+export const SUPER_ADMIN_EMAIL = "ricardodonascimento@gmail.com";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
-    }
+    _db = drizzle(process.env.DATABASE_URL);
   }
   return _db;
 }
 
-// ============ USER AUTHENTICATION ============
-export async function createUser(data: {
-  name: string;
-  email: string;
-  password: string;
-  role?: "user" | "admin";
-}) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  // Check if user already exists
-  const existing = await getUserByEmail(data.email);
-  if (existing) {
-    throw new Error("User with this email already exists");
-  }
-
-  // Hash password
-  const passwordHash = await bcrypt.hash(data.password, 10);
-
-  try {
-    await db.insert(users).values({
-      name: data.name,
-      email: data.email,
-      passwordHash,
-      role: data.role || "user",
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error("[Database] Failed to create user:", error);
-    throw error;
-  }
+function normaliseEmail(email: string) {
+  return email.trim().toLowerCase();
 }
+
+export function hashInvitationToken(token: string) {
+  return createHash("sha256").update(token).digest("hex");
+}
+
+// ============ USERS AND LOCAL AUTHENTICATION ============
 
 export async function getUserByEmail(email: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
+  if (!db) return undefined;
 
-  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, normaliseEmail(email)))
+    .limit(1);
+  return result[0];
 }
 
 export async function getUserById(id: number) {
@@ -69,140 +49,295 @@ export async function getUserById(id: number) {
   if (!db) return undefined;
 
   const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
 }
 
-export async function verifyPassword(plainPassword: string, passwordHash: string): Promise<boolean> {
-  try {
-    return await bcrypt.compare(plainPassword, passwordHash);
-  } catch (error) {
-    console.error("[Database] Password verification failed:", error);
-    return false;
-  }
+export async function verifyPassword(plainPassword: string, passwordHash: string) {
+  if (!passwordHash) return false;
+  return bcrypt.compare(plainPassword, passwordHash);
 }
 
 export async function updateLastSignedIn(userId: number) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) throw new Error("Base de dados indisponível");
 
-  return await db.update(users)
-    .set({ lastSignedIn: new Date() })
-    .where(eq(users.id, userId));
+  await db.update(users).set({ lastSignedIn: new Date() }).where(eq(users.id, userId));
+}
+
+export async function listUsers() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({
+      id: users.id,
+      name: users.name,
+      email: users.email,
+      role: users.role,
+      isActive: users.isActive,
+      isSuperAdmin: users.isSuperAdmin,
+      createdAt: users.createdAt,
+      lastSignedIn: users.lastSignedIn,
+    })
+    .from(users)
+    .orderBy(desc(users.isSuperAdmin), users.name);
+}
+
+export async function updateUserRole(userId: number, role: "user" | "admin") {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+  if (target.isSuperAdmin || target.email === SUPER_ADMIN_EMAIL) {
+    throw new Error("A função do super administrador não pode ser alterada");
+  }
+
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function setUserActive(userId: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+  if (target.isSuperAdmin || target.email === SUPER_ADMIN_EMAIL) {
+    throw new Error("O super administrador não pode ser desativado");
+  }
+
+  await db.update(users).set({ isActive }).where(eq(users.id, userId));
+}
+
+// ============ INVITATIONS ============
+
+export async function getInvitationForRegistration(email: string, token: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(invitations)
+    .where(
+      and(
+        eq(invitations.email, normaliseEmail(email)),
+        eq(invitations.tokenHash, hashInvitationToken(token)),
+        isNull(invitations.usedAt),
+      ),
+    )
+    .limit(1);
+
+  const invitation = result[0];
+  if (!invitation || invitation.expiresAt <= new Date()) return undefined;
+  return invitation;
+}
+
+export async function createInvitation(data: {
+  email: string;
+  token: string;
+  role: "user" | "admin";
+  isSuperAdmin?: boolean;
+  createdByUserId: number;
+  expiresAt: Date;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const email = normaliseEmail(data.email);
+  const existingUser = await getUserByEmail(email);
+  if (existingUser) throw new Error("Já existe uma conta com este email");
+
+  await db
+    .insert(invitations)
+    .values({
+      email,
+      tokenHash: hashInvitationToken(data.token),
+      role: data.role,
+      isSuperAdmin: data.isSuperAdmin ?? false,
+      createdByUserId: data.createdByUserId,
+      expiresAt: data.expiresAt,
+    })
+    .onDuplicateKeyUpdate({
+      set: {
+        tokenHash: hashInvitationToken(data.token),
+        role: data.role,
+        isSuperAdmin: data.isSuperAdmin ?? false,
+        createdByUserId: data.createdByUserId,
+        expiresAt: data.expiresAt,
+        usedAt: null,
+      },
+    });
+}
+
+export async function listInvitations() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({
+      id: invitations.id,
+      email: invitations.email,
+      role: invitations.role,
+      isSuperAdmin: invitations.isSuperAdmin,
+      expiresAt: invitations.expiresAt,
+      usedAt: invitations.usedAt,
+      createdAt: invitations.createdAt,
+    })
+    .from(invitations)
+    .orderBy(desc(invitations.createdAt));
+}
+
+export async function registerUserFromInvitation(data: {
+  name: string;
+  email: string;
+  password: string;
+  invitationToken: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const email = normaliseEmail(data.email);
+  const invitation = await getInvitationForRegistration(email, data.invitationToken);
+  if (!invitation) {
+    throw new Error("Convite inválido, utilizado ou expirado");
+  }
+
+  const existingUser = await getUserByEmail(email);
+  if (existingUser) throw new Error("Já existe uma conta com este email");
+
+  const passwordHash = await bcrypt.hash(data.password, 12);
+  const isSuperAdmin = email === SUPER_ADMIN_EMAIL;
+  if (isSuperAdmin && !invitation.isSuperAdmin) {
+    throw new Error("O convite desta conta não autoriza acesso de super administrador");
+  }
+
+  await db.transaction(async tx => {
+    await tx.insert(users).values({
+      name: data.name.trim(),
+      email,
+      passwordHash,
+      role: isSuperAdmin ? "admin" : invitation.role,
+      isActive: true,
+      isSuperAdmin,
+    });
+
+    await tx
+      .update(invitations)
+      .set({ usedAt: new Date() })
+      .where(and(eq(invitations.id, invitation.id), isNull(invitations.usedAt)));
+  });
+
+  const user = await getUserByEmail(email);
+  if (!user) throw new Error("Não foi possível criar a conta");
+  return user;
 }
 
 // ============ ROUNDS ============
+
 export async function createRound(data: {
   roundNumber: number;
   prize?: string;
   bettingDeadline: Date;
 }) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const result = await db.insert(rounds).values({
-    roundNumber: data.roundNumber,
-    prize: data.prize,
-    bettingDeadline: data.bettingDeadline,
-  });
-  
-  return result;
+  if (!db) throw new Error("Base de dados indisponível");
+  return db.insert(rounds).values(data);
 }
 
 export async function getRound(roundId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  
   const result = await db.select().from(rounds).where(eq(rounds.id, roundId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
 }
 
 export async function getRoundByNumber(roundNumber: number) {
   const db = await getDb();
   if (!db) return undefined;
-  
-  const result = await db.select().from(rounds).where(eq(rounds.roundNumber, roundNumber)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  const result = await db
+    .select()
+    .from(rounds)
+    .where(eq(rounds.roundNumber, roundNumber))
+    .limit(1);
+  return result[0];
 }
 
 export async function getAllRounds() {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(rounds).orderBy(rounds.roundNumber);
+  return db.select().from(rounds).orderBy(rounds.roundNumber);
 }
 
 // ============ MATCHES ============
-export async function createMatches(roundId: number, matchesData: Array<{
-  homeTeam: string;
-  awayTeam: string;
-  matchOrder: number;
-}>) {
+
+export async function createMatches(
+  roundId: number,
+  matchesData: Array<{ homeTeam: string; awayTeam: string; matchOrder: number }>,
+) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const values = matchesData.map(m => ({
-    roundId,
-    homeTeam: m.homeTeam,
-    awayTeam: m.awayTeam,
-    matchOrder: m.matchOrder,
-  }));
-  
-  return await db.insert(matches).values(values);
+  if (!db) throw new Error("Base de dados indisponível");
+  return db.insert(matches).values(matchesData.map(match => ({ ...match, roundId })));
 }
 
 export async function getMatchesByRound(roundId: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select().from(matches).where(eq(matches.roundId, roundId)).orderBy(matches.matchOrder);
+  return db.select().from(matches).where(eq(matches.roundId, roundId)).orderBy(matches.matchOrder);
 }
 
 export async function updateMatchResult(matchId: number, result: "1" | "X" | "2") {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  return await db.update(matches).set({ result }).where(eq(matches.id, matchId));
+  if (!db) throw new Error("Base de dados indisponível");
+  return db.update(matches).set({ result }).where(eq(matches.id, matchId));
 }
 
 // ============ PREDICTIONS ============
+
 export async function getPrediction(matchId: number, userId: number) {
   const db = await getDb();
   if (!db) return undefined;
-  
-  const result = await db.select().from(predictions)
+  const result = await db
+    .select()
+    .from(predictions)
     .where(and(eq(predictions.matchId, matchId), eq(predictions.userId, userId)))
     .limit(1);
-  
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
 }
 
-export async function createOrUpdatePrediction(matchId: number, userId: number, prediction: "1" | "X" | "2") {
+export async function createOrUpdatePrediction(
+  matchId: number,
+  userId: number,
+  prediction: "1" | "X" | "2",
+) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const existing = await getPrediction(matchId, userId);
-  
-  if (existing) {
-    return await db.update(predictions)
-      .set({ prediction })
-      .where(eq(predictions.id, existing.id));
-  } else {
-    return await db.insert(predictions).values({
-      matchId,
-      userId,
-      prediction,
-    });
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const matchWithDeadline = await db
+    .select({ deadline: rounds.bettingDeadline })
+    .from(matches)
+    .innerJoin(rounds, eq(matches.roundId, rounds.id))
+    .where(eq(matches.id, matchId))
+    .limit(1);
+
+  const deadline = matchWithDeadline[0]?.deadline;
+  if (!deadline) throw new Error("Jogo não encontrado");
+  if (new Date() >= deadline) {
+    throw new Error("O prazo de apostas desta jornada já encerrou");
   }
+
+  const existing = await getPrediction(matchId, userId);
+  if (existing) {
+    return db.update(predictions).set({ prediction }).where(eq(predictions.id, existing.id));
+  }
+  return db.insert(predictions).values({ matchId, userId, prediction });
 }
 
 export async function getPredictionsByRoundAndUser(roundId: number, userId: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select({
-    prediction: predictions,
-    match: matches,
-  }).from(predictions)
+  return db
+    .select({ prediction: predictions, match: matches })
+    .from(predictions)
     .innerJoin(matches, eq(predictions.matchId, matches.id))
     .where(and(eq(matches.roundId, roundId), eq(predictions.userId, userId)))
     .orderBy(matches.matchOrder);
@@ -211,94 +346,64 @@ export async function getPredictionsByRoundAndUser(roundId: number, userId: numb
 export async function getPredictionsByRound(roundId: number) {
   const db = await getDb();
   if (!db) return [];
-  
-  return await db.select({
-    prediction: predictions,
-    match: matches,
-  }).from(predictions)
+  return db
+    .select({ prediction: predictions, match: matches, user: users })
+    .from(predictions)
     .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .innerJoin(users, eq(predictions.userId, users.id))
     .where(eq(matches.roundId, roundId));
 }
 
-// ============ STANDINGS ============
+// ============ STANDINGS AND WINNERS ============
+
 export async function getStandings() {
   const db = await getDb();
   if (!db) return [];
-  
-  // Count correct predictions per user across all rounds
-  const result = await db.select({
-    userId: predictions.userId,
-    userName: users.name,
-    userEmail: users.email,
-    correctCount: sql<number>`COUNT(CASE WHEN ${predictions.isCorrect} = 'true' THEN 1 END)`,
-  })
-    .from(predictions)
-    .innerJoin(users, eq(predictions.userId, users.id))
-    .groupBy(predictions.userId)
+  return db
+    .select({
+      userId: users.id,
+      userName: users.name,
+      userEmail: users.email,
+      correctCount: sql<number>`COUNT(CASE WHEN ${predictions.isCorrect} = 'true' THEN 1 END)`,
+    })
+    .from(users)
+    .leftJoin(predictions, eq(predictions.userId, users.id))
+    .where(eq(users.isActive, true))
+    .groupBy(users.id)
     .orderBy(desc(sql<number>`COUNT(CASE WHEN ${predictions.isCorrect} = 'true' THEN 1 END)`));
-  
-  return result;
 }
 
-// ============ WINNER CALCULATION ============
 export async function calculateRoundWinner(roundId: number) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  // Get all matches for this round with results
+  if (!db) throw new Error("Base de dados indisponível");
+
   const roundMatches = await db.select().from(matches).where(eq(matches.roundId, roundId));
-  
-  // Check if all matches have results
-  const allResultsEntered = roundMatches.every(m => m.result !== null);
-  if (!allResultsEntered) {
-    throw new Error("Not all match results have been entered");
+  if (roundMatches.length !== 6 || roundMatches.some(match => match.result === null)) {
+    throw new Error("Introduza os resultados dos seis jogos antes de calcular o vencedor");
   }
-  
-  // Get all predictions for this round
-  const roundPredictions = await db.select({
-    prediction: predictions,
-    match: matches,
-  }).from(predictions)
-    .innerJoin(matches, eq(predictions.matchId, matches.id))
-    .where(eq(matches.roundId, roundId));
-  
-  // Mark predictions as correct or false
-  for (const pred of roundPredictions) {
-    const isCorrect = pred.prediction.prediction === pred.match.result ? "true" : "false";
-    await db.update(predictions)
-      .set({ isCorrect })
-      .where(eq(predictions.id, pred.prediction.id));
+
+  const roundPredictions = await getPredictionsByRound(roundId);
+  const correctByUser = new Map<number, number>();
+
+  for (const entry of roundPredictions) {
+    const isCorrect = entry.prediction.prediction === entry.match.result;
+    await db
+      .update(predictions)
+      .set({ isCorrect: isCorrect ? "true" : "false" })
+      .where(eq(predictions.id, entry.prediction.id));
+    correctByUser.set(
+      entry.prediction.userId,
+      (correctByUser.get(entry.prediction.userId) ?? 0) + (isCorrect ? 1 : 0),
+    );
   }
-  
-  // Find users who got all 6 correct
-  const userCorrectCounts = new Map<number, number>();
-  for (const pred of roundPredictions) {
-    const userId = pred.prediction.userId;
-    const count = userCorrectCounts.get(userId) || 0;
-    if (pred.prediction.prediction === pred.match.result) {
-      userCorrectCounts.set(userId, count + 1);
-    } else {
-      userCorrectCounts.set(userId, count);
-    }
-  }
-  
-  // Find the winner (6 correct predictions)
-  let winnerId: number | null = null;
-  userCorrectCounts.forEach((count, userId) => {
-    if (count === 6 && winnerId === null) {
-      winnerId = userId;
-    }
-  })
-  
-  // Update round with winner
-  if (winnerId) {
-    await db.update(rounds).set({ winnerId }).where(eq(rounds.id, roundId));
-  }
-  
+
+  const winnerId = Array.from(correctByUser.entries()).find(([, correct]) => correct === 6)?.[0] ?? null;
+  await db.update(rounds).set({ winnerId }).where(eq(rounds.id, roundId));
   return winnerId;
 }
 
 // ============ EMAIL NOTIFICATIONS ============
+
 export async function createEmailNotification(data: {
   userId: number;
   roundId?: number;
@@ -306,36 +411,15 @@ export async function createEmailNotification(data: {
   subject: string;
 }) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  return await db.insert(emailNotifications).values({
-    userId: data.userId,
-    roundId: data.roundId,
-    type: data.type,
-    subject: data.subject,
-  });
+  if (!db) throw new Error("Base de dados indisponível");
+  return db.insert(emailNotifications).values(data);
 }
 
 export async function markEmailAsSent(notificationId: number) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-
-  return await db
+  if (!db) throw new Error("Base de dados indisponível");
+  return db
     .update(emailNotifications)
     .set({ sent: "true", sentAt: new Date() })
     .where(eq(emailNotifications.id, notificationId));
-}
-
-export async function getUnsentNotifications() {
-  const db = await getDb();
-  if (!db) return [];
-
-  return await db
-    .select({
-      notification: emailNotifications,
-      user: users,
-    })
-    .from(emailNotifications)
-    .innerJoin(users, eq(emailNotifications.userId, users.id))
-    .where(eq(emailNotifications.sent, "false"));
 }

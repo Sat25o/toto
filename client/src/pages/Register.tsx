@@ -10,16 +10,18 @@ import { Trophy } from "lucide-react";
 
 export default function Register() {
   const [, setLocation] = useLocation();
+  const invitationToken = new URLSearchParams(window.location.search).get("token") ?? "";
+  const invitedEmail = new URLSearchParams(window.location.search).get("email") ?? "";
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(invitedEmail);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: () => {
-      toast.success("Registo realizado com sucesso! Faça login agora.");
-      setLocation("/login");
+    onSuccess: (data) => {
+      toast.success("Conta criada com sucesso!");
+      setLocation(data.user.role === "admin" ? "/admin" : "/dashboard");
     },
     onError: (error) => {
       toast.error(error.message || "Erro ao registar");
@@ -39,10 +41,28 @@ export default function Register() {
       return;
     }
 
-    setIsLoading(true);
-    registerMutation.mutate({ name, email, password });
-    setIsLoading(false);
+    registerMutation.mutate({ name, email, password, invitationToken });
   };
+
+  if (!invitationToken || !invitedEmail) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md border-slate-200/50 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-slate-900">Registo por convite</CardTitle>
+            <CardDescription>
+              A Liga Toto Talho aceita novos participantes apenas através de um convite válido.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setLocation("/login")}>
+              Ir para o login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
@@ -59,8 +79,8 @@ export default function Register() {
         {/* Register Card */}
         <Card className="border-slate-200/50 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-slate-900">Criar Conta</CardTitle>
-            <CardDescription>Registar-se para participar</CardDescription>
+            <CardTitle className="text-slate-900">Ativar convite</CardTitle>
+            <CardDescription>Defina os seus dados para entrar na Liga Toto Talho</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,8 +108,8 @@ export default function Register() {
                   type="email"
                   placeholder="seu@email.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   required
+                  readOnly
                   className="mt-1 border-slate-300"
                 />
               </div>
@@ -129,20 +149,17 @@ export default function Register() {
                 disabled={isLoading || registerMutation.isPending}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {isLoading || registerMutation.isPending ? "Carregando..." : "Registar"}
+                {isLoading || registerMutation.isPending ? "A criar conta..." : "Ativar conta"}
               </Button>
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-slate-600 text-sm">
-                Já tem conta?{" "}
-                <button
-                  onClick={() => setLocation("/login")}
-                  className="text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Fazer login aqui
-                </button>
-              </p>
+              <button
+                onClick={() => setLocation("/login")}
+                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Já tem conta? Fazer login
+              </button>
             </div>
           </CardContent>
         </Card>

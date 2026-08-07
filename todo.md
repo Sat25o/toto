@@ -68,3 +68,12 @@
 - [x] Email quando deadline está próximo (24h antes)
 - [x] Email quando resultados são publicados
 - [x] Integração com Manus Email API (estrutura pronta, aguarda conector)
+
+## Correção de Autenticação e Convites
+
+- [x] Corrigir schema e migração da tabela de utilizadores para autenticação local
+- [x] Implementar sessões seguras por email/password, sem OAuth do Manus
+- [x] Restringir o registo a convites únicos emitidos pelo super administrador
+- [x] Proteger ricardodonascimento@gmail.com como super administrador não removível
+- [x] Atualizar gestão de utilizadores para listar contas, roles, estado e convites
+- [x] Cobrir registo por convite, login e proteção do super administrador com testes

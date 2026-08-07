@@ -1,215 +1,228 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Users, Shield, Trash2, Edit2 } from "lucide-react";
-import { useState } from "react";
+import { Copy, Edit2, MailPlus, Shield, ShieldCheck, UserCheck, UserX, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+
+type Role = "user" | "admin";
 
 export default function UsersManagement() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [newRole, setNewRole] = useState<"user" | "admin">("user");
+  const [selectedUser, setSelectedUser] = useState<{ id: number; name: string; role: Role } | null>(null);
+  const [newRole, setNewRole] = useState<Role>("user");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<Role>("user");
+  const [latestInviteUrl, setLatestInviteUrl] = useState("");
 
-  // Fetch all users
-  const { data: users, isLoading: usersLoading, refetch } = trpc.users.list.useQuery();
+  const { data: users, isLoading: usersLoading, refetch: refetchUsers } = trpc.users.list.useQuery(
+    undefined,
+    { enabled: Boolean(user?.role === "admin") },
+  );
+  const { data: invitations, refetch: refetchInvitations } = trpc.invitations.list.useQuery(
+    undefined,
+    { enabled: Boolean(user?.isSuperAdmin) },
+  );
 
-  // Update user role mutation
   const updateRoleMutation = trpc.users.updateRole.useMutation({
     onSuccess: () => {
-      toast.success("Role atualizado com sucesso!");
+      toast.success("Função atualizada.");
       setIsDialogOpen(false);
-      refetch();
+      void refetchUsers();
     },
-    onError: (error) => {
-      toast.error(error.message || "Erro ao atualizar role");
-    },
+    onError: error => toast.error(error.message),
   });
-
-  // Deactivate user mutation
   const deactivateMutation = trpc.users.deactivate.useMutation({
     onSuccess: () => {
-      toast.success("Utilizador desativado com sucesso!");
-      refetch();
+      toast.success("Conta desativada.");
+      void refetchUsers();
     },
-    onError: (error) => {
-      toast.error(error.message || "Erro ao desativar utilizador");
+    onError: error => toast.error(error.message),
+  });
+  const reactivateMutation = trpc.users.reactivate.useMutation({
+    onSuccess: () => {
+      toast.success("Conta reativada.");
+      void refetchUsers();
     },
+    onError: error => toast.error(error.message),
+  });
+  const createInviteMutation = trpc.invitations.create.useMutation({
+    onSuccess: data => {
+      setLatestInviteUrl(data.inviteUrl);
+      setInviteEmail("");
+      setInviteRole("user");
+      toast.success("Convite criado. Copie e envie o link ao apostador.");
+      void refetchInvitations();
+    },
+    onError: error => toast.error(error.message),
   });
 
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  useEffect(() => {
+    if (!authLoading && (!user || user.role !== "admin")) {
+      setLocation("/login");
+    }
+  }, [authLoading, setLocation, user]);
+
+  if (authLoading || !user || user.role !== "admin") {
+    return <div className="min-h-screen flex items-center justify-center text-slate-600">A carregar…</div>;
   }
 
-  if (!user || user.role !== "admin") {
-    setLocation("/dashboard");
-    return null;
-  }
-
-  const handleUpdateRole = () => {
-    if (!selectedUser) return;
-    updateRoleMutation.mutate({ userId: selectedUser.id, role: newRole });
-  };
-
-  const handleDeactivate = (userId: number) => {
-    if (confirm("Tem a certeza que deseja desativar este utilizador?")) {
-      deactivateMutation.mutate({ userId });
+  const copyInvite = async () => {
+    try {
+      await navigator.clipboard.writeText(latestInviteUrl);
+      toast.success("Link do convite copiado.");
+    } catch {
+      toast.error("Não foi possível copiar automaticamente. Selecione o link e copie-o manualmente.");
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
-              <Users className="w-8 h-8 text-blue-600" />
-              Gestão de Utilizadores
-            </h1>
-            <p className="text-slate-600">Gerencie os 34 apostadores</p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setLocation("/admin")}
-            className="border-slate-300"
-          >
-            Voltar ao Admin
-          </Button>
+      <div className="mx-auto mb-8 flex max-w-6xl items-center justify-between gap-4">
+        <div>
+          <h1 className="flex items-center gap-2 text-3xl font-bold text-slate-900">
+            <Users className="h-8 w-8 text-blue-600" /> Gestão de utilizadores
+          </h1>
+          <p className="text-slate-600">Liga Toto Talho · gestão de apostadores e acessos</p>
         </div>
+        <Button variant="outline" onClick={() => setLocation("/admin")}>Voltar ao painel</Button>
       </div>
 
-      {/* Users Table */}
-      <div className="max-w-6xl mx-auto">
-        <Card className="border-slate-200/50">
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
+        {user.isSuperAdmin ? (
+          <Card className="border-blue-200 lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-slate-900"><MailPlus className="h-5 w-5 text-blue-600" /> Convidar apostador</CardTitle>
+              <CardDescription>O convite é pessoal, válido durante 7 dias e só pode ser usado uma vez.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label htmlFor="invite-email">Email do participante</Label>
+                <Input id="invite-email" type="email" value={inviteEmail} onChange={event => setInviteEmail(event.target.value)} placeholder="nome@email.com" className="mt-1" />
+              </div>
+              <div>
+                <Label htmlFor="invite-role">Acesso inicial</Label>
+                <Select value={inviteRole} onValueChange={value => setInviteRole(value as Role)}>
+                  <SelectTrigger id="invite-role" className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">Apostador</SelectItem>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                className="w-full bg-blue-600 hover:bg-blue-700"
+                disabled={!inviteEmail || createInviteMutation.isPending}
+                onClick={() => createInviteMutation.mutate({ email: inviteEmail, role: inviteRole })}
+              >
+                {createInviteMutation.isPending ? "A criar…" : "Criar convite"}
+              </Button>
+              {latestInviteUrl && (
+                <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                  <p className="text-xs font-semibold text-blue-900">Link pronto a enviar</p>
+                  <p className="break-all text-xs text-blue-800">{latestInviteUrl}</p>
+                  <Button variant="outline" size="sm" className="w-full" onClick={copyInvite} title="Copiar link de convite">
+                    <Copy className="mr-2 h-4 w-4" /> Copiar link
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-slate-200 lg:col-span-1">
+            <CardHeader>
+              <CardTitle className="text-slate-900">Registo por convite</CardTitle>
+              <CardDescription>A emissão de convites está reservada ao super administrador.</CardDescription>
+            </CardHeader>
+          </Card>
+        )}
+
+        <Card className="border-slate-200/70 lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-slate-900">Apostadores Registados</CardTitle>
-            <CardDescription>
-              Total: {users?.length || 0} utilizadores
-            </CardDescription>
+            <CardTitle className="text-slate-900">Apostadores registados</CardTitle>
+            <CardDescription>{users?.length ?? 0} conta(s) criadas</CardDescription>
           </CardHeader>
           <CardContent>
             {usersLoading ? (
-              <div className="space-y-4">
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-                <Skeleton className="h-12 w-full" />
-              </div>
+              <div className="space-y-3"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
             ) : users && users.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>
-                  <TableHeader>
-                    <TableRow className="border-slate-200">
-                      <TableHead className="text-slate-600">Nome</TableHead>
-                      <TableHead className="text-slate-600">Email</TableHead>
-                      <TableHead className="text-slate-600">Role</TableHead>
-                      <TableHead className="text-slate-600">Registado em</TableHead>
-                      <TableHead className="text-slate-600">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
+                  <TableHeader><TableRow><TableHead>Participante</TableHead><TableHead>Acesso</TableHead><TableHead>Estado</TableHead><TableHead className="text-right">Ações</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {users.map((u: any) => (
-                      <TableRow key={u.id} className="border-slate-100 hover:bg-slate-50">
-                        <TableCell className="font-medium text-slate-900">{u.name}</TableCell>
-                        <TableCell className="text-slate-600">{u.email}</TableCell>
-                        <TableCell>
-                          <Badge
-                            className={
-                              u.role === "admin"
-                                ? "bg-purple-100 text-purple-800"
-                                : "bg-blue-100 text-blue-800"
-                            }
-                          >
-                            {u.role === "admin" ? (
-                              <>
-                                <Shield className="w-3 h-3 mr-1" />
-                                Admin
-                              </>
+                    {users.map(account => {
+                      const protectedAccount = account.isSuperAdmin;
+                      return (
+                        <TableRow key={account.id}>
+                          <TableCell>
+                            <p className="font-medium text-slate-900">{account.name}</p>
+                            <p className="text-xs text-slate-500">{account.email}</p>
+                          </TableCell>
+                          <TableCell>
+                            {protectedAccount ? <Badge className="bg-amber-100 text-amber-800"><ShieldCheck className="mr-1 h-3 w-3" /> Super administrador</Badge> : account.role === "admin" ? <Badge className="bg-purple-100 text-purple-800"><Shield className="mr-1 h-3 w-3" /> Admin</Badge> : <Badge className="bg-blue-100 text-blue-800">Apostador</Badge>}
+                          </TableCell>
+                          <TableCell>{account.isActive ? <Badge className="bg-emerald-100 text-emerald-800">Ativa</Badge> : <Badge className="bg-slate-200 text-slate-700">Desativada</Badge>}</TableCell>
+                          <TableCell className="text-right">
+                            {protectedAccount ? (
+                              <span title="A conta do super administrador é protegida contra alterações e desativação"><Badge className="bg-amber-50 text-amber-800">Protegida</Badge></span>
                             ) : (
-                              "Apostador"
-                            )}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-slate-600 text-sm">
-                          {new Date(u.createdAt).toLocaleDateString("pt-PT")}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Dialog open={isDialogOpen && selectedUser?.id === u.id} onOpenChange={setIsDialogOpen}>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedUser(u);
-                                    setNewRole(u.role);
-                                  }}
-                                  className="border-slate-300"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Editar Role</DialogTitle>
-                                  <DialogDescription>
-                                    Alterar role para {u.name}
-                                  </DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <label className="text-sm font-medium text-slate-700">Novo Role</label>
-                                    <Select value={newRole} onValueChange={(value: any) => setNewRole(value)}>
-                                      <SelectTrigger className="mt-1">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="user">Apostador</SelectItem>
-                                        <SelectItem value="admin">Admin</SelectItem>
-                                      </SelectContent>
+                              <div className="flex justify-end gap-2">
+                                <Dialog open={isDialogOpen && selectedUser?.id === account.id} onOpenChange={setIsDialogOpen}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" title="Alterar nível de acesso" onClick={() => { setSelectedUser(account); setNewRole(account.role); }}><Edit2 className="h-4 w-4" /></Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader><DialogTitle>Editar acesso</DialogTitle><DialogDescription>Defina o nível de acesso de {account.name}.</DialogDescription></DialogHeader>
+                                    <Select value={newRole} onValueChange={value => setNewRole(value as Role)}>
+                                      <SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="user">Apostador</SelectItem><SelectItem value="admin">Administrador</SelectItem></SelectContent>
                                     </Select>
-                                  </div>
-                                  <Button
-                                    onClick={handleUpdateRole}
-                                    disabled={updateRoleMutation.isPending}
-                                    className="w-full bg-blue-600 hover:bg-blue-700"
-                                  >
-                                    {updateRoleMutation.isPending ? "Atualizando..." : "Atualizar"}
-                                  </Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeactivate(u.id)}
-                              disabled={deactivateMutation.isPending}
-                              className="border-red-300 text-red-600 hover:bg-red-50"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                    <Button className="bg-blue-600 hover:bg-blue-700" disabled={updateRoleMutation.isPending} onClick={() => selectedUser && updateRoleMutation.mutate({ userId: selectedUser.id, role: newRole })}>Guardar alteração</Button>
+                                  </DialogContent>
+                                </Dialog>
+                                {account.isActive ? (
+                                  <Button variant="outline" size="sm" className="border-red-200 text-red-700 hover:bg-red-50" title="Desativar conta" onClick={() => deactivateMutation.mutate({ userId: account.id })}><UserX className="h-4 w-4" /></Button>
+                                ) : (
+                                  <Button variant="outline" size="sm" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50" title="Reativar conta" onClick={() => reactivateMutation.mutate({ userId: account.id })}><UserCheck className="h-4 w-4" /></Button>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
-            ) : (
-              <p className="text-slate-500 text-center py-8">Nenhum utilizador registado</p>
-            )}
+            ) : <p className="py-8 text-center text-slate-500">Ainda não existem participantes registados.</p>}
           </CardContent>
         </Card>
       </div>
+
+      {user.isSuperAdmin && invitations && invitations.length > 0 && (
+        <Card className="mx-auto mt-6 max-w-6xl border-slate-200/70">
+          <CardHeader><CardTitle className="text-slate-900">Convites emitidos</CardTitle><CardDescription>Acompanhe os convites pendentes, usados e expirados.</CardDescription></CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Acesso</TableHead><TableHead>Estado</TableHead><TableHead>Validade</TableHead></TableRow></TableHeader><TableBody>
+              {invitations.map(invitation => {
+                const expired = !invitation.usedAt && new Date(invitation.expiresAt) < new Date();
+                const status = invitation.usedAt ? "Usado" : expired ? "Expirado" : "Pendente";
+                return <TableRow key={invitation.id}><TableCell>{invitation.email}</TableCell><TableCell>{invitation.role === "admin" ? "Administrador" : "Apostador"}</TableCell><TableCell><Badge className={status === "Usado" ? "bg-slate-200 text-slate-700" : status === "Expirado" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>{status}</Badge></TableCell><TableCell>{new Date(invitation.expiresAt).toLocaleString("pt-PT")}</TableCell></TableRow>;
+              })}
+            </TableBody></Table></div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

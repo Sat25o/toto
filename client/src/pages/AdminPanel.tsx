@@ -146,6 +146,22 @@ export default function AdminPanel() {
           <div className="flex gap-2">
             <Button
               variant="outline"
+              onClick={() => setLocation("/users")}
+              className="border-slate-300"
+              title="Gerir apostadores, estados de conta e convites"
+            >
+              Utilizadores
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/public-predictions")}
+              className="border-slate-300"
+              title="Consultar as apostas publicadas depois do fim do prazo"
+            >
+              Apostas públicas
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setLocation("/history")}
               className="border-slate-300"
             >
