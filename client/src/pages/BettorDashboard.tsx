@@ -49,11 +49,6 @@ export default function BettorDashboard() {
   });
 
   useEffect(() => {
-    setOptimisticPredictions({});
-    setPendingMatchId(null);
-  }, [selectedRoundId]);
-
-  useEffect(() => {
     if (!authLoading && !user) {
       setLocation("/login");
     }
@@ -66,6 +61,13 @@ export default function BettorDashboard() {
   if (!user) {
     return null;
   }
+
+  const handleRoundSelection = (roundId: number) => {
+    // Reset synchronously while changing rounds, never after a prediction click.
+    setOptimisticPredictions({});
+    setPendingMatchId(null);
+    setSelectedRoundId(roundId);
+  };
 
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
     if (isDeadlinePassed) return;
@@ -136,7 +138,7 @@ export default function BettorDashboard() {
                 rounds.map((round) => (
                   <button
                     key={round.id}
-                    onClick={() => setSelectedRoundId(round.id)}
+                    onClick={() => handleRoundSelection(round.id)}
                     className={`w-full text-left p-3 rounded-lg border transition-all ${
                       selectedRoundId === round.id
                         ? "bg-blue-50 border-blue-300 text-blue-900"

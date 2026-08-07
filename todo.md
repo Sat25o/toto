@@ -100,3 +100,9 @@
 - [x] Atualizar 1/X/2 imediatamente sem refresh e sem seleção fictícia
 - [x] Mostrar os nomes reais das equipas em vez de Team A / Team B
 - [x] Validar a criação da primeira jornada real
+
+## Correção de Seleção Imediata
+
+- [x] Evitar que a limpeza assíncrona da jornada apague a seleção feita pelo utilizador
+- [x] Atualizar visualmente o 1/X/2 no próprio clique e manter a seleção após a resposta do servidor
+- [x] Testar seleção imediata depois de abrir uma jornada
