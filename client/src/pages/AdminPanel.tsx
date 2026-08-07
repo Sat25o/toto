@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Plus, Settings } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
+import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
@@ -31,7 +32,7 @@ export default function AdminPanel() {
     roundNumber: "",
     prize: "",
     deadline: "",
-    matches: Array(6).fill({ homeTeam: "", awayTeam: "" }),
+    matches: createEmptyMatches(),
   });
 
   const [resultForm, setResultForm] = useState<Record<number, "1" | "X" | "2">>({});
@@ -44,7 +45,7 @@ export default function AdminPanel() {
         roundNumber: "",
         prize: "",
         deadline: "",
-        matches: Array(6).fill({ homeTeam: "", awayTeam: "" }),
+        matches: createEmptyMatches(),
       });
     },
     onError: (error) => {
@@ -144,6 +145,14 @@ export default function AdminPanel() {
             <p className="text-slate-600">Gerencie jornadas, resultados e vencedores</p>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/dashboard")}
+              className="border-slate-300"
+              title="Submeter os seus próprios palpites como participante"
+            >
+              Os meus palpites
+            </Button>
             <Button
               variant="outline"
               onClick={() => setLocation("/users")}
@@ -253,11 +262,12 @@ export default function AdminPanel() {
                             type="text"
                             placeholder="ex: Benfica"
                             value={match.homeTeam}
-                            onChange={(e) => {
-                              const newMatches = [...newRoundForm.matches];
-                              newMatches[i].homeTeam = e.target.value;
-                              setNewRoundForm({ ...newRoundForm, matches: newMatches });
-                            }}
+                            onChange={(e) =>
+                              setNewRoundForm(current => ({
+                                ...current,
+                                matches: updateDraftMatch(current.matches, i, "homeTeam", e.target.value),
+                              }))
+                            }
                             className="mt-1 border-slate-300"
                             required
                           />
@@ -271,11 +281,12 @@ export default function AdminPanel() {
                             type="text"
                             placeholder="ex: Porto"
                             value={match.awayTeam}
-                            onChange={(e) => {
-                              const newMatches = [...newRoundForm.matches];
-                              newMatches[i].awayTeam = e.target.value;
-                              setNewRoundForm({ ...newRoundForm, matches: newMatches });
-                            }}
+                            onChange={(e) =>
+                              setNewRoundForm(current => ({
+                                ...current,
+                                matches: updateDraftMatch(current.matches, i, "awayTeam", e.target.value),
+                              }))
+                            }
                             className="mt-1 border-slate-300"
                             required
                           />

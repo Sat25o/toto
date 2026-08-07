@@ -118,4 +118,14 @@ describe("autenticação local", () => {
       appRouter.createCaller(ctx).invitations.create({ email: "novo@example.com", role: "user" }),
     ).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
+
+  it("permite que um administrador submeta os seus próprios palpites", async () => {
+    const adminUser: User = { ...sampleUser, role: "admin", isSuperAdmin: true };
+    vi.mocked(db.createOrUpdatePrediction).mockResolvedValue({} as never);
+    const { ctx } = context(adminUser);
+
+    await appRouter.createCaller(ctx).predictions.submit({ matchId: 11, prediction: "X" });
+
+    expect(db.createOrUpdatePrediction).toHaveBeenCalledWith(11, adminUser.id, "X");
+  });
 });

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Clock, Trophy, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -39,12 +39,17 @@ export default function BettorDashboard() {
     },
   });
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      setLocation("/login");
+    }
+  }, [authLoading, setLocation, user]);
+
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
 
-  if (!user || user.role === "admin") {
-    setLocation("/");
+  if (!user) {
     return null;
   }
 
@@ -64,6 +69,16 @@ export default function BettorDashboard() {
             <p className="text-slate-600">Bem-vindo, {user.name}</p>
           </div>
           <div className="flex gap-2">
+            {user.role === "admin" && (
+              <Button
+                variant="outline"
+                onClick={() => setLocation("/admin")}
+                className="border-slate-300"
+                title="Voltar ao painel de gestão da competição"
+              >
+                Administração
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setLocation("/history")}

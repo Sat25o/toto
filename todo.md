@@ -78,3 +78,10 @@
 - [x] Atualizar gestão de utilizadores para listar contas, roles, estado e convites
 - [x] Cobrir registo por convite, login e proteção do super administrador com testes
 - [x] Permitir que um convite válido ative uma conta antiga existente sem duplicar o email
+
+## Correção de Jornadas e Participação Administrativa
+
+- [x] Garantir campos independentes para os seis jogos ao criar uma jornada
+- [x] Permitir que administradores submetam palpites e participem nas 34 vagas
+- [x] Adicionar acesso aos palpites pessoais a partir do painel administrativo
+- [x] Validar criação de jogos e participação administrativa com testes
