@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Clock, Trophy, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
+import { toggleRoundSelection } from "@/lib/roundSelection";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -63,10 +64,11 @@ export default function BettorDashboard() {
   }
 
   const handleRoundSelection = (roundId: number) => {
-    // Reset synchronously while changing rounds, never after a prediction click.
+    const nextRoundId = toggleRoundSelection(selectedRoundId, roundId);
+    // Reset synchronously while changing or closing a round, never after a prediction click.
     setOptimisticPredictions({});
     setPendingMatchId(null);
-    setSelectedRoundId(roundId);
+    setSelectedRoundId(nextRoundId);
   };
 
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {

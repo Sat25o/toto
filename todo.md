@@ -131,3 +131,9 @@
 
 - [x] Adicionar o botão Apostas Públicas ao menu do apostador
 - [x] Manter o menu do Dashboard responsivo em telemóvel
+
+## Jornada Expansível no Dashboard
+
+- [x] Fechar a jornada quando o utilizador volta a clicar no mesmo cartão
+- [x] Limpar apenas o estado temporário ao fechar a jornada
+- [x] Testar alternância abrir/fechar em telemóvel
