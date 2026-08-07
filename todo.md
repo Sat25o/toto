@@ -150,3 +150,9 @@
 - [x] Proteger super administrador e impedir eliminação da própria conta
 - [x] Adicionar confirmação antes de apagar no painel de utilizadores
 - [x] Testar a proteção e a remoção segura de dados associados
+
+## Jornadas Expansíveis em Gerir Resultados
+
+- [x] Fechar uma jornada de resultados ao tocar novamente no respetivo cartão
+- [x] Reutilizar a lógica de alternância já validada no Dashboard
+- [x] Validar a seleção de resultados em telemóvel após a alteração

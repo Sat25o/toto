@@ -12,6 +12,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
+import { toggleRoundSelection } from "@/lib/roundSelection";
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
@@ -354,7 +355,7 @@ export default function AdminPanel() {
                       rounds.map((round) => (
                         <button
                           key={round.id}
-                          onClick={() => setSelectedRoundId(round.id)}
+                          onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))}
                           className={`w-full text-left p-3 rounded-lg border transition-all ${
                             selectedRoundId === round.id
                               ? "bg-blue-50 border-blue-300"
