@@ -21,6 +21,19 @@ class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
+  private recoverApp = async () => {
+    try {
+      if ("serviceWorker" in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration => registration.unregister()));
+      }
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+    } finally {
+      window.location.replace(`/?refresh=${Date.now()}`);
+    }
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -31,16 +44,11 @@ class ErrorBoundary extends Component<Props, State> {
               className="text-destructive mb-6 flex-shrink-0"
             />
 
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
-
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
-            </div>
+            <h2 className="text-xl mb-2 text-slate-900">A app precisa de ser atualizada.</h2>
+            <p className="mb-6 text-center text-slate-600">Toque em atualizar para carregar a versão mais recente.</p>
 
             <button
-              onClick={() => window.location.reload()}
+              onClick={() => void this.recoverApp()}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg",
                 "bg-primary text-primary-foreground",
@@ -48,7 +56,7 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             >
               <RotateCcw size={16} />
-              Reload Page
+              Atualizar app
             </button>
           </div>
         </div>

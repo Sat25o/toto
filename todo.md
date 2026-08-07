@@ -187,3 +187,10 @@
 - [x] Registar o serviço de instalação PWA
 - [x] Adicionar botão Instalar App com instruções para iPhone
 - [x] Testar o botão e a apresentação mobile
+
+## Estabilidade da App Instalada
+
+- [x] Eliminar cache de recursos JavaScript que pode misturar versões da app
+- [x] Atualizar o service worker sem reutilizar ficheiros antigos
+- [x] Permitir recuperar a app limpando cache e recarregando em caso de erro
+- [x] Testar a atualização segura após nova versão publicada

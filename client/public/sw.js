@@ -1,8 +1,6 @@
-const CACHE_NAME = "liga-toto-talhao-v1";
-const APP_SHELL = ["/", "/login", "/manifest.webmanifest"];
+const CACHE_NAME = "liga-toto-talhao-v2";
 
-self.addEventListener("install", event => {
-  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)));
+self.addEventListener("install", () => {
   self.skipWaiting();
 });
 
@@ -18,15 +16,6 @@ self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
 
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        if (response.ok) {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request).then(cached => cached || caches.match("/")))
-  );
+  // A aplicação é sempre carregada da rede para nunca misturar ficheiros JavaScript de versões diferentes.
+  event.respondWith(fetch(event.request));
 });
