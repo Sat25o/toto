@@ -126,3 +126,8 @@
 - [x] Reorganizar ações administrativas em grelha de dois botões por linha no telemóvel
 - [x] Remover corte horizontal e adaptar título e subtítulo para ecrãs estreitos
 - [x] Validar o menu administrativo a 375 px por inspeção responsiva e compilação sem erros
+
+## Atalho de Apostas Públicas no Dashboard
+
+- [x] Adicionar o botão Apostas Públicas ao menu do apostador
+- [x] Manter o menu do Dashboard responsivo em telemóvel

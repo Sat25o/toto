@@ -109,6 +109,14 @@ export default function BettorDashboard() {
             </Button>
             <Button
               variant="outline"
+              onClick={() => setLocation("/public-predictions")}
+              className="border-slate-300"
+              title="Consultar as apostas de todos os participantes após o fecho do prazo"
+            >
+              Apostas Públicas
+            </Button>
+            <Button
+              variant="outline"
               onClick={() => setLocation("/standings")}
               className="border-slate-300"
             >
