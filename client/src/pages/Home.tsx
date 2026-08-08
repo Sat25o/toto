@@ -2,8 +2,9 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { SamsungInstallGuide } from "@/components/SamsungInstallGuide";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, Users, Target, TrendingUp } from "lucide-react";
+import { CircleHelp, Trophy, Users, Target, TrendingUp } from "lucide-react";
 import { useLocation } from "wouter";
 
 export default function Home() {
@@ -41,6 +42,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2">
             <InstallAppButton className="hidden sm:inline-flex" />
+            <Button variant="outline" size="icon" onClick={() => setLocation("/help")} title="Abrir centro de ajuda"><CircleHelp className="h-4 w-4" /></Button>
             <Button
               onClick={() => startLogin()}
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -154,6 +156,8 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        <div className="mb-16"><SamsungInstallGuide /></div>
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg p-12 text-center text-white">

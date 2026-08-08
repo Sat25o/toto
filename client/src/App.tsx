@@ -15,6 +15,7 @@ import UsersManagement from "./pages/UsersManagement";
 import PublicPredictions from "./pages/PublicPredictions";
 import LeagueInfo from "./pages/LeagueInfo";
 import LeagueManagement from "./pages/LeagueManagement";
+import Help from "./pages/Help";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -31,6 +32,7 @@ function Router() {
       <Route path={"/public-predictions"} component={PublicPredictions} />
       <Route path={"/rules"} component={LeagueInfo} />
       <Route path={"/league-management"} component={LeagueManagement} />
+      <Route path={"/help"} component={Help} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

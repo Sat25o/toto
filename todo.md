@@ -242,3 +242,11 @@
 - [x] Detetar Samsung Internet e evitar o pedido de instalação que aciona Play Protect
 - [x] Mostrar instruções oficiais para criar atalho no ecrã inicial
 - [x] Testar o fluxo Samsung e os fluxos de outros navegadores
+
+## Guia de Instalação e Ajuda
+
+- [x] Criar guia visual Samsung na página inicial
+- [x] Detetar Samsung Internet, Chrome Android, Safari iPhone e outros navegadores
+- [x] Criar página de ajuda com perguntas frequentes
+- [x] Adicionar acesso à ajuda a partir da página inicial
+- [x] Testar os guias e a navegação em telemóvel

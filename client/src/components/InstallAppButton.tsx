@@ -2,20 +2,12 @@ import { useEffect, useState } from "react";
 import { Download, Plus, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { shouldShowInstallInstructions } from "@/lib/pwaInstall";
+import { detectInstallBrowser, shouldShowInstallInstructions } from "@/lib/pwaInstall";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
-
-function isIosDevice() {
-  return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
-}
-
-function isSamsungInternet() {
-  return /SamsungBrowser/i.test(window.navigator.userAgent);
-}
 
 function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
@@ -25,7 +17,9 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [installed, setInstalled] = useState(false);
-  const samsungInternet = isSamsungInternet();
+  const browser = detectInstallBrowser(window.navigator.userAgent);
+  const samsungInternet = browser === "samsung";
+  const iosDevice = browser === "ios";
 
   useEffect(() => {
     setInstalled(isStandalone());
@@ -47,7 +41,7 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
 
   const handleInstall = async () => {
     const prompt = deferredPrompt;
-    if (shouldShowInstallInstructions(isIosDevice(), Boolean(prompt), isSamsungInternet())) {
+    if (shouldShowInstallInstructions(iosDevice, Boolean(prompt), samsungInternet)) {
       setShowInstallHelp(true);
       return;
     }
@@ -80,7 +74,7 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong>Ecrã inicial</strong>. Se não houver o ícone +, abra o menu do navegador e escolha <strong>Adicionar ao ecrã inicial</strong>.</span></li>
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span><span>Não use <strong>Instalar mesmo assim</strong> no aviso do Play Protect; este atalho abre o site com segurança.</span></li>
             </ol>
-          ) : isIosDevice() ? (
+          ) : iosDevice ? (
             <ol className="space-y-3 text-sm text-slate-700">
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>No Safari, toque em <strong className="inline-flex items-center gap-1"><Share className="h-4 w-4" /> Partilhar</strong>.</span></li>
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Adicionar ao ecrã principal</strong>.</span></li>
