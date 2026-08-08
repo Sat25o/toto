@@ -5,6 +5,7 @@ import { getParticipantProgress } from "@/lib/publicProgress";
 import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
+import { toggleSummaryFilter } from "@/lib/summaryFilter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -143,43 +144,48 @@ export default function PublicPredictions() {
               <Card className="border-slate-200/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-slate-900">Resumo da jornada</CardTitle>
-                  <CardDescription>Estado atualizado com os resultados oficiais já introduzidos.</CardDescription>
+                  <CardDescription>Toque num cartão para filtrar. Amarelo = em jogo; vermelho = eliminado; verde = vencedor.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                <CardContent className="space-y-3">
+                  <div className="flex gap-2">
+                    <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Procurar apostador" className="pl-9" /></div>
+                    <Button size="sm" variant="outline" onClick={() => { setSearchQuery(""); setStatusFilter("all"); }} title="Limpar pesquisa e filtro">Todos</Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter(current => toggleSummaryFilter(current, "eligible"))}
+                    aria-pressed={statusFilter === "eligible"}
+                    title="Filtrar participantes que continuam em jogo"
+                    className={`rounded-lg border border-amber-200 bg-amber-50 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 ${statusFilter === "eligible" ? "ring-2 ring-amber-500 ring-offset-2" : "hover:bg-amber-100"}`}
+                  >
                     <div className="text-xs font-medium text-amber-800">Em jogo</div>
                     <div className="mt-1 text-2xl font-bold text-amber-950">{publicSummary.eligibleCount}</div>
-                  </div>
-                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter(current => toggleSummaryFilter(current, "eliminated"))}
+                    aria-pressed={statusFilter === "eliminated"}
+                    title="Filtrar participantes eliminados"
+                    className={`rounded-lg border border-red-200 bg-red-50 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 ${statusFilter === "eliminated" ? "ring-2 ring-red-500 ring-offset-2" : "hover:bg-red-100"}`}
+                  >
                     <div className="text-xs font-medium text-red-800">Eliminados</div>
                     <div className="mt-1 text-2xl font-bold text-red-950">{publicSummary.eliminatedCount}</div>
-                  </div>
-                  <div className="col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 sm:col-span-1">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStatusFilter(current => toggleSummaryFilter(current, "winner"))}
+                    aria-pressed={statusFilter === "winner"}
+                    title="Filtrar participantes vencedores"
+                    className={`col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 sm:col-span-1 ${statusFilter === "winner" ? "ring-2 ring-emerald-500 ring-offset-2" : "hover:bg-emerald-100"}`}
+                  >
                     <div className="text-xs font-medium text-emerald-800">{publicSummary.winnerCount === 1 ? "Vencedor" : "Vencedores"}</div>
                     {publicSummary.winnerCount > 0 ? (
                       <div className="mt-1 text-sm font-bold text-emerald-950">{publicSummary.winnerNames.join(", ")}</div>
                     ) : (
                       <div className="mt-1 text-sm text-emerald-900">Ainda não há vencedor apurado</div>
                     )}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-slate-200/50">
-                <CardHeader>
-                  <CardTitle className="text-slate-900">Estado dos apostadores</CardTitle>
-                  <CardDescription>
-                    <span className="font-semibold text-amber-800">Amarelo</span> = continua em jogo; {" "}
-                    <span className="font-semibold text-red-800">vermelho</span> = falhou um resultado ou não completou os seis palpites; {" "}
-                    <span className="font-semibold text-emerald-800">verde</span> = acertou os seis jogos.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Procurar apostador" className="pl-9" /></div>
-                  <div className="flex flex-wrap gap-2" aria-label="Filtrar apostadores por estado">
-                    {(["all", "eligible", "eliminated", "winner"] as const).map(filter => {
-                      const labels = { all: "Todos", eligible: "Em jogo", eliminated: "Eliminado", winner: "Vencedor" };
-                      return <Button key={filter} size="sm" variant={statusFilter === filter ? "default" : "outline"} onClick={() => setStatusFilter(filter)} title={`Mostrar ${labels[filter].toLocaleLowerCase()}`}>{labels[filter]}</Button>;
-                    })}
+                  </button>
                   </div>
                 </CardContent>
               </Card>

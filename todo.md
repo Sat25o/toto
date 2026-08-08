@@ -229,3 +229,10 @@
 - [x] Mostrar os nomes de todos os vencedores quando existirem
 - [x] Adaptar o resumo a ecrãs de telemóvel
 - [x] Testar resumo sem vencedor, com um vencedor e com vencedores múltiplos
+
+## Resumo Interativo das Apostas Públicas
+
+- [x] Mover pesquisa de apostadores para o Resumo da jornada
+- [x] Transformar os cartões Em jogo, Eliminados e Vencedores em filtros
+- [x] Remover a caixa redundante Estado dos apostadores
+- [x] Testar filtros no resumo em telemóvel
