@@ -6,5 +6,6 @@ describe("instalação da app", () => {
     expect(shouldShowInstallInstructions(true, true)).toBe(true);
     expect(shouldShowInstallInstructions(false, false)).toBe(true);
     expect(shouldShowInstallInstructions(false, true)).toBe(false);
+    expect(shouldShowInstallInstructions(false, true, true)).toBe(true);
   });
 });

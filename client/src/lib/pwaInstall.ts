@@ -1,3 +1,3 @@
-export function shouldShowInstallInstructions(isIos: boolean, hasInstallPrompt: boolean) {
-  return isIos || !hasInstallPrompt;
+export function shouldShowInstallInstructions(isIos: boolean, hasInstallPrompt: boolean, isSamsungInternet = false) {
+  return isIos || isSamsungInternet || !hasInstallPrompt;
 }

@@ -13,6 +13,10 @@ function isIosDevice() {
   return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
 }
 
+function isSamsungInternet() {
+  return /SamsungBrowser/i.test(window.navigator.userAgent);
+}
+
 function isStandalone() {
   return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 }
@@ -21,6 +25,7 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallHelp, setShowInstallHelp] = useState(false);
   const [installed, setInstalled] = useState(false);
+  const samsungInternet = isSamsungInternet();
 
   useEffect(() => {
     setInstalled(isStandalone());
@@ -42,7 +47,7 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
 
   const handleInstall = async () => {
     const prompt = deferredPrompt;
-    if (shouldShowInstallInstructions(isIosDevice(), Boolean(prompt))) {
+    if (shouldShowInstallInstructions(isIosDevice(), Boolean(prompt), isSamsungInternet())) {
       setShowInstallHelp(true);
       return;
     }
@@ -61,7 +66,7 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
   return (
     <>
       <Button variant="outline" className={className} onClick={handleInstall} title="Adicionar a Liga Toto Talho como app web segura, sem descarregar APK">
-        <Download className="mr-2 h-4 w-4" /> Instalar app web
+        <Download className="mr-2 h-4 w-4" /> {samsungInternet ? "Adicionar ao ecrã inicial" : "Instalar app web"}
       </Button>
       <Dialog open={showInstallHelp} onOpenChange={setShowInstallHelp}>
         <DialogContent>
@@ -69,7 +74,13 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
             <DialogTitle>Instalar a Liga Toto Talho</DialogTitle>
             <DialogDescription>Esta é uma app web segura. Não descarrega nem instala ficheiros APK.</DialogDescription>
           </DialogHeader>
-          {isIosDevice() ? (
+          {samsungInternet ? (
+            <ol className="space-y-3 text-sm text-slate-700">
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>No Samsung Internet, procure o ícone <strong>+</strong> junto à barra de endereço e toque nele.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong>Ecrã inicial</strong>. Se não houver o ícone +, abra o menu do navegador e escolha <strong>Adicionar ao ecrã inicial</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span><span>Não use <strong>Instalar mesmo assim</strong> no aviso do Play Protect; este atalho abre o site com segurança.</span></li>
+            </ol>
+          ) : isIosDevice() ? (
             <ol className="space-y-3 text-sm text-slate-700">
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>No Safari, toque em <strong className="inline-flex items-center gap-1"><Share className="h-4 w-4" /> Partilhar</strong>.</span></li>
               <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Adicionar ao ecrã principal</strong>.</span></li>

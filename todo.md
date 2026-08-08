@@ -236,3 +236,9 @@
 - [x] Transformar os cartões Em jogo, Eliminados e Vencedores em filtros
 - [x] Remover a caixa redundante Estado dos apostadores
 - [x] Testar filtros no resumo em telemóvel
+
+## Instalação Segura em Samsung
+
+- [x] Detetar Samsung Internet e evitar o pedido de instalação que aciona Play Protect
+- [x] Mostrar instruções oficiais para criar atalho no ecrã inicial
+- [x] Testar o fluxo Samsung e os fluxos de outros navegadores
