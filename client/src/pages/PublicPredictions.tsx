@@ -4,6 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { getParticipantProgress } from "@/lib/publicProgress";
 import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
+import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +72,7 @@ export default function PublicPredictions() {
     ? orderedParticipants.map(participant => ({ participant, progress: getParticipantProgress(publicRound.matches, participant.predictions, Number.POSITIVE_INFINITY, true) }))
     : [];
   const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
+  const publicSummary = summarizePublicRound(participantCards);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
@@ -138,6 +140,30 @@ export default function PublicPredictions() {
             </div>
           ) : publicRound ? (
             <div className="space-y-5">
+              <Card className="border-slate-200/50">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-slate-900">Resumo da jornada</CardTitle>
+                  <CardDescription>Estado atualizado com os resultados oficiais já introduzidos.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                    <div className="text-xs font-medium text-amber-800">Em jogo</div>
+                    <div className="mt-1 text-2xl font-bold text-amber-950">{publicSummary.eligibleCount}</div>
+                  </div>
+                  <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                    <div className="text-xs font-medium text-red-800">Eliminados</div>
+                    <div className="mt-1 text-2xl font-bold text-red-950">{publicSummary.eliminatedCount}</div>
+                  </div>
+                  <div className="col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-3 sm:col-span-1">
+                    <div className="text-xs font-medium text-emerald-800">{publicSummary.winnerCount === 1 ? "Vencedor" : "Vencedores"}</div>
+                    {publicSummary.winnerCount > 0 ? (
+                      <div className="mt-1 text-sm font-bold text-emerald-950">{publicSummary.winnerNames.join(", ")}</div>
+                    ) : (
+                      <div className="mt-1 text-sm text-emerald-900">Ainda não há vencedor apurado</div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
               <Card className="border-slate-200/50">
                 <CardHeader>
                   <CardTitle className="text-slate-900">Estado dos apostadores</CardTitle>

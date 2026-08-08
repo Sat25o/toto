@@ -222,3 +222,10 @@
 - [x] Marcar como eliminados participantes com menos de seis palpites após o prazo
 - [x] Diferenciar visualmente a eliminação por falta de palpites
 - [x] Testar participantes completos, incompletos e sem palpites
+
+## Resumo das Apostas Públicas
+
+- [x] Mostrar total de apostadores em jogo e eliminados
+- [x] Mostrar os nomes de todos os vencedores quando existirem
+- [x] Adaptar o resumo a ecrãs de telemóvel
+- [x] Testar resumo sem vencedor, com um vencedor e com vencedores múltiplos
