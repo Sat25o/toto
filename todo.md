@@ -250,3 +250,9 @@
 - [x] Criar página de ajuda com perguntas frequentes
 - [x] Adicionar acesso à ajuda a partir da página inicial
 - [x] Testar os guias e a navegação em telemóvel
+
+## Ecrã Inicial Samsung Bloqueado
+
+- [x] Explicar como desbloquear temporariamente o esquema do ecrã inicial
+- [x] Adicionar solução ao guia Samsung e às perguntas frequentes
+- [x] Testar a orientação em telemóvel

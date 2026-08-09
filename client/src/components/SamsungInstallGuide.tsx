@@ -1,4 +1,4 @@
-import { CirclePlus, Home, Menu, ShieldCheck, Smartphone } from "lucide-react";
+import { CirclePlus, Home, LockKeyhole, Menu, ShieldCheck, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 
@@ -20,6 +20,7 @@ export function SamsungInstallGuide() {
         <div className="rounded-xl border border-blue-100 bg-white p-4"><Home className="h-6 w-6 text-blue-600" /><div className="mt-3 font-semibold text-slate-900">2. Ecrã inicial</div><p className="mt-1 text-sm text-slate-600">Escolha “Ecrã inicial” para criar o atalho.</p></div>
         <div className="rounded-xl border border-blue-100 bg-white p-4"><Menu className="h-6 w-6 text-blue-600" /><div className="mt-3 font-semibold text-slate-900">3. Alternativa</div><p className="mt-1 text-sm text-slate-600">Sem o +, use o menu e “Adicionar ao ecrã inicial”.</p></div>
       </div>
+      <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950"><div className="flex gap-2 font-semibold"><LockKeyhole className="h-5 w-5 shrink-0 text-amber-700" />Se aparecer “Esquema do ecrã inicial bloqueado”</div><p className="mt-2 leading-6">Abra <strong>Definições → Ecrã inicial</strong> e desative temporariamente <strong>Bloquear esquema do ecrã inicial</strong>. Depois volte ao Samsung Internet e tente adicionar novamente. Pode reativar o bloqueio no fim.</p></div>
       <div className="mt-4 flex items-center gap-2 text-xs font-medium text-emerald-800"><ShieldCheck className="h-4 w-4" />Atalho seguro pelo navegador, sem instalar aplicações Android externas.</div>
     </section>
   );
