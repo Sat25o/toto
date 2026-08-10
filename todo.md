@@ -256,3 +256,9 @@
 - [x] Explicar como desbloquear temporariamente o esquema do ecrã inicial
 - [x] Adicionar solução ao guia Samsung e às perguntas frequentes
 - [x] Testar a orientação em telemóvel
+
+## Página Inicial Privada
+
+- [x] Remover conteúdo público, guias e informação promocional da página inicial
+- [x] Manter apenas o botão Entrar para o grupo privado
+- [x] Validar a entrada minimalista em telemóvel e computador
