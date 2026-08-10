@@ -262,3 +262,8 @@
 - [x] Remover conteúdo público, guias e informação promocional da página inicial
 - [x] Manter apenas o botão Entrar para o grupo privado
 - [x] Validar a entrada minimalista em telemóvel e computador
+
+## Limpeza Visual do Login
+
+- [x] Remover elementos vazios deixados pelas edições visuais no ecrã de login
+- [x] Validar o formulário de login simplificado em telemóvel e computador

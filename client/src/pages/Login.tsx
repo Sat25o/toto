@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Trophy } from "lucide-react";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -37,15 +36,6 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Trophy className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
-          </div>
-          <p className="text-slate-600">Prognósticos 34 Jornadas</p>
-        </div>
-
         {/* Login Card */}
         <Card className="border-slate-200/50 shadow-lg">
           <CardHeader>
@@ -92,12 +82,6 @@ export default function Login() {
                 {isLoading || loginMutation.isPending ? "Carregando..." : "Fazer Login"}
               </Button>
             </form>
-
-            <div className="mt-6 text-center">
-              <p className="text-slate-600 text-sm">
-                Para criar uma conta, peça um convite ao administrador.
-              </p>
-            </div>
           </CardContent>
         </Card>
 
