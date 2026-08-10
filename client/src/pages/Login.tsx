@@ -84,11 +84,6 @@ export default function Login() {
             </form>
           </CardContent>
         </Card>
-
-        {/* Footer */}
-        <p className="text-center text-slate-500 text-sm mt-8">
-          © 2026 Liga Toto Talho. Todos os direitos reservados.
-        </p>
       </div>
     </div>
   );

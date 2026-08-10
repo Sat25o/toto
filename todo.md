@@ -267,3 +267,8 @@
 
 - [x] Remover elementos vazios deixados pelas edições visuais no ecrã de login
 - [x] Validar o formulário de login simplificado em telemóvel e computador
+
+## Finalização do Login Minimalista
+
+- [x] Remover o rodapé vazio depois da remoção do texto
+- [x] Validar a apresentação final do formulário de login
