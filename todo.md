@@ -330,3 +330,9 @@
 - [x] Fixar a coluna Jogo durante o deslize horizontal dos palpites
 - [x] Manter equipas e resultado final legíveis na coluna fixa
 - [x] Validar a deslocação horizontal em telemóvel e computador
+
+## Sessão Persistente
+
+- [x] Renovar a sessão segura por sete dias quando a aplicação é utilizada
+- [x] Manter a expiração do token e do cookie alinhada em sete dias
+- [x] Testar a renovação e o encerramento da sessão

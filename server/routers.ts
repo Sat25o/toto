@@ -10,7 +10,7 @@ import * as db from "./db";
 import { buildInvitationUrl } from "./invitationUrl";
 import { assertRoundHistoryIsAvailable } from "./historyAccess";
 
-const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+export const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITATION_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000;
 
 function publicUser(user: {
@@ -44,7 +44,17 @@ export const appRouter = router({
   system: systemRouter,
 
   auth: router({
-    me: publicProcedure.query(({ ctx }) => (ctx.user ? publicUser(ctx.user) : null)),
+    me: publicProcedure.query(async ({ ctx }) => {
+      if (!ctx.user) return null;
+
+      const token = await sdk.createSessionToken(ctx.user.id);
+      ctx.res.cookie(COOKIE_NAME, token, {
+        ...getSessionCookieOptions(ctx.req),
+        maxAge: SESSION_MAX_AGE_MS,
+      });
+
+      return publicUser(ctx.user);
+    }),
     login: publicProcedure
       .input(z.object({ email: z.string().email(), password: z.string().min(1) }))
       .mutation(async ({ input, ctx }) => {
