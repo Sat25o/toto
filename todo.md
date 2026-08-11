@@ -279,3 +279,11 @@
 - [x] Bloquear a edição após prazo, palpites, resultados oficiais ou fecho da jornada
 - [x] Adicionar controlos de correção de jogos no painel de administração
 - [x] Testar as regras de proteção e validar a experiência em telemóvel e computador
+
+## Histórico e Classificação por Acertos
+
+- [x] Manter no histórico a indicação de vencedores ou ausência de vencedor
+- [x] Remover a apresentação dos resultados oficiais dos jogos no histórico
+- [x] Mostrar os palpites de todos os participantes identificados pelo nome
+- [x] Destacar a classificação geral acumulada por total de acertos
+- [x] Testar a ordenação acumulada e a apresentação em telemóvel e computador

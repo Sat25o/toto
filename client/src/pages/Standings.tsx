@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Medal } from "lucide-react";
+import { sortCumulativeStandings } from "@/lib/standingsRanking";
 
 export default function Standings() {
   const { user, loading: authLoading } = useAuth();
@@ -13,6 +14,7 @@ export default function Standings() {
 
   // Fetch standings
   const { data: standings, isLoading } = trpc.standings.list.useQuery();
+  const sortedStandings = sortCumulativeStandings(standings ?? []);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -69,7 +71,7 @@ export default function Standings() {
                 <Skeleton className="h-12 w-full" />
                 <Skeleton className="h-12 w-full" />
               </div>
-            ) : standings && standings.length > 0 ? (
+            ) : sortedStandings.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -80,16 +82,13 @@ export default function Standings() {
                       <th className="px-6 py-3 text-left text-sm font-semibold text-slate-600">
                         Apostador
                       </th>
-                      <th className="px-6 py-3 text-left text-sm font-semibold text-slate-600">
-                        Email
-                      </th>
                       <th className="px-6 py-3 text-right text-sm font-semibold text-slate-600">
                         Acertos
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {standings.map((entry, index) => {
+                    {sortedStandings.map((entry, index) => {
                       const isCurrentUser = user?.id === entry.userId;
                       return (
                         <tr
@@ -112,9 +111,6 @@ export default function Standings() {
                                 <Badge className="ml-2 bg-blue-100 text-blue-800">Você</Badge>
                               )}
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-sm text-slate-600">
-                            {entry.userEmail || "—"}
                           </td>
                           <td className="px-6 py-4 text-right">
                             <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold">

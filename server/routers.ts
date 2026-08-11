@@ -8,6 +8,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { buildInvitationUrl } from "./invitationUrl";
+import { assertRoundHistoryIsAvailable } from "./historyAccess";
 
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const INVITATION_VALIDITY_MS = 7 * 24 * 60 * 60 * 1000;
@@ -344,6 +345,18 @@ export const appRouter = router({
     getByRoundAdmin: adminProcedure
       .input(z.object({ roundId: z.number().int().positive() }))
       .query(({ input }) => db.getPredictionsByRound(input.roundId)),
+    getHistoryByRound: protectedProcedure
+      .input(z.object({ roundId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        const round = await db.getRound(input.roundId);
+        if (!round) throw new TRPCError({ code: "NOT_FOUND", message: "Jornada não encontrada" });
+        try {
+          assertRoundHistoryIsAvailable(round.isSettled);
+          return db.getPredictionsByRound(input.roundId);
+        } catch (error) {
+          throw new TRPCError({ code: "FORBIDDEN", message: error instanceof Error ? error.message : "Histórico indisponível" });
+        }
+      }),
     getPublic: protectedProcedure
       .input(z.object({ roundId: z.number().int().positive() }))
       .query(async ({ input }) => {
