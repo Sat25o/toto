@@ -312,3 +312,9 @@
 - [x] Remover o quadro de Classificação Geral da página de Histórico
 - [x] Remover o atalho Histórico do menu de administração
 - [x] Validar a navegação e a página de Histórico simplificada
+
+## Ordem dos Botões do Dashboard
+
+- [x] Reorganizar os atalhos por prioridade de utilização
+- [x] Ocultar o atalho Histórico no Dashboard quando o utilizador for administrador
+- [x] Validar os atalhos em telemóvel e computador

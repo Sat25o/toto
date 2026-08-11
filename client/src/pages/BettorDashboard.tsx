@@ -115,11 +115,28 @@ export default function BettorDashboard() {
             )}
             <Button
               variant="outline"
-              onClick={() => setLocation("/history")}
+              onClick={() => setLocation("/public-predictions")}
+              className="border-slate-300"
+              title="Consultar as apostas de todos os participantes após o fecho do prazo"
+            >
+              Apostas Públicas
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/standings")}
               className="border-slate-300"
             >
-              Histórico
+              Classificação
             </Button>
+            {user.role !== "admin" && (
+              <Button
+                variant="outline"
+                onClick={() => setLocation("/history")}
+                className="border-slate-300"
+              >
+                Histórico
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setLocation("/rules")}
@@ -128,22 +145,7 @@ export default function BettorDashboard() {
             >
               <BookOpen className="mr-2 h-4 w-4" /> Regras
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/public-predictions")}
-              className="border-slate-300"
-              title="Consultar as apostas de todos os participantes após o fecho do prazo"
-            >
-              Apostas Públicas
-            </Button>
             <InstallAppButton />
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/standings")}
-              className="border-slate-300"
-            >
-              Classificação
-            </Button>
           </div>
         </div>
       </div>
