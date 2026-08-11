@@ -8,13 +8,20 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { splitRoundParticipation } from "@/lib/roundParticipation";
 import { InstallAppButton } from "@/components/InstallAppButton";
+
+type MatchEditDraft = {
+  id: number;
+  homeTeam: string;
+  awayTeam: string;
+  matchOrder: number;
+};
 
 export default function AdminPanel() {
   const { user, loading: authLoading } = useAuth();
@@ -46,6 +53,7 @@ export default function AdminPanel() {
 
   const [resultForm, setResultForm] = useState<Record<number, "1" | "X" | "2">>({});
   const [deadlineDraft, setDeadlineDraft] = useState("");
+  const [matchDraft, setMatchDraft] = useState<MatchEditDraft[]>([]);
 
   // Create round mutation
   const createRoundMutation = trpc.rounds.create.useMutation({
@@ -85,6 +93,14 @@ export default function AdminPanel() {
     onError: error => toast.error(error.message || "Não foi possível atualizar o prazo"),
   });
 
+  const updateMatchesMutation = trpc.rounds.updateMatches.useMutation({
+    onSuccess: () => {
+      toast.success("Jogos da jornada atualizados.");
+      void refetchRoundData();
+    },
+    onError: error => toast.error(error.message || "Não foi possível atualizar os jogos"),
+  });
+
   // Calculate winner mutation
   const calculateWinnerMutation = trpc.winner.calculate.useMutation({
     onSuccess: (data) => {
@@ -100,15 +116,6 @@ export default function AdminPanel() {
       toast.error(error.message || "Erro ao calcular vencedor");
     },
   });
-
-  if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
-  if (!user || user.role !== "admin") {
-    setLocation("/");
-    return null;
-  }
 
   const handleCreateRound = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,13 +174,39 @@ export default function AdminPanel() {
   };
 
   useEffect(() => {
-    if (!roundData?.round) return;
+    if (!roundData?.round) {
+      setDeadlineDraft("");
+      setMatchDraft([]);
+      return;
+    }
     const deadline = new Date(roundData.round.bettingDeadline);
     const localDeadline = new Date(deadline.getTime() - deadline.getTimezoneOffset() * 60_000)
       .toISOString()
       .slice(0, 16);
     setDeadlineDraft(localDeadline);
-  }, [roundData?.round?.bettingDeadline, selectedRoundId]);
+    setMatchDraft(
+      roundData.matches.map(match => ({
+        id: match.id,
+        homeTeam: match.homeTeam,
+        awayTeam: match.awayTeam,
+        matchOrder: match.matchOrder,
+      })),
+    );
+  }, [roundData?.matches, roundData?.round?.bettingDeadline, selectedRoundId]);
+
+  useEffect(() => {
+    if (!authLoading && (!user || user.role !== "admin")) {
+      setLocation("/");
+    }
+  }, [authLoading, setLocation, user]);
+
+  if (authLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!user || user.role !== "admin") {
+    return null;
+  }
 
   const handleDeadlineUpdate = () => {
     if (!selectedRoundId || !deadlineDraft) return;
@@ -185,8 +218,40 @@ export default function AdminPanel() {
     updateDeadlineMutation.mutate({ roundId: selectedRoundId, bettingDeadline: nextDeadline });
   };
 
+  const handleMatchFieldChange = (matchId: number, field: "homeTeam" | "awayTeam", value: string) => {
+    setMatchDraft(current => current.map(match => (match.id === matchId ? { ...match, [field]: value } : match)));
+  };
+
+  const handleMatchesUpdate = () => {
+    if (!selectedRoundId || matchDraft.length !== 6) return;
+    if (matchDraft.some(match => !match.homeTeam.trim() || !match.awayTeam.trim())) {
+      toast.error("Indique a equipa da casa e a equipa visitante nos seis jogos.");
+      return;
+    }
+    updateMatchesMutation.mutate({
+      roundId: selectedRoundId,
+      matches: matchDraft.map(match => ({
+        id: match.id,
+        homeTeam: match.homeTeam.trim(),
+        awayTeam: match.awayTeam.trim(),
+      })),
+    });
+  };
+
   const totalMatches = roundData?.matches.length ?? 6;
   const { completed: completedParticipants, pending: pendingParticipants } = splitRoundParticipation(participation ?? [], totalMatches);
+  const totalPredictions = (participation ?? []).reduce((total, participant) => total + participant.predictionCount, 0);
+  const matchEditingBlockedReason = !roundData
+    ? null
+    : roundData.round.isSettled
+      ? "A jornada já foi fechada."
+      : new Date(roundData.round.bettingDeadline) <= new Date()
+        ? "O prazo de apostas já terminou."
+        : totalPredictions > 0
+          ? "Já existem palpites nesta jornada."
+          : roundData.matches.some(match => match.result)
+            ? "Já existem resultados oficiais nesta jornada."
+            : null;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -461,6 +526,39 @@ export default function AdminPanel() {
                         <Button className="bg-blue-600 hover:bg-blue-700" disabled={roundData.round.isSettled || !deadlineDraft || updateDeadlineMutation.isPending} onClick={handleDeadlineUpdate} title="Guardar a nova data e hora limite">
                           {roundData.round.isSettled ? "Jornada fechada" : updateDeadlineMutation.isPending ? "A guardar…" : "Atualizar prazo"}
                         </Button>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-blue-200">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base text-slate-900"><Pencil className="h-4 w-4" /> Corrigir jogos da jornada</CardTitle>
+                        <CardDescription>Corrija as equipas antes do prazo, desde que ainda não existam palpites nem resultados oficiais.</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {matchEditingBlockedReason ? (
+                          <p className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">Não é possível editar os jogos: {matchEditingBlockedReason}</p>
+                        ) : (
+                          <div className="space-y-4">
+                            <div className="space-y-3">
+                              {matchDraft.map(match => (
+                                <div key={match.id} className="grid gap-3 rounded-lg border border-slate-200 p-3 sm:grid-cols-2">
+                                  <div>
+                                    <Label htmlFor={`edit-home-${match.id}`}>Jogo {match.matchOrder} · Casa</Label>
+                                    <Input id={`edit-home-${match.id}`} value={match.homeTeam} onChange={event => handleMatchFieldChange(match.id, "homeTeam", event.target.value)} className="mt-1" />
+                                  </div>
+                                  <div>
+                                    <Label htmlFor={`edit-away-${match.id}`}>Jogo {match.matchOrder} · Visitante</Label>
+                                    <Input id={`edit-away-${match.id}`} value={match.awayTeam} onChange={event => handleMatchFieldChange(match.id, "awayTeam", event.target.value)} className="mt-1" />
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                            <Button type="button" onClick={handleMatchesUpdate} disabled={matchDraft.length !== 6 || updateMatchesMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
+                              <Save className="mr-2 h-4 w-4" />
+                              {updateMatchesMutation.isPending ? "A guardar…" : "Guardar jogos"}
+                            </Button>
+                          </div>
+                        )}
                       </CardContent>
                     </Card>
 

@@ -6,6 +6,7 @@ import { calculateEqualPrizeShare } from "./settlement";
 import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
 import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
+import { assertRoundMatchesAreEditable } from "./matchEditing";
 import {
   adminMessages,
   emailNotifications,
@@ -340,6 +341,55 @@ export async function getMatchesByRound(roundId: number) {
   const db = await getDb();
   if (!db) return [];
   return db.select().from(matches).where(eq(matches.roundId, roundId)).orderBy(matches.matchOrder);
+}
+
+export async function updateRoundMatches(
+  roundId: number,
+  matchesData: Array<{ id: number; homeTeam: string; awayTeam: string }>,
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const round = await getRound(roundId);
+  if (!round) throw new Error("Jornada não encontrada");
+
+  const currentMatches = await getMatchesByRound(roundId);
+  const currentMatchIds = new Set(currentMatches.map(match => match.id));
+  const submittedMatchIds = new Set(matchesData.map(match => match.id));
+  if (
+    currentMatches.length !== 6 ||
+    matchesData.length !== 6 ||
+    submittedMatchIds.size !== 6 ||
+    Array.from(submittedMatchIds).some(matchId => !currentMatchIds.has(matchId))
+  ) {
+    throw new Error("Os seis jogos da jornada têm de ser enviados corretamente");
+  }
+
+  const predictionCount = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(predictions)
+    .innerJoin(matches, eq(predictions.matchId, matches.id))
+    .where(eq(matches.roundId, roundId));
+
+  assertRoundMatchesAreEditable({
+    isSettled: round.isSettled,
+    bettingDeadline: round.bettingDeadline,
+    hasPredictions: Number(predictionCount[0]?.count ?? 0) > 0,
+    hasOfficialResults: currentMatches.some(match => match.result !== null),
+  });
+
+  await db.transaction(async tx => {
+    await Promise.all(
+      matchesData.map(match =>
+        tx
+          .update(matches)
+          .set({ homeTeam: match.homeTeam.trim(), awayTeam: match.awayTeam.trim() })
+          .where(and(eq(matches.id, match.id), eq(matches.roundId, roundId))),
+      ),
+    );
+  });
+
+  return getMatchesByRound(roundId);
 }
 
 export async function updateMatchResult(matchId: number, result: "1" | "X" | "2") {

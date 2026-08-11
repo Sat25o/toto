@@ -272,3 +272,10 @@
 
 - [x] Remover o rodapé vazio depois da remoção do texto
 - [x] Validar a apresentação final do formulário de login
+
+## Correção de Jogos em Jornadas
+
+- [x] Permitir ao administrador editar as equipas dos seis jogos de uma jornada aberta
+- [x] Bloquear a edição após prazo, palpites, resultados oficiais ou fecho da jornada
+- [x] Adicionar controlos de correção de jogos no painel de administração
+- [x] Testar as regras de proteção e validar a experiência em telemóvel e computador

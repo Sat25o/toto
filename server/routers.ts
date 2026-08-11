@@ -253,6 +253,29 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar o prazo" });
         }
       }),
+    updateMatches: adminProcedure
+      .input(
+        z.object({
+          roundId: z.number().int().positive(),
+          matches: z
+            .array(
+              z.object({
+                id: z.number().int().positive(),
+                homeTeam: z.string().trim().min(1).max(100),
+                awayTeam: z.string().trim().min(1).max(100),
+              }),
+            )
+            .length(6),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        try {
+          const matches = await db.updateRoundMatches(input.roundId, input.matches);
+          return { success: true, matches };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar os jogos" });
+        }
+      }),
     create: adminProcedure
       .input(
         z.object({
