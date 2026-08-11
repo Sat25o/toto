@@ -349,3 +349,9 @@
 - [x] Permitir abrir e fechar o detalhe de cada grupo de boletim igual
 - [x] Mostrar os seis jogos e o palpite comum do grupo
 - [x] Testar a alternância de detalhe e validar a apresentação
+
+## Posição do Detalhe de Copiaços
+
+- [x] Mostrar a Aposta comum logo por baixo do grupo de Copiaços selecionado
+- [x] Manter a abertura e o fecho do detalhe no próprio cartão
+- [x] Validar a posição do detalhe em telemóvel e computador

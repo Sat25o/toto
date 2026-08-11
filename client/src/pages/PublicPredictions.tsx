@@ -83,8 +83,6 @@ export default function PublicPredictions() {
     ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
     : [];
 
-  const openCopycatsGroup = identicalPredictionGroups.find(group => group.predictions.join("|") === openCopycatsGroupKey) ?? null;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
       <header className="max-w-7xl mx-auto mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -298,6 +296,25 @@ export default function PublicPredictions() {
                                   {isOpen ? <ChevronUp className="h-5 w-5 text-violet-700" /> : <ChevronDown className="h-5 w-5 text-violet-700" />}
                                 </div>
                               </button>
+                              {isOpen && (
+                                <div className="border-t border-violet-200 bg-violet-50/40 p-4">
+                                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                      <h3 className="font-bold text-slate-900">Aposta comum</h3>
+                                      <p className="text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
+                                    </div>
+                                    <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
+                                  </div>
+                                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                    {publicRound.matches.map((match, matchIndex) => (
+                                      <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                        <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
+                                        <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{group.predictions[matchIndex]}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
                             </article>
                           );
                         })}
@@ -310,25 +327,6 @@ export default function PublicPredictions() {
                       </div>
                     )}
 
-                    {openCopycatsGroup && (
-                      <div className="mt-5 rounded-xl border border-violet-300 bg-white p-4 shadow-sm">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <h2 className="font-bold text-slate-900">Aposta comum</h2>
-                            <p className="text-sm text-slate-600">{openCopycatsGroup.participants.map(participant => participant.name).join(", ")}</p>
-                          </div>
-                          <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
-                        </div>
-                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                          {publicRound.matches.map((match, matchIndex) => (
-                            <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                              <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
-                              <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{openCopycatsGroup.predictions[matchIndex]}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
