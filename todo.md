@@ -355,3 +355,9 @@
 - [x] Mostrar a Aposta comum logo por baixo do grupo de Copiaços selecionado
 - [x] Manter a abertura e o fecho do detalhe no próprio cartão
 - [x] Validar a posição do detalhe em telemóvel e computador
+
+## Comparação de Grupos de Copiaços
+
+- [x] Permitir manter abertos vários grupos de Copiaços ao mesmo tempo
+- [x] Adicionar controlos para abrir e fechar todos os grupos
+- [x] Validar a comparação de vários boletins em simultâneo

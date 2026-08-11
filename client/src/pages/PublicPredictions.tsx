@@ -7,7 +7,7 @@ import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/parti
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { toggleSummaryFilter } from "@/lib/summaryFilter";
 import { findIdenticalPredictionGroups } from "@/lib/identicalPredictions";
-import { toggleCopycatsDetail } from "@/lib/copycatsDetail";
+import { openAllCopycatsDetails, toggleCopycatsDetail } from "@/lib/copycatsDetail";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -52,7 +52,7 @@ export default function PublicPredictions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PublicParticipantStatus>("all");
   const [activeTab, setActiveTab] = useState<"apostadores" | "copycats">("apostadores");
-  const [openCopycatsGroupKey, setOpenCopycatsGroupKey] = useState<string | null>(null);
+  const [openCopycatsGroupKeys, setOpenCopycatsGroupKeys] = useState<string[]>([]);
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
@@ -63,6 +63,10 @@ export default function PublicPredictions() {
   useEffect(() => {
     if (!authLoading && !user) setLocation("/login");
   }, [authLoading, setLocation, user]);
+
+  useEffect(() => {
+    setOpenCopycatsGroupKeys([]);
+  }, [selectedRoundId]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">A carregar...</div>;
@@ -273,52 +277,78 @@ export default function PublicPredictions() {
                   </CardHeader>
                   <CardContent>
                     {identicalPredictionGroups.length > 0 ? (
-                      <div className="grid gap-4 md:grid-cols-2">
-                        {identicalPredictionGroups.map((group, index) => {
-                          const groupKey = group.predictions.join("|");
-                          const isOpen = groupKey === openCopycatsGroupKey;
+                      <>
+                        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                          <p className="text-sm text-slate-600">Pode manter vários grupos abertos para comparar os palpites.</p>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              title="Abrir os detalhes de todos os grupos de Copiaços"
+                              onClick={() => setOpenCopycatsGroupKeys(openAllCopycatsDetails(identicalPredictionGroups.map(group => group.predictions.join("|"))))}
+                            >
+                              Abrir todos
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              title="Fechar os detalhes de todos os grupos de Copiaços"
+                              onClick={() => setOpenCopycatsGroupKeys([])}
+                              disabled={openCopycatsGroupKeys.length === 0}
+                            >
+                              Fechar todos
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {identicalPredictionGroups.map((group, index) => {
+                            const groupKey = group.predictions.join("|");
+                            const isOpen = openCopycatsGroupKeys.includes(groupKey);
 
-                          return (
-                            <article key={`${groupKey}-${index}`} className={`overflow-hidden rounded-xl border bg-white shadow-sm transition ${isOpen ? "border-violet-400 ring-2 ring-violet-200" : "border-violet-200"}`}>
-                              <button
-                                type="button"
-                                onClick={() => setOpenCopycatsGroupKey(current => toggleCopycatsDetail(current, groupKey))}
-                                aria-expanded={isOpen}
-                                className="flex w-full items-start justify-between gap-3 p-4 text-left transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-600"
-                              >
-                                <div>
-                                  <h2 className="font-bold text-slate-900">{group.participants.length} apostadores com o mesmo boletim</h2>
-                                  <p className="mt-1 text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
-                                  <p className="mt-2 text-xs font-medium text-violet-700">Toque para {isOpen ? "fechar" : "ver a aposta"}</p>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-2">
-                                  <Badge className="bg-violet-100 text-violet-800">Iguais</Badge>
-                                  {isOpen ? <ChevronUp className="h-5 w-5 text-violet-700" /> : <ChevronDown className="h-5 w-5 text-violet-700" />}
-                                </div>
-                              </button>
-                              {isOpen && (
-                                <div className="border-t border-violet-200 bg-violet-50/40 p-4">
-                                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                                    <div>
-                                      <h3 className="font-bold text-slate-900">Aposta comum</h3>
-                                      <p className="text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
-                                    </div>
-                                    <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
+                            return (
+                              <article key={`${groupKey}-${index}`} className={`overflow-hidden rounded-xl border bg-white shadow-sm transition ${isOpen ? "border-violet-400 ring-2 ring-violet-200" : "border-violet-200"}`}>
+                                <button
+                                  type="button"
+                                  onClick={() => setOpenCopycatsGroupKeys(current => toggleCopycatsDetail(current, groupKey))}
+                                  aria-expanded={isOpen}
+                                  className="flex w-full items-start justify-between gap-3 p-4 text-left transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-600"
+                                >
+                                  <div>
+                                    <h2 className="font-bold text-slate-900">{group.participants.length} apostadores com o mesmo boletim</h2>
+                                    <p className="mt-1 text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
+                                    <p className="mt-2 text-xs font-medium text-violet-700">Toque para {isOpen ? "fechar" : "ver a aposta"}</p>
                                   </div>
-                                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                                    {publicRound.matches.map((match, matchIndex) => (
-                                      <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                        <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
-                                        <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{group.predictions[matchIndex]}</span>
+                                  <div className="flex shrink-0 items-center gap-2">
+                                    <Badge className="bg-violet-100 text-violet-800">Iguais</Badge>
+                                    {isOpen ? <ChevronUp className="h-5 w-5 text-violet-700" /> : <ChevronDown className="h-5 w-5 text-violet-700" />}
+                                  </div>
+                                </button>
+                                {isOpen && (
+                                  <div className="border-t border-violet-200 bg-violet-50/40 p-4">
+                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                                      <div>
+                                        <h3 className="font-bold text-slate-900">Aposta comum</h3>
+                                        <p className="text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
                                       </div>
-                                    ))}
+                                      <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
+                                    </div>
+                                    <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                                      {publicRound.matches.map((match, matchIndex) => (
+                                        <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                          <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
+                                          <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{group.predictions[matchIndex]}</span>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              )}
-                            </article>
-                          );
-                        })}
-                      </div>
+                                )}
+                              </article>
+                            );
+                          })}
+                        </div>
+                      </>
                     ) : (
                       <div className="py-10 text-center">
                         <Copy className="mx-auto mb-3 h-10 w-10 text-violet-300" />
