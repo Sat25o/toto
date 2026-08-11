@@ -7,13 +7,14 @@ import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/parti
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { toggleSummaryFilter } from "@/lib/summaryFilter";
 import { findIdenticalPredictionGroups } from "@/lib/identicalPredictions";
+import { toggleCopycatsDetail } from "@/lib/copycatsDetail";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, CircleDotDashed, Copy, Search, Trophy, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronUp, CircleDotDashed, Copy, Search, Trophy, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const statusAppearance = {
@@ -51,6 +52,7 @@ export default function PublicPredictions() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PublicParticipantStatus>("all");
   const [activeTab, setActiveTab] = useState<"apostadores" | "copycats">("apostadores");
+  const [openCopycatsGroupKey, setOpenCopycatsGroupKey] = useState<string | null>(null);
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
@@ -80,6 +82,8 @@ export default function PublicPredictions() {
   const identicalPredictionGroups = publicRound
     ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
     : [];
+
+  const openCopycatsGroup = identicalPredictionGroups.find(group => group.predictions.join("|") === openCopycatsGroupKey) ?? null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
@@ -272,28 +276,57 @@ export default function PublicPredictions() {
                   <CardContent>
                     {identicalPredictionGroups.length > 0 ? (
                       <div className="grid gap-4 md:grid-cols-2">
-                        {identicalPredictionGroups.map((group, index) => (
-                          <article key={`${group.predictions.join("-")}-${index}`} className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
-                            <div className="flex items-start justify-between gap-3">
-                              <div>
-                                <h2 className="font-bold text-slate-900">{group.participants.length} apostadores com o mesmo boletim</h2>
-                                <p className="mt-1 text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
-                              </div>
-                              <Badge className="bg-violet-100 text-violet-800">Iguais</Badge>
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-2" aria-label="Palpites iguais">
-                              {group.predictions.map((prediction, predictionIndex) => (
-                                <span key={predictionIndex} className="rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">J{predictionIndex + 1}: {prediction}</span>
-                              ))}
-                            </div>
-                          </article>
-                        ))}
+                        {identicalPredictionGroups.map((group, index) => {
+                          const groupKey = group.predictions.join("|");
+                          const isOpen = groupKey === openCopycatsGroupKey;
+
+                          return (
+                            <article key={`${groupKey}-${index}`} className={`overflow-hidden rounded-xl border bg-white shadow-sm transition ${isOpen ? "border-violet-400 ring-2 ring-violet-200" : "border-violet-200"}`}>
+                              <button
+                                type="button"
+                                onClick={() => setOpenCopycatsGroupKey(current => toggleCopycatsDetail(current, groupKey))}
+                                aria-expanded={isOpen}
+                                className="flex w-full items-start justify-between gap-3 p-4 text-left transition hover:bg-violet-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-violet-600"
+                              >
+                                <div>
+                                  <h2 className="font-bold text-slate-900">{group.participants.length} apostadores com o mesmo boletim</h2>
+                                  <p className="mt-1 text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
+                                  <p className="mt-2 text-xs font-medium text-violet-700">Toque para {isOpen ? "fechar" : "ver a aposta"}</p>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <Badge className="bg-violet-100 text-violet-800">Iguais</Badge>
+                                  {isOpen ? <ChevronUp className="h-5 w-5 text-violet-700" /> : <ChevronDown className="h-5 w-5 text-violet-700" />}
+                                </div>
+                              </button>
+                            </article>
+                          );
+                        })}
                       </div>
                     ) : (
                       <div className="py-10 text-center">
                         <Copy className="mx-auto mb-3 h-10 w-10 text-violet-300" />
                         <p className="font-semibold text-slate-800">Não há boletins totalmente iguais nesta jornada.</p>
                         <p className="mt-1 text-sm text-slate-600">Só aparecem aqui participantes que tenham os seis palpites exatamente iguais.</p>
+                      </div>
+                    )}
+
+                    {openCopycatsGroup && (
+                      <div className="mt-5 rounded-xl border border-violet-300 bg-white p-4 shadow-sm">
+                        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <h2 className="font-bold text-slate-900">Aposta comum</h2>
+                            <p className="text-sm text-slate-600">{openCopycatsGroup.participants.map(participant => participant.name).join(", ")}</p>
+                          </div>
+                          <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
+                        </div>
+                        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                          {publicRound.matches.map((match, matchIndex) => (
+                            <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                              <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
+                              <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{openCopycatsGroup.predictions[matchIndex]}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </CardContent>

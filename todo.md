@@ -343,3 +343,9 @@
 - [x] Mostrar os grupos na nova aba Copiaços dentro das Apostas Públicas
 - [x] Mostrar estado vazio quando não existirem palpites totalmente iguais
 - [x] Testar a deteção de boletins iguais e a visibilidade após o fecho
+
+## Detalhe de Copiaços
+
+- [x] Permitir abrir e fechar o detalhe de cada grupo de boletim igual
+- [x] Mostrar os seis jogos e o palpite comum do grupo
+- [x] Testar a alternância de detalhe e validar a apresentação
