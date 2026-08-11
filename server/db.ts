@@ -7,6 +7,7 @@ import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
 import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
 import { assertRoundMatchesAreEditable } from "./matchEditing";
+import { STANDINGS_START_ROUND } from "../shared/league";
 import {
   adminMessages,
   emailNotifications,
@@ -540,18 +541,21 @@ export async function getRoundWinners(roundId: number) {
 export async function getStandings() {
   const db = await getDb();
   if (!db) return [];
+  const correctCount = sql<number>`COUNT(CASE WHEN ${rounds.roundNumber} >= ${STANDINGS_START_ROUND} AND ${rounds.isSettled} = true AND ${predictions.isCorrect} = 'true' THEN 1 END)`;
   return db
     .select({
       userId: users.id,
       userName: users.name,
       userEmail: users.email,
-      correctCount: sql<number>`COUNT(CASE WHEN ${predictions.isCorrect} = 'true' THEN 1 END)`,
+      correctCount,
     })
     .from(users)
     .leftJoin(predictions, eq(predictions.userId, users.id))
+    .leftJoin(matches, eq(predictions.matchId, matches.id))
+    .leftJoin(rounds, eq(matches.roundId, rounds.id))
     .where(eq(users.isActive, true))
     .groupBy(users.id)
-    .orderBy(desc(sql<number>`COUNT(CASE WHEN ${predictions.isCorrect} = 'true' THEN 1 END)`));
+    .orderBy(desc(correctCount), users.name);
 }
 
 export async function calculateRoundWinner(roundId: number) {

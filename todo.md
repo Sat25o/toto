@@ -293,3 +293,10 @@
 - [x] Mostrar as jornadas e os respetivos palpites acima da Classificação Geral
 - [x] Permitir abrir e fechar a mesma jornada ao tocar novamente no cartão
 - [x] Validar a organização e a alternância em telemóvel e computador
+
+## Início da Classificação na Jornada 2
+
+- [x] Excluir os acertos da Jornada 1 da Classificação Geral
+- [x] Contar apenas os acertos desde a Jornada 2 em diante
+- [x] Indicar na interface que a classificação começa na Jornada 2
+- [x] Testar o estado inicial a zero e o início da contagem na Jornada 2

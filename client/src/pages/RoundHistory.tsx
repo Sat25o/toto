@@ -9,6 +9,7 @@ import { Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { sortCumulativeStandings } from "@/lib/standingsRanking";
 import { toggleRoundSelection } from "@/lib/roundSelection";
+import { STANDINGS_START_ROUND } from "@shared/league";
 
 export default function RoundHistory() {
   const { user, loading: authLoading } = useAuth();
@@ -72,7 +73,7 @@ export default function RoundHistory() {
         <Card className="overflow-hidden border-blue-200">
           <CardHeader className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="flex items-center gap-2 text-slate-900"><Trophy className="h-5 w-5 text-yellow-600" /> Classificação Geral</CardTitle>
-            <CardDescription>O ranking soma cada jogo acertado nas jornadas finalizadas, mesmo sem acertar os seis jogos.</CardDescription>
+            <CardDescription>O ranking soma cada jogo acertado nas jornadas finalizadas desde a Jornada {STANDINGS_START_ROUND}, mesmo sem acertar os seis jogos.</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {standingsLoading ? (

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy, Medal } from "lucide-react";
 import { sortCumulativeStandings } from "@/lib/standingsRanking";
+import { STANDINGS_START_ROUND } from "@shared/league";
 
 export default function Standings() {
   const { user, loading: authLoading } = useAuth();
@@ -45,7 +46,7 @@ export default function Standings() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Classificação Geral</h1>
-            <p className="text-slate-600">Ranking de apostadores por acertos totais</p>
+            <p className="text-slate-600">Ranking de apostadores por acertos desde a Jornada {STANDINGS_START_ROUND}</p>
           </div>
           <Button
             variant="outline"
@@ -62,7 +63,7 @@ export default function Standings() {
         <Card className="border-slate-200/50 overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-slate-200">
             <CardTitle className="text-slate-900">Ranking da Temporada</CardTitle>
-            <CardDescription>Total de acertos acumulados em todas as jornadas</CardDescription>
+            <CardDescription>Total de acertos acumulados desde a Jornada {STANDINGS_START_ROUND}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -136,9 +137,9 @@ export default function Standings() {
         <Card className="border-slate-200/50 mt-6 bg-blue-50 border-blue-200">
           <CardContent className="pt-6">
             <p className="text-blue-900 text-sm">
-              <span className="font-semibold">Como funciona:</span> O ranking é atualizado automaticamente
-              após cada jornada ser finalizada. Os acertos são contados quando você acerta o resultado
-              (1, X ou 2) de cada jogo.
+              <span className="font-semibold">Como funciona:</span> A classificação começa na Jornada {STANDINGS_START_ROUND}.
+              O ranking é atualizado automaticamente após cada jornada ser finalizada e soma cada resultado
+              acertado (1, X ou 2). Os acertos da Jornada 1 ficam apenas no Histórico.
             </p>
           </CardContent>
         </Card>
