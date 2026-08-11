@@ -318,3 +318,9 @@
 - [x] Reorganizar os atalhos por prioridade de utilização
 - [x] Ocultar o atalho Histórico no Dashboard quando o utilizador for administrador
 - [x] Validar os atalhos em telemóvel e computador
+
+## Ícones no Menu do Dashboard
+
+- [x] Restaurar o Histórico no Dashboard de administradores
+- [x] Adicionar ícones aos botões Administração, Apostas Públicas, Classificação e Histórico
+- [x] Confirmar que todos os atalhos principais têm ícones consistentes

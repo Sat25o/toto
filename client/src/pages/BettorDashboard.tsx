@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -107,10 +107,10 @@ export default function BettorDashboard() {
               <Button
                 variant="outline"
                 onClick={() => setLocation("/admin")}
-                className="border-slate-300"
-                title="Voltar ao painel de gestão da competição"
-              >
-                Administração
+              className="border-slate-300"
+              title="Voltar ao painel de gestão da competição"
+            >
+                <ShieldCheck className="mr-2 h-4 w-4" /> Administração
               </Button>
             )}
             <Button
@@ -119,24 +119,22 @@ export default function BettorDashboard() {
               className="border-slate-300"
               title="Consultar as apostas de todos os participantes após o fecho do prazo"
             >
-              Apostas Públicas
+              <Globe2 className="mr-2 h-4 w-4" /> Apostas Públicas
             </Button>
             <Button
               variant="outline"
               onClick={() => setLocation("/standings")}
               className="border-slate-300"
             >
-              Classificação
+              <Trophy className="mr-2 h-4 w-4" /> Classificação
             </Button>
-            {user.role !== "admin" && (
-              <Button
-                variant="outline"
-                onClick={() => setLocation("/history")}
-                className="border-slate-300"
-              >
-                Histórico
-              </Button>
-            )}
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/history")}
+              className="border-slate-300"
+            >
+              <History className="mr-2 h-4 w-4" /> Histórico
+            </Button>
             <Button
               variant="outline"
               onClick={() => setLocation("/rules")}
