@@ -324,3 +324,9 @@
 - [x] Restaurar o Histórico no Dashboard de administradores
 - [x] Adicionar ícones aos botões Administração, Apostas Públicas, Classificação e Histórico
 - [x] Confirmar que todos os atalhos principais têm ícones consistentes
+
+## Coluna Fixa no Histórico
+
+- [x] Fixar a coluna Jogo durante o deslize horizontal dos palpites
+- [x] Manter equipas e resultado final legíveis na coluna fixa
+- [x] Validar a deslocação horizontal em telemóvel e computador
