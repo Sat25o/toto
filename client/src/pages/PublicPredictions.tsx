@@ -6,12 +6,14 @@ import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { toggleSummaryFilter } from "@/lib/summaryFilter";
+import { findIdenticalPredictionGroups } from "@/lib/identicalPredictions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckCircle2, CircleDotDashed, Search, Trophy, XCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CheckCircle2, CircleDotDashed, Copy, Search, Trophy, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const statusAppearance = {
@@ -48,6 +50,7 @@ export default function PublicPredictions() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | PublicParticipantStatus>("all");
+  const [activeTab, setActiveTab] = useState<"apostadores" | "copycats">("apostadores");
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
@@ -74,6 +77,9 @@ export default function PublicPredictions() {
     : [];
   const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
   const publicSummary = summarizePublicRound(participantCards);
+  const identicalPredictionGroups = publicRound
+    ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
+    : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
@@ -140,7 +146,13 @@ export default function PublicPredictions() {
               <Skeleton className="h-64 w-full" />
             </div>
           ) : publicRound ? (
-            <div className="space-y-5">
+            <Tabs value={activeTab} onValueChange={value => setActiveTab(value as "apostadores" | "copycats")} className="space-y-5">
+              <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:min-w-96">
+                <TabsTrigger value="apostadores">Apostadores</TabsTrigger>
+                <TabsTrigger value="copycats"><Copy className="mr-2 h-4 w-4" />Copiaços</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="apostadores" className="mt-0 space-y-5">
               <Card className="border-slate-200/50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-slate-900">Resumo da jornada</CardTitle>
@@ -249,7 +261,45 @@ export default function PublicPredictions() {
               {publicRound.participants.length > 0 && visibleParticipantCards.length === 0 && (
                 <Card><CardContent className="py-10 text-center text-slate-600">Nenhum apostador encontrado com estes filtros.</CardContent></Card>
               )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="copycats" className="mt-0">
+                <Card className="border-violet-200 bg-violet-50/40">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-slate-900"><Copy className="h-5 w-5 text-violet-700" /> Copiaços</CardTitle>
+                    <CardDescription>Mostra apenas grupos com os mesmos palpites 1/X/2 nos seis jogos desta jornada.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {identicalPredictionGroups.length > 0 ? (
+                      <div className="grid gap-4 md:grid-cols-2">
+                        {identicalPredictionGroups.map((group, index) => (
+                          <article key={`${group.predictions.join("-")}-${index}`} className="rounded-xl border border-violet-200 bg-white p-4 shadow-sm">
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <h2 className="font-bold text-slate-900">{group.participants.length} apostadores com o mesmo boletim</h2>
+                                <p className="mt-1 text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
+                              </div>
+                              <Badge className="bg-violet-100 text-violet-800">Iguais</Badge>
+                            </div>
+                            <div className="mt-4 flex flex-wrap gap-2" aria-label="Palpites iguais">
+                              {group.predictions.map((prediction, predictionIndex) => (
+                                <span key={predictionIndex} className="rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">J{predictionIndex + 1}: {prediction}</span>
+                              ))}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-10 text-center">
+                        <Copy className="mx-auto mb-3 h-10 w-10 text-violet-300" />
+                        <p className="font-semibold text-slate-800">Não há boletins totalmente iguais nesta jornada.</p>
+                        <p className="mt-1 text-sm text-slate-600">Só aparecem aqui participantes que tenham os seis palpites exatamente iguais.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           ) : null}
         </section>
       </main>

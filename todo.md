@@ -336,3 +336,10 @@
 - [x] Renovar a sessão segura por sete dias quando a aplicação é utilizada
 - [x] Manter a expiração do token e do cookie alinhada em sete dias
 - [x] Testar a renovação e o encerramento da sessão
+
+## Aba Copiaços
+
+- [x] Agrupar boletins completos com os mesmos seis palpites após o fecho da jornada
+- [x] Mostrar os grupos na nova aba Copiaços dentro das Apostas Públicas
+- [x] Mostrar estado vazio quando não existirem palpites totalmente iguais
+- [x] Testar a deteção de boletins iguais e a visibilidade após o fecho
