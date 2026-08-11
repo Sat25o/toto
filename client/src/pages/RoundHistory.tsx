@@ -7,10 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { sortCumulativeStandings } from "@/lib/standingsRanking";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getHistoryPredictionTone } from "@/lib/historyPredictionTone";
-import { STANDINGS_START_ROUND } from "@shared/league";
 
 export default function RoundHistory() {
   const { user, loading: authLoading } = useAuth();
@@ -18,7 +16,6 @@ export default function RoundHistory() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
-  const { data: standings, isLoading: standingsLoading } = trpc.standings.list.useQuery();
   const { data: roundData, isLoading: roundDataLoading } = trpc.rounds.getWithMatches.useQuery(
     { roundId: selectedRoundId || 0 },
     { enabled: selectedRoundId !== null },
@@ -33,7 +30,6 @@ export default function RoundHistory() {
   }, [authLoading, setLocation, user]);
 
   const completedRounds = rounds?.filter(round => round.isSettled) ?? [];
-  const sortedStandings = useMemo(() => sortCumulativeStandings(standings ?? []), [standings]);
   const participants = useMemo(() => {
     const byId = new Map<number, string>();
     (allPredictions ?? []).forEach(entry => byId.set(entry.user.id, entry.user.name));
@@ -57,12 +53,12 @@ export default function RoundHistory() {
   if (!user) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto mb-8 max-w-6xl">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Histórico de Jornadas</h1>
-            <p className="text-slate-600">Palpites de todos os apostadores e classificação por acertos acumulados</p>
+            <p className="text-slate-600">Palpites e resultados de todas as jornadas finalizadas</p>
           </div>
           <Button variant="outline" onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")} className="border-slate-300">
             Voltar
@@ -70,36 +66,7 @@ export default function RoundHistory() {
         </div>
       </div>
 
-      <div className="order-2 mx-auto mb-6 max-w-6xl">
-        <Card className="overflow-hidden border-blue-200">
-          <CardHeader className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-            <CardTitle className="flex items-center gap-2 text-slate-900"><Trophy className="h-5 w-5 text-yellow-600" /> Classificação Geral</CardTitle>
-            <CardDescription>O ranking soma cada jogo acertado nas jornadas finalizadas desde a Jornada {STANDINGS_START_ROUND}, mesmo sem acertar os seis jogos.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {standingsLoading ? (
-              <div className="space-y-2 p-4"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
-            ) : sortedStandings.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[420px] text-sm">
-                  <thead><tr className="border-b border-slate-200 bg-slate-50"><th className="px-4 py-3 text-left font-semibold text-slate-600">Posição</th><th className="px-4 py-3 text-left font-semibold text-slate-600">Apostador</th><th className="px-4 py-3 text-right font-semibold text-slate-600">Acertos acumulados</th></tr></thead>
-                  <tbody>
-                    {sortedStandings.map((entry, index) => (
-                      <tr key={entry.userId} className={entry.userId === user.id ? "border-b border-blue-100 bg-blue-50" : "border-b border-slate-100"}>
-                        <td className="px-4 py-3 font-semibold text-slate-600">{index + 1}º</td>
-                        <td className="px-4 py-3 font-semibold text-slate-900">{entry.userName || "Utilizador"}{entry.userId === user.id && <Badge className="ml-2 bg-blue-100 text-blue-800">Você</Badge>}</td>
-                        <td className="px-4 py-3 text-right"><span className="inline-flex min-w-9 items-center justify-center rounded-full bg-blue-100 px-2 py-1 font-bold text-blue-800">{entry.correctCount}</span></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : <p className="p-6 text-center text-sm text-slate-600">Ainda não existem acertos apurados em jornadas finalizadas.</p>}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="order-1 mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-1">
           <Card className="sticky top-4 border-slate-200/50">
             <CardHeader><CardTitle className="text-slate-900">Jornadas Finalizadas</CardTitle><CardDescription>Selecione para ver os palpites</CardDescription></CardHeader>

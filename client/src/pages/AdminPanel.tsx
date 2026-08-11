@@ -290,13 +290,6 @@ export default function AdminPanel() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setLocation("/history")}
-              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
-            >
-              Histórico
-            </Button>
-            <Button
-              variant="outline"
               onClick={() => setLocation("/league-management")}
               className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
               title="Editar regras e publicar avisos no Dashboard"

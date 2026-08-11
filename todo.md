@@ -306,3 +306,9 @@
 - [x] Mostrar o resultado final por baixo de cada jogo no quadro de palpites
 - [x] Destacar palpites certos a verde e palpites errados a vermelho
 - [x] Validar a leitura das cores e dos resultados em telemóvel e computador
+
+## Separação entre Histórico e Classificação
+
+- [x] Remover o quadro de Classificação Geral da página de Histórico
+- [x] Remover o atalho Histórico do menu de administração
+- [x] Validar a navegação e a página de Histórico simplificada
