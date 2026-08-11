@@ -300,3 +300,9 @@
 - [x] Contar apenas os acertos desde a Jornada 2 em diante
 - [x] Indicar na interface que a classificação começa na Jornada 2
 - [x] Testar o estado inicial a zero e o início da contagem na Jornada 2
+
+## Resultados e Acertos no Histórico
+
+- [x] Mostrar o resultado final por baixo de cada jogo no quadro de palpites
+- [x] Destacar palpites certos a verde e palpites errados a vermelho
+- [x] Validar a leitura das cores e dos resultados em telemóvel e computador
