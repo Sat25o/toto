@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { sortCumulativeStandings } from "@/lib/standingsRanking";
+import { toggleRoundSelection } from "@/lib/roundSelection";
 
 export default function RoundHistory() {
   const { user, loading: authLoading } = useAuth();
@@ -54,7 +55,7 @@ export default function RoundHistory() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="flex min-h-screen flex-col bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto mb-8 max-w-6xl">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
@@ -67,7 +68,7 @@ export default function RoundHistory() {
         </div>
       </div>
 
-      <div className="mx-auto mb-6 max-w-6xl">
+      <div className="order-2 mx-auto mb-6 max-w-6xl">
         <Card className="overflow-hidden border-blue-200">
           <CardHeader className="border-b border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardTitle className="flex items-center gap-2 text-slate-900"><Trophy className="h-5 w-5 text-yellow-600" /> Classificação Geral</CardTitle>
@@ -96,13 +97,13 @@ export default function RoundHistory() {
         </Card>
       </div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
+      <div className="order-1 mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-1">
           <Card className="sticky top-4 border-slate-200/50">
             <CardHeader><CardTitle className="text-slate-900">Jornadas Finalizadas</CardTitle><CardDescription>Selecione para ver os palpites</CardDescription></CardHeader>
             <CardContent className="max-h-96 space-y-2 overflow-y-auto">
               {roundsLoading ? <><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></> : completedRounds.length > 0 ? completedRounds.map(round => (
-                <button key={round.id} onClick={() => setSelectedRoundId(round.id)} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-blue-300 bg-blue-50 text-blue-900" : "border-slate-200 text-slate-700 hover:border-slate-300"}`}>
+                <button key={round.id} onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-blue-300 bg-blue-50 text-blue-900" : "border-slate-200 text-slate-700 hover:border-slate-300"}`}>
                   <div className="font-semibold">Jornada {round.roundNumber}</div>
                   <div className="text-sm text-slate-600">{new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}</div>
                   <Badge className="mt-2 bg-yellow-100 text-xs text-yellow-800"><Trophy className="mr-1 h-3 w-3" /> Finalizada</Badge>

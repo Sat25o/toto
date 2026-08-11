@@ -287,3 +287,9 @@
 - [x] Mostrar os palpites de todos os participantes identificados pelo nome
 - [x] Destacar a classificação geral acumulada por total de acertos
 - [x] Testar a ordenação acumulada e a apresentação em telemóvel e computador
+
+## Organização do Histórico
+
+- [x] Mostrar as jornadas e os respetivos palpites acima da Classificação Geral
+- [x] Permitir abrir e fechar a mesma jornada ao tocar novamente no cartão
+- [x] Validar a organização e a alternância em telemóvel e computador
