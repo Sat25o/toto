@@ -16,6 +16,7 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   isSuperAdmin: boolean("isSuperAdmin").default(false).notNull(),
+  mustChangePassword: boolean("mustChangePassword").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn"),

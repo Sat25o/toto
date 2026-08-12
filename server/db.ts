@@ -85,6 +85,7 @@ export async function listUsers() {
       role: users.role,
       isActive: users.isActive,
       isSuperAdmin: users.isSuperAdmin,
+      mustChangePassword: users.mustChangePassword,
       createdAt: users.createdAt,
       lastSignedIn: users.lastSignedIn,
     })
@@ -116,6 +117,33 @@ export async function setUserActive(userId: number, isActive: boolean) {
   }
 
   await db.update(users).set({ isActive }).where(eq(users.id, userId));
+}
+
+/** Defines a one-time provisional password and requires the participant to replace it on the next access. */
+export async function setTemporaryPassword(userId: number, temporaryPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+  if (target.isSuperAdmin || target.email === SUPER_ADMIN_EMAIL) {
+    throw new Error("A palavra-passe do super administrador não pode ser redefinida desta forma");
+  }
+
+  const passwordHash = await bcrypt.hash(temporaryPassword, 12);
+  await db.update(users).set({ passwordHash, mustChangePassword: true }).where(eq(users.id, userId));
+}
+
+/** Replaces a provisional password with the participant's own password. */
+export async function changeOwnPassword(userId: number, newPassword: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+
+  const passwordHash = await bcrypt.hash(newPassword, 12);
+  await db.update(users).set({ passwordHash, mustChangePassword: false }).where(eq(users.id, userId));
 }
 
 /** Removes an account and its personal competition data. This operation is irreversible. */

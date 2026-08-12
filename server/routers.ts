@@ -5,7 +5,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { sdk } from "./_core/sdk";
 import { systemRouter } from "./_core/systemRouter";
-import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, passwordRecoveryProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import * as db from "./db";
 import { buildInvitationUrl } from "./invitationUrl";
 import { assertRoundHistoryIsAvailable } from "./historyAccess";
@@ -20,6 +20,7 @@ function publicUser(user: {
   role: "user" | "admin";
   isActive: boolean;
   isSuperAdmin: boolean;
+  mustChangePassword: boolean;
 }) {
   return {
     id: user.id,
@@ -28,6 +29,7 @@ function publicUser(user: {
     role: user.role,
     isActive: user.isActive,
     isSuperAdmin: user.isSuperAdmin,
+    mustChangePassword: user.mustChangePassword,
   };
 }
 
@@ -106,6 +108,12 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...getSessionCookieOptions(ctx.req), maxAge: -1 });
       return { success: true } as const;
     }),
+    changeTemporaryPassword: passwordRecoveryProcedure
+      .input(z.object({ password: z.string().min(8).max(128) }))
+      .mutation(async ({ input, ctx }) => {
+        await db.changeOwnPassword(ctx.user.id, input.password);
+        return { success: true };
+      }),
   }),
 
   invitations: router({
@@ -181,6 +189,16 @@ export const appRouter = router({
       .mutation(async ({ input, ctx }) => {
         try {
           await db.deleteUser(input.userId, ctx.user.id);
+          return { success: true };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });
+        }
+      }),
+    setTemporaryPassword: adminProcedure
+      .input(z.object({ userId: z.number().int().positive(), temporaryPassword: z.string().min(8).max(128) }))
+      .mutation(async ({ input }) => {
+        try {
+          await db.setTemporaryPassword(input.userId, input.temporaryPassword);
           return { success: true };
         } catch (error) {
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });

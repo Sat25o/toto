@@ -50,6 +50,13 @@
       "when": 1786123580171,
       "tag": "0006_clammy_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1786559581522,
+      "tag": "0007_noisy_nemesis",
+      "breakpoints": true
     }
   ]
 }

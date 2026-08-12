@@ -4,10 +4,12 @@ import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -22,6 +24,8 @@ export default function BettorDashboard() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -38,6 +42,16 @@ export default function BettorDashboard() {
     { enabled: selectedRoundId !== null }
   );
   const { data: adminMessages } = trpc.messages.list.useQuery(undefined, { enabled: Boolean(user) });
+
+  const changeTemporaryPasswordMutation = trpc.auth.changeTemporaryPassword.useMutation({
+    onSuccess: async () => {
+      setNewPassword("");
+      setConfirmNewPassword("");
+      toast.success("Palavra-passe alterada com sucesso.");
+      await utils.auth.me.invalidate();
+    },
+    onError: error => toast.error(error.message || "Não foi possível alterar a palavra-passe"),
+  });
 
   // Submit prediction mutation
   const submitPredictionMutation = trpc.predictions.submit.useMutation({
@@ -66,6 +80,47 @@ export default function BettorDashboard() {
 
   if (!user) {
     return null;
+  }
+
+  if (user.mustChangePassword) {
+    const handlePasswordChange = (event: React.FormEvent) => {
+      event.preventDefault();
+      if (newPassword.length < 8) {
+        toast.error("A nova palavra-passe deve ter pelo menos 8 caracteres.");
+        return;
+      }
+      if (newPassword !== confirmNewPassword) {
+        toast.error("As palavras-passe não coincidem.");
+        return;
+      }
+      changeTemporaryPasswordMutation.mutate({ password: newPassword });
+    };
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6">
+        <Card className="mx-auto mt-12 max-w-md border-amber-200 shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-slate-900"><KeyRound className="h-5 w-5 text-amber-700" /> Atualize a palavra-passe</CardTitle>
+            <CardDescription>O administrador definiu uma palavra-passe provisória. Para continuar, escolha uma palavra-passe pessoal com pelo menos 8 caracteres.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={handlePasswordChange}>
+              <div>
+                <Label htmlFor="new-password">Nova palavra-passe</Label>
+                <Input id="new-password" type="password" autoComplete="new-password" value={newPassword} onChange={event => setNewPassword(event.target.value)} className="mt-1" required />
+              </div>
+              <div>
+                <Label htmlFor="confirm-new-password">Confirmar nova palavra-passe</Label>
+                <Input id="confirm-new-password" type="password" autoComplete="new-password" value={confirmNewPassword} onChange={event => setConfirmNewPassword(event.target.value)} className="mt-1" required />
+              </div>
+              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={changeTemporaryPasswordMutation.isPending}>
+                {changeTemporaryPasswordMutation.isPending ? "A guardar…" : "Guardar nova palavra-passe"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const handleRoundSelection = (roundId: number) => {

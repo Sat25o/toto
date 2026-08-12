@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Copy, Edit2, MailPlus, RefreshCw, Shield, ShieldCheck, Trash2, UserCheck, UserX, Users } from "lucide-react";
+import { Copy, Edit2, KeyRound, MailPlus, RefreshCw, Shield, ShieldCheck, Trash2, UserCheck, UserX, Users } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Role = "user" | "admin";
@@ -27,6 +27,8 @@ export default function UsersManagement() {
   const [inviteRole, setInviteRole] = useState<Role>("user");
   const [latestInviteUrl, setLatestInviteUrl] = useState("");
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string } | null>(null);
+  const [passwordResetUser, setPasswordResetUser] = useState<{ id: number; name: string } | null>(null);
+  const [temporaryPassword, setTemporaryPassword] = useState("");
 
   const { data: users, isLoading: usersLoading, refetch: refetchUsers } = trpc.users.list.useQuery(
     undefined,
@@ -63,6 +65,15 @@ export default function UsersManagement() {
     onSuccess: () => {
       toast.success("Conta e dados associados apagados.");
       setUserToDelete(null);
+      void refetchUsers();
+    },
+    onError: error => toast.error(error.message),
+  });
+  const temporaryPasswordMutation = trpc.users.setTemporaryPassword.useMutation({
+    onSuccess: () => {
+      toast.success("Palavra-passe provisória definida. Informe-a ao participante de forma privada.");
+      setPasswordResetUser(null);
+      setTemporaryPassword("");
       void refetchUsers();
     },
     onError: error => toast.error(error.message),
@@ -188,7 +199,7 @@ export default function UsersManagement() {
                           <TableCell>
                             {protectedAccount ? <Badge className="bg-amber-100 text-amber-800"><ShieldCheck className="mr-1 h-3 w-3" /> Super administrador</Badge> : account.role === "admin" ? <Badge className="bg-purple-100 text-purple-800"><Shield className="mr-1 h-3 w-3" /> Admin</Badge> : <Badge className="bg-blue-100 text-blue-800">Apostador</Badge>}
                           </TableCell>
-                          <TableCell>{account.isActive ? <Badge className="bg-emerald-100 text-emerald-800">Ativa</Badge> : <Badge className="bg-slate-200 text-slate-700">Desativada</Badge>}</TableCell>
+                          <TableCell><div className="flex flex-wrap gap-1">{account.isActive ? <Badge className="bg-emerald-100 text-emerald-800">Ativa</Badge> : <Badge className="bg-slate-200 text-slate-700">Desativada</Badge>}{account.mustChangePassword && <Badge className="bg-amber-100 text-amber-800" title="Esta conta tem uma palavra-passe provisória e será obrigada a alterá-la">Pass provisória</Badge>}</div></TableCell>
                           <TableCell className="text-right">
                             {protectedAccount ? (
                               <span title="A conta do super administrador é protegida contra alterações e desativação"><Badge className="bg-amber-50 text-amber-800">Protegida</Badge></span>
@@ -204,6 +215,16 @@ export default function UsersManagement() {
                                       <SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="user">Apostador</SelectItem><SelectItem value="admin">Administrador</SelectItem></SelectContent>
                                     </Select>
                                     <Button className="bg-blue-600 hover:bg-blue-700" disabled={updateRoleMutation.isPending} onClick={() => selectedUser && updateRoleMutation.mutate({ userId: selectedUser.id, role: newRole })}>Guardar alteração</Button>
+                                  </DialogContent>
+                                </Dialog>
+                                <Dialog open={passwordResetUser?.id === account.id} onOpenChange={open => { if (!open) { setPasswordResetUser(null); setTemporaryPassword(""); } }}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="sm" className="border-amber-200 text-amber-800 hover:bg-amber-50" title="Definir palavra-passe provisória" onClick={() => setPasswordResetUser({ id: account.id, name: account.name })}><KeyRound className="h-4 w-4" /></Button>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader><DialogTitle>Definir palavra-passe provisória</DialogTitle><DialogDescription>Defina uma palavra-passe temporária para {account.name}. No próximo acesso, terá de escolher uma palavra-passe pessoal.</DialogDescription></DialogHeader>
+                                    <div className="space-y-2"><Label htmlFor={`temporary-password-${account.id}`}>Palavra-passe provisória</Label><Input id={`temporary-password-${account.id}`} type="password" autoComplete="new-password" minLength={8} value={temporaryPassword} onChange={event => setTemporaryPassword(event.target.value)} placeholder="Mínimo 8 caracteres" /></div>
+                                    <Button className="bg-amber-600 hover:bg-amber-700" disabled={temporaryPassword.length < 8 || temporaryPasswordMutation.isPending} onClick={() => passwordResetUser && temporaryPasswordMutation.mutate({ userId: passwordResetUser.id, temporaryPassword })}>{temporaryPasswordMutation.isPending ? "A guardar…" : "Definir palavra-passe provisória"}</Button>
                                   </DialogContent>
                                 </Dialog>
                                 {account.isActive ? (

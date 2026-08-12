@@ -16,6 +16,10 @@ export default function Login() {
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: (data) => {
       toast.success("Login realizado com sucesso!");
+      if (data.user.mustChangePassword) {
+        setLocation("/dashboard");
+        return;
+      }
       // Redirect based on role
       if (data.user.role === "admin") {
         setLocation("/admin");

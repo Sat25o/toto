@@ -361,3 +361,10 @@
 - [x] Permitir manter abertos vários grupos de Copiaços ao mesmo tempo
 - [x] Adicionar controlos para abrir e fechar todos os grupos
 - [x] Validar a comparação de vários boletins em simultâneo
+
+## Recuperação Manual de Palavra-passe
+
+- [x] Registar quando uma conta recebe uma palavra-passe provisória
+- [x] Permitir ao administrador definir uma palavra-passe provisória para uma conta elegível
+- [x] Obrigar o participante a alterar a palavra-passe provisória no Dashboard
+- [x] Testar a recuperação, alteração e proteção da conta de super administrador

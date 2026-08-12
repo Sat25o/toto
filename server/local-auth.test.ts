@@ -47,6 +47,7 @@ const sampleUser: User = {
   role: "user",
   isActive: true,
   isSuperAdmin: false,
+  mustChangePassword: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   lastSignedIn: null,

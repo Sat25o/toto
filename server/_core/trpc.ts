@@ -25,14 +25,27 @@ const requireUser = t.middleware(async opts => {
   });
 });
 
-export const protectedProcedure = t.procedure.use(requireUser);
+export const passwordRecoveryProcedure = t.procedure.use(requireUser);
+export const protectedProcedure = passwordRecoveryProcedure.use(async ({ ctx, next }) => {
+  if (ctx.user.mustChangePassword) {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Atualize a palavra-passe provisória para continuar" });
+  }
 
-export const adminProcedure = t.procedure.use(
-  t.middleware(async opts => {
-    const { ctx, next } = opts;
+  return next({
+    ctx: {
+      ...ctx,
+      user: ctx.user,
+    },
+  });
+});
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+export const adminProcedure = passwordRecoveryProcedure.use(
+  async ({ ctx, next }) => {
+    if (ctx.user.role !== 'admin') {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+    }
+    if (ctx.user.mustChangePassword) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Atualize a palavra-passe provisória para continuar" });
     }
 
     return next({
@@ -41,5 +54,5 @@ export const adminProcedure = t.procedure.use(
         user: ctx.user,
       },
     });
-  }),
+  },
 );

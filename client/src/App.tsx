@@ -1,7 +1,9 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
+import { useEffect } from "react";
+import { useAuth } from "./_core/hooks/useAuth";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -18,7 +20,15 @@ import LeagueManagement from "./pages/LeagueManagement";
 import Help from "./pages/Help";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
+  const { user, loading } = useAuth();
+  const [location, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!loading && user?.mustChangePassword && location !== "/dashboard") {
+      setLocation("/dashboard");
+    }
+  }, [loading, location, setLocation, user?.mustChangePassword]);
+
   return (
     <Switch>
       <Route path={"/"} component={Home} />
