@@ -22,6 +22,7 @@ export default function UsersManagement() {
   const [, setLocation] = useLocation();
   const [selectedUser, setSelectedUser] = useState<{ id: number; name: string; role: Role } | null>(null);
   const [newRole, setNewRole] = useState<Role>("user");
+  const [newName, setNewName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<Role>("user");
@@ -39,9 +40,9 @@ export default function UsersManagement() {
     { enabled: Boolean(user?.isSuperAdmin) },
   );
 
-  const updateRoleMutation = trpc.users.updateRole.useMutation({
+  const updateProfileMutation = trpc.users.updateProfile.useMutation({
     onSuccess: () => {
-      toast.success("Função atualizada.");
+      toast.success("Nome e acesso atualizados.");
       setIsDialogOpen(false);
       void refetchUsers();
     },
@@ -84,6 +85,13 @@ export default function UsersManagement() {
       setInviteEmail("");
       setInviteRole("user");
       toast.success("Convite criado. Copie e envie o link ao apostador.");
+      void refetchInvitations();
+    },
+    onError: error => toast.error(error.message),
+  });
+  const deleteInvitationMutation = trpc.invitations.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Convite apagado.");
       void refetchInvitations();
     },
     onError: error => toast.error(error.message),
@@ -207,14 +215,15 @@ export default function UsersManagement() {
                               <div className="flex justify-end gap-2">
                                 <Dialog open={isDialogOpen && selectedUser?.id === account.id} onOpenChange={setIsDialogOpen}>
                                   <DialogTrigger asChild>
-                                    <Button variant="outline" size="sm" title="Alterar nível de acesso" onClick={() => { setSelectedUser(account); setNewRole(account.role); }}><Edit2 className="h-4 w-4" /></Button>
+                                    <Button variant="outline" size="sm" title="Editar nome e nível de acesso" onClick={() => { setSelectedUser(account); setNewName(account.name); setNewRole(account.role); }}><Edit2 className="h-4 w-4" /></Button>
                                   </DialogTrigger>
                                   <DialogContent>
-                                    <DialogHeader><DialogTitle>Editar acesso</DialogTitle><DialogDescription>Defina o nível de acesso de {account.name}.</DialogDescription></DialogHeader>
+                                    <DialogHeader><DialogTitle>Editar participante</DialogTitle><DialogDescription>Atualize o nome e o nível de acesso de {account.name}.</DialogDescription></DialogHeader>
+                                    <div><Label htmlFor={`user-name-${account.id}`}>Nome</Label><Input id={`user-name-${account.id}`} value={newName} onChange={event => setNewName(event.target.value)} className="mt-1" /></div>
                                     <Select value={newRole} onValueChange={value => setNewRole(value as Role)}>
                                       <SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="user">Apostador</SelectItem><SelectItem value="admin">Administrador</SelectItem></SelectContent>
                                     </Select>
-                                    <Button className="bg-blue-600 hover:bg-blue-700" disabled={updateRoleMutation.isPending} onClick={() => selectedUser && updateRoleMutation.mutate({ userId: selectedUser.id, role: newRole })}>Guardar alteração</Button>
+                                    <Button className="bg-blue-600 hover:bg-blue-700" disabled={newName.trim().length < 2 || updateProfileMutation.isPending} onClick={() => selectedUser && updateProfileMutation.mutate({ userId: selectedUser.id, name: newName.trim(), role: newRole })}>Guardar alteração</Button>
                                   </DialogContent>
                                 </Dialog>
                                 <Dialog open={passwordResetUser?.id === account.id} onOpenChange={open => { if (!open) { setPasswordResetUser(null); setTemporaryPassword(""); } }}>
@@ -249,13 +258,13 @@ export default function UsersManagement() {
 
       {user.isSuperAdmin && invitations && invitations.length > 0 && (
         <Card className="mx-auto mt-6 max-w-6xl border-slate-200/70">
-          <CardHeader><CardTitle className="text-slate-900">Convites emitidos</CardTitle><CardDescription>Acompanhe os convites pendentes, usados e expirados.</CardDescription></CardHeader>
+          <CardHeader><CardTitle className="text-slate-900">Convites emitidos</CardTitle><CardDescription>Acompanhe os convites pendentes e expirados. Os convites aceites deixam de aparecer nesta lista.</CardDescription></CardHeader>
           <CardContent>
             <div className="overflow-x-auto"><Table><TableHeader><TableRow><TableHead>Email</TableHead><TableHead>Acesso</TableHead><TableHead>Estado</TableHead><TableHead>Validade</TableHead><TableHead className="text-right">Ação</TableHead></TableRow></TableHeader><TableBody>
               {invitations.map(invitation => {
-                const expired = !invitation.usedAt && new Date(invitation.expiresAt) < new Date();
-                const status = invitation.usedAt ? "Usado" : expired ? "Expirado" : "Pendente";
-                return <TableRow key={invitation.id}><TableCell>{invitation.email}</TableCell><TableCell>{invitation.role === "admin" ? "Administrador" : "Apostador"}</TableCell><TableCell><Badge className={status === "Usado" ? "bg-slate-200 text-slate-700" : status === "Expirado" ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>{status}</Badge></TableCell><TableCell>{new Date(invitation.expiresAt).toLocaleString("pt-PT")}</TableCell><TableCell className="text-right">{status === "Usado" ? <span className="text-xs text-slate-500">Sem ação</span> : <Button variant="outline" size="sm" className="whitespace-nowrap" disabled={createInviteMutation.isPending} onClick={() => reissueInvite(invitation.email, invitation.role)} title="Criar um novo link válido durante 7 dias"><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Reemitir</Button>}</TableCell></TableRow>;
+                const expired = new Date(invitation.expiresAt) < new Date();
+                const status = expired ? "Expirado" : "Pendente";
+                return <TableRow key={invitation.id}><TableCell>{invitation.email}</TableCell><TableCell>{invitation.role === "admin" ? "Administrador" : "Apostador"}</TableCell><TableCell><Badge className={expired ? "bg-red-100 text-red-800" : "bg-blue-100 text-blue-800"}>{status}</Badge></TableCell><TableCell>{new Date(invitation.expiresAt).toLocaleString("pt-PT")}</TableCell><TableCell className="text-right"><div className="flex justify-end gap-2"><Button variant="outline" size="sm" className="whitespace-nowrap" disabled={createInviteMutation.isPending} onClick={() => reissueInvite(invitation.email, invitation.role)} title="Criar um novo link válido durante 7 dias"><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Reemitir</Button><Button variant="outline" size="sm" className="border-red-200 text-red-700 hover:bg-red-50" disabled={deleteInvitationMutation.isPending} onClick={() => deleteInvitationMutation.mutate({ invitationId: invitation.id })} title="Apagar convite"><Trash2 className="h-4 w-4" /></Button></div></TableCell></TableRow>;
               })}
             </TableBody></Table></div>
           </CardContent>

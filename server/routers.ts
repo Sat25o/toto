@@ -150,6 +150,13 @@ export const appRouter = router({
           inviteUrl: buildInvitationUrl(input.email, invitationToken),
         };
       }),
+    delete: adminProcedure
+      .input(z.object({ invitationId: z.number().int().positive() }))
+      .mutation(async ({ input, ctx }) => {
+        requireSuperAdmin(ctx.user.isSuperAdmin);
+        await db.deleteInvitation(input.invitationId);
+        return { success: true };
+      }),
   }),
 
   users: router({
@@ -159,6 +166,16 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         try {
           await db.updateUserRole(input.userId, input.role);
+          return { success: true };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });
+        }
+      }),
+    updateProfile: adminProcedure
+      .input(z.object({ userId: z.number().int().positive(), name: z.string().trim().min(2).max(120), role: z.enum(["user", "admin"]) }))
+      .mutation(async ({ input }) => {
+        try {
+          await db.updateUserProfile(input.userId, { name: input.name, role: input.role });
           return { success: true };
         } catch (error) {
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Operação recusada" });

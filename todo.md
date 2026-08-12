@@ -368,3 +368,10 @@
 - [x] Permitir ao administrador definir uma palavra-passe provisória para uma conta elegível
 - [x] Obrigar o participante a alterar a palavra-passe provisória no Dashboard
 - [x] Testar a recuperação, alteração e proteção da conta de super administrador
+
+## Gestão de Convites e Nomes
+
+- [x] Ocultar da lista os convites já aceites
+- [x] Permitir apagar convites pendentes ou expirados
+- [x] Permitir editar o nome de participantes registados
+- [x] Testar as permissões e atualizações de convites e nomes

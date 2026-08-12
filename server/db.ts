@@ -106,6 +106,19 @@ export async function updateUserRole(userId: number, role: "user" | "admin") {
   await db.update(users).set({ role }).where(eq(users.id, userId));
 }
 
+export async function updateUserProfile(userId: number, data: { name: string; role: "user" | "admin" }) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const target = await getUserById(userId);
+  if (!target) throw new Error("Utilizador não encontrado");
+  if (target.isSuperAdmin || target.email === SUPER_ADMIN_EMAIL) {
+    throw new Error("O perfil do super administrador não pode ser alterado nesta área");
+  }
+
+  await db.update(users).set({ name: data.name.trim(), role: data.role }).where(eq(users.id, userId));
+}
+
 export async function setUserActive(userId: number, isActive: boolean) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
@@ -240,7 +253,15 @@ export async function listInvitations() {
       createdAt: invitations.createdAt,
     })
     .from(invitations)
+    .where(isNull(invitations.usedAt))
     .orderBy(desc(invitations.createdAt));
+}
+
+export async function deleteInvitation(invitationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  await db.delete(invitations).where(and(eq(invitations.id, invitationId), isNull(invitations.usedAt)));
 }
 
 export async function registerUserFromInvitation(data: {
