@@ -18,6 +18,7 @@ import PublicPredictions from "./pages/PublicPredictions";
 import LeagueInfo from "./pages/LeagueInfo";
 import LeagueManagement from "./pages/LeagueManagement";
 import Help from "./pages/Help";
+import ChampionsLeague from "./pages/ChampionsLeague";
 
 function Router() {
   const { user, loading } = useAuth();
@@ -42,6 +43,7 @@ function Router() {
       <Route path={"/public-predictions"} component={PublicPredictions} />
       <Route path={"/rules"} component={LeagueInfo} />
       <Route path={"/league-management"} component={LeagueManagement} />
+      <Route path={"/champions-league"} component={ChampionsLeague} />
       <Route path={"/help"} component={Help} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

@@ -375,3 +375,10 @@
 - [x] Permitir apagar convites pendentes ou expirados
 - [x] Permitir editar o nome de participantes registados
 - [x] Testar as permissões e atualizações de convites e nomes
+
+## Liga dos Campeões
+
+- [x] Criar uma aba com o formato de eliminatórias para os 16 melhores classificados
+- [x] Explicar qualificação após a Jornada 13, fases e objetivo de final perto do Natal
+- [x] Integrar o acesso no menu principal com ícone próprio
+- [x] Testar a estrutura do calendário e validar a página em telemóvel e computador

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -182,6 +182,14 @@ export default function BettorDashboard() {
               className="border-slate-300"
             >
               <Trophy className="mr-2 h-4 w-4" /> Classificação
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/champions-league")}
+              className="border-amber-200 text-amber-900 hover:bg-amber-50"
+              title="Consultar o formato e o calendário da Liga dos Campeões"
+            >
+              <Medal className="mr-2 h-4 w-4" /> Liga dos Campeões
             </Button>
             <Button
               variant="outline"
