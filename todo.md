@@ -382,3 +382,10 @@
 - [x] Explicar qualificação após a Jornada 13, fases e objetivo de final perto do Natal
 - [x] Integrar o acesso no menu principal com ícone próprio
 - [x] Testar a estrutura do calendário e validar a página em telemóvel e computador
+
+## Quadro Automático da Liga dos Campeões
+
+- [x] Guardar os 16 qualificados quando a Jornada 13 é finalizada
+- [x] Gerar automaticamente os confrontos de oitavos e os lugares das fases seguintes
+- [x] Mostrar o quadro real com qualificados e confrontos na aba Liga dos Campeões
+- [x] Testar a qualificação automática, emparelhamentos e quadro inicial

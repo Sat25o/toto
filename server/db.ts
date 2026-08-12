@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
@@ -7,9 +7,12 @@ import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
 import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
 import { assertRoundMatchesAreEditable } from "./matchEditing";
-import { STANDINGS_START_ROUND } from "../shared/league";
+import { CHAMPIONS_LEAGUE_EDITION, CHAMPIONS_LEAGUE_QUALIFICATION_ROUND, CHAMPIONS_LEAGUE_QUALIFIED_COUNT, STANDINGS_START_ROUND } from "../shared/league";
+import { buildChampionsLeagueFixtures } from "./championsLeagueBracket";
 import {
   adminMessages,
+  championsLeagueEntries,
+  championsLeagueMatches,
   emailNotifications,
   invitations,
   leagueRules,
@@ -607,6 +610,81 @@ export async function getStandings() {
     .orderBy(desc(correctCount), users.name);
 }
 
+export async function getChampionsLeagueBracket() {
+  const db = await getDb();
+  if (!db) return { entries: [], matches: [] };
+
+  const entries = await db
+    .select({
+      id: championsLeagueEntries.id,
+      seed: championsLeagueEntries.seed,
+      qualificationScore: championsLeagueEntries.qualificationScore,
+      userId: championsLeagueEntries.userId,
+      userName: users.name,
+    })
+    .from(championsLeagueEntries)
+    .innerJoin(users, eq(championsLeagueEntries.userId, users.id))
+    .where(eq(championsLeagueEntries.edition, CHAMPIONS_LEAGUE_EDITION))
+    .orderBy(asc(championsLeagueEntries.seed));
+
+  const matchesData = await db
+    .select()
+    .from(championsLeagueMatches)
+    .where(eq(championsLeagueMatches.edition, CHAMPIONS_LEAGUE_EDITION))
+    .orderBy(asc(championsLeagueMatches.roundNumber), asc(championsLeagueMatches.matchOrder));
+
+  const entriesById = new Map(entries.map(entry => [entry.id, entry]));
+  return {
+    entries,
+    matches: matchesData.map(match => ({
+      ...match,
+      homeEntry: match.homeEntryId === null ? null : entriesById.get(match.homeEntryId) ?? null,
+      awayEntry: match.awayEntryId === null ? null : entriesById.get(match.awayEntryId) ?? null,
+      winnerEntry: match.winnerEntryId === null ? null : entriesById.get(match.winnerEntryId) ?? null,
+    })),
+  };
+}
+
+/** Cria uma única vez os 16 qualificados e o quadro base quando a Jornada 13 é finalizada. */
+export async function generateChampionsLeagueBracket() {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const existingEntries = await db
+    .select({ id: championsLeagueEntries.id })
+    .from(championsLeagueEntries)
+    .where(eq(championsLeagueEntries.edition, CHAMPIONS_LEAGUE_EDITION))
+    .limit(1);
+  if (existingEntries.length > 0) return getChampionsLeagueBracket();
+
+  const standings = await getStandings();
+  const qualifiers = standings.slice(0, CHAMPIONS_LEAGUE_QUALIFIED_COUNT);
+  if (qualifiers.length < CHAMPIONS_LEAGUE_QUALIFIED_COUNT) return null;
+
+  await db.transaction(async tx => {
+    await tx.insert(championsLeagueEntries).values(
+      qualifiers.map((qualifier, index) => ({
+        edition: CHAMPIONS_LEAGUE_EDITION,
+        userId: qualifier.userId,
+        seed: index + 1,
+        qualificationScore: Number(qualifier.correctCount),
+      })),
+    );
+
+    const savedEntries = await tx
+      .select({ id: championsLeagueEntries.id, seed: championsLeagueEntries.seed })
+      .from(championsLeagueEntries)
+      .where(eq(championsLeagueEntries.edition, CHAMPIONS_LEAGUE_EDITION))
+      .orderBy(asc(championsLeagueEntries.seed));
+
+    await tx.insert(championsLeagueMatches).values(
+      buildChampionsLeagueFixtures(savedEntries).map(fixture => ({ edition: CHAMPIONS_LEAGUE_EDITION, ...fixture })),
+    );
+  });
+
+  return getChampionsLeagueBracket();
+}
+
 export async function calculateRoundWinner(roundId: number) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
@@ -655,6 +733,10 @@ export async function calculateRoundWinner(roundId: number) {
       .set({ winnerId: winnerIds[0] ?? null, isSettled: true })
       .where(eq(rounds.id, roundId));
   });
+
+  if (round.roundNumber === CHAMPIONS_LEAGUE_QUALIFICATION_ROUND) {
+    await generateChampionsLeagueBracket();
+  }
 
   return { winnerIds, winnerCount: winnerIds.length, prizeAmount, prizeShare };
 }

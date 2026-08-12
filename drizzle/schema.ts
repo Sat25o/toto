@@ -172,3 +172,42 @@ export const pushSubscriptions = mysqlTable(
 );
 
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+
+/** Os 16 qualificados registados para a edição anual da Liga dos Campeões. */
+export const championsLeagueEntries = mysqlTable(
+  "championsLeagueEntries",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    edition: varchar("edition", { length: 20 }).notNull(),
+    userId: int("userId").notNull(),
+    seed: int("seed").notNull(),
+    qualificationScore: int("qualificationScore").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => [
+    uniqueIndex("championsLeagueEntries_edition_user_unique").on(table.edition, table.userId),
+    uniqueIndex("championsLeagueEntries_edition_seed_unique").on(table.edition, table.seed),
+  ],
+);
+
+/** Confrontos do quadro, incluindo os lugares que serão preenchidos pelos vencedores posteriores. */
+export const championsLeagueMatches = mysqlTable(
+  "championsLeagueMatches",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    edition: varchar("edition", { length: 20 }).notNull(),
+    stage: mysqlEnum("stage", ["round_of_16", "quarter_final", "semi_final", "final"]).notNull(),
+    roundNumber: int("roundNumber").notNull(),
+    matchOrder: int("matchOrder").notNull(),
+    homeEntryId: int("homeEntryId"),
+    awayEntryId: int("awayEntryId"),
+    winnerEntryId: int("winnerEntryId"),
+    status: mysqlEnum("status", ["pending", "complete"]).default("pending").notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => [uniqueIndex("championsLeagueMatches_edition_stage_order_unique").on(table.edition, table.stage, table.matchOrder)],
+);
+
+export type ChampionsLeagueEntry = typeof championsLeagueEntries.$inferSelect;
+export type ChampionsLeagueMatch = typeof championsLeagueMatches.$inferSelect;

@@ -223,6 +223,10 @@ export const appRouter = router({
       }),
   }),
 
+  championsLeague: router({
+    getBracket: protectedProcedure.query(async () => db.getChampionsLeagueBracket()),
+  }),
+
   rules: router({
     list: protectedProcedure.query(() => db.listLeagueRules()),
     listAdmin: adminProcedure.query(() => db.listLeagueRules(true)),
