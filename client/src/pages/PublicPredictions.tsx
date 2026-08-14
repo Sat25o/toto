@@ -120,7 +120,7 @@ export default function PublicPredictions() {
                 closedRounds.map(round => (
                   <button
                     key={round.id}
-                    onClick={() => setSelectedRoundId(round.id)}
+                    onClick={() => setSelectedRoundId(current => current === round.id ? null : round.id)}
                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
                       selectedRoundId === round.id
                         ? "border-blue-300 bg-blue-50 text-blue-900"

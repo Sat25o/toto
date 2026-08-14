@@ -389,3 +389,8 @@
 - [x] Gerar automaticamente os confrontos de oitavos e os lugares das fases seguintes
 - [x] Mostrar o quadro real com qualificados e confrontos na aba Liga dos Campeões
 - [x] Testar a qualificação automática, emparelhamentos e quadro inicial
+
+## Alternância de Jornadas Públicas
+
+- [x] Permitir fechar a mesma jornada ao tocar novamente no cartão
+- [x] Validar a abertura e o fecho das Apostas Públicas
