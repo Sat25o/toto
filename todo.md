@@ -394,3 +394,9 @@
 
 - [x] Permitir fechar a mesma jornada ao tocar novamente no cartão
 - [x] Validar a abertura e o fecho das Apostas Públicas
+
+## Movimento na Classificação
+
+- [x] Comparar a posição atual com a classificação antes da última jornada finalizada
+- [x] Mostrar indicadores de subida, descida e posição estável
+- [x] Testar a variação de posições e a apresentação do ranking

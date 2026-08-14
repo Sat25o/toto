@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
@@ -9,6 +9,7 @@ import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
 import { assertRoundMatchesAreEditable } from "./matchEditing";
 import { CHAMPIONS_LEAGUE_EDITION, CHAMPIONS_LEAGUE_QUALIFICATION_ROUND, CHAMPIONS_LEAGUE_QUALIFIED_COUNT, STANDINGS_START_ROUND } from "../shared/league";
 import { buildChampionsLeagueFixtures } from "./championsLeagueBracket";
+import { addStandingMovements } from "./standingsMovement";
 import {
   adminMessages,
   championsLeagueEntries,
@@ -593,21 +594,41 @@ export async function getRoundWinners(roundId: number) {
 export async function getStandings() {
   const db = await getDb();
   if (!db) return [];
-  const correctCount = sql<number>`COUNT(CASE WHEN ${rounds.roundNumber} >= ${STANDINGS_START_ROUND} AND ${rounds.isSettled} = true AND ${predictions.isCorrect} = 'true' THEN 1 END)`;
-  return db
+  const settledRounds = await db
+    .select({ roundNumber: rounds.roundNumber })
+    .from(rounds)
+    .where(and(gte(rounds.roundNumber, STANDINGS_START_ROUND), eq(rounds.isSettled, true)))
+    .orderBy(desc(rounds.roundNumber));
+  const previousSettledRound = settledRounds[1]?.roundNumber ?? null;
+
+  const currentCorrectCount = sql<number>`COUNT(CASE WHEN ${rounds.roundNumber} >= ${STANDINGS_START_ROUND} AND ${rounds.isSettled} = true AND ${predictions.isCorrect} = 'true' THEN 1 END)`;
+  const current = await db
     .select({
       userId: users.id,
       userName: users.name,
       userEmail: users.email,
-      correctCount,
+      correctCount: currentCorrectCount,
     })
     .from(users)
     .leftJoin(predictions, eq(predictions.userId, users.id))
     .leftJoin(matches, eq(predictions.matchId, matches.id))
     .leftJoin(rounds, eq(matches.roundId, rounds.id))
     .where(eq(users.isActive, true))
-    .groupBy(users.id)
-    .orderBy(desc(correctCount), users.name);
+    .groupBy(users.id);
+
+  if (previousSettledRound === null) return addStandingMovements(current, null);
+
+  const previousCorrectCount = sql<number>`COUNT(CASE WHEN ${rounds.roundNumber} >= ${STANDINGS_START_ROUND} AND ${rounds.roundNumber} <= ${previousSettledRound} AND ${rounds.isSettled} = true AND ${predictions.isCorrect} = 'true' THEN 1 END)`;
+  const previous = await db
+    .select({ userId: users.id, userName: users.name, correctCount: previousCorrectCount })
+    .from(users)
+    .leftJoin(predictions, eq(predictions.userId, users.id))
+    .leftJoin(matches, eq(predictions.matchId, matches.id))
+    .leftJoin(rounds, eq(matches.roundId, rounds.id))
+    .where(eq(users.isActive, true))
+    .groupBy(users.id);
+
+  return addStandingMovements(current, previous);
 }
 
 export async function getChampionsLeagueBracket() {

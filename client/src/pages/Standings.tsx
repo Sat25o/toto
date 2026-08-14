@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Trophy, Medal } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, Trophy, Medal } from "lucide-react";
 import { sortCumulativeStandings } from "@/lib/standingsRanking";
 import { STANDINGS_START_ROUND } from "@shared/league";
 
@@ -37,6 +37,16 @@ export default function Standings() {
       default:
         return <span className="text-slate-400 font-semibold">{position + 1}º</span>;
     }
+  };
+
+  const getMovementIndicator = (entry: (typeof sortedStandings)[number]) => {
+    if (entry.movement === "up") {
+      return <span className="inline-flex items-center gap-1 font-semibold text-emerald-700" title={`Subiu ${entry.positionChange} posição(ões) desde a jornada anterior`}><ArrowUp className="h-4 w-4" />{entry.positionChange}</span>;
+    }
+    if (entry.movement === "down") {
+      return <span className="inline-flex items-center gap-1 font-semibold text-red-700" title={`Desceu ${Math.abs(entry.positionChange)} posição(ões) desde a jornada anterior`}><ArrowDown className="h-4 w-4" />{Math.abs(entry.positionChange)}</span>;
+    }
+    return <span className="inline-flex items-center gap-1 text-slate-500" title={entry.previousPosition === null ? "Ainda não existe jornada anterior para comparar" : "Manteve a mesma posição"}><Minus className="h-4 w-4" />{entry.previousPosition === null ? "—" : "0"}</span>;
   };
 
   return (
@@ -83,6 +93,9 @@ export default function Standings() {
                       <th className="px-6 py-3 text-left text-sm font-semibold text-slate-600">
                         Apostador
                       </th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold text-slate-600">
+                        Movimento
+                      </th>
                       <th className="px-6 py-3 text-right text-sm font-semibold text-slate-600">
                         Acertos
                       </th>
@@ -113,6 +126,9 @@ export default function Standings() {
                               )}
                             </div>
                           </td>
+                          <td className="px-4 py-4 text-center">
+                            {getMovementIndicator(entry)}
+                          </td>
                           <td className="px-6 py-4 text-right">
                             <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 text-blue-700 font-bold">
                               {entry.correctCount}
@@ -139,7 +155,7 @@ export default function Standings() {
             <p className="text-blue-900 text-sm">
               <span className="font-semibold">Como funciona:</span> A classificação começa na Jornada {STANDINGS_START_ROUND}.
               O ranking é atualizado automaticamente após cada jornada ser finalizada e soma cada resultado
-              acertado (1, X ou 2). Os acertos da Jornada 1 ficam apenas no Histórico.
+              acertado (1, X ou 2). As setas comparam a posição atual com a classificação antes da última jornada finalizada. Os acertos da Jornada 1 ficam apenas no Histórico.
             </p>
           </CardContent>
         </Card>
