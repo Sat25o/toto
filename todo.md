@@ -416,3 +416,7 @@
 - [x] Ativar o jogo suplente automaticamente quando um jogo principal é adiado
 - [x] Contar sempre seis jogos ativos em classificação, vencedor e prémio
 - [x] Testar jornadas novas com e sem adiamento de jogo principal
+
+## Regra de Jogos Adiados
+
+- [x] Adicionar uma regra ativa e editável sobre adiamentos e jogo suplente
