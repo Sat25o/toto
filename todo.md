@@ -428,3 +428,10 @@
 - [x] Calcular vencedor, classificação e prémio pelos jogos efetivamente válidos
 - [x] Atualizar a informação pública e administrativa sobre múltiplos adiamentos
 - [x] Testar o fecho com vários jogos adiados
+
+## Classificação em Direto
+
+- [x] Calcular acertos provisórios pelos resultados já registados em jornadas em curso
+- [x] Recalcular o ranking em direto sem alterar a classificação oficial
+- [x] Mostrar a classificação provisória e o número de jogos atualizados
+- [x] Testar a atualização após cada resultado e a preservação do ranking oficial

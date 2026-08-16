@@ -12,6 +12,7 @@ import { buildChampionsLeagueFixtures } from "./championsLeagueBracket";
 import { addStandingMovements } from "./standingsMovement";
 import { assertRoundCanBeSettled, getValidSettlementMatches, getWinnerIdsForValidMatches } from "./postponedMatchSettlement";
 import { getPrizeCarryOver } from "./prizeRollover";
+import { addLiveCorrectCounts } from "./liveStandings";
 import {
   adminMessages,
   championsLeagueEntries,
@@ -675,6 +676,59 @@ export async function getStandings() {
     .groupBy(users.id);
 
   return addStandingMovements(current, previous);
+}
+
+/** Returns a temporary ranking using official totals plus results registered in unfinished rounds. */
+export async function getLiveStandings() {
+  const officialStandings = await getStandings();
+  if (officialStandings.length === 0) {
+    return { standings: [], completedMatchCount: 0, liveRoundNumbers: [] as number[] };
+  }
+
+  const db = await getDb();
+  if (!db) return { standings: officialStandings, completedMatchCount: 0, liveRoundNumbers: [] as number[] };
+
+  const liveRounds = await db
+    .select({ id: rounds.id, roundNumber: rounds.roundNumber })
+    .from(rounds)
+    .where(and(gte(rounds.roundNumber, STANDINGS_START_ROUND), eq(rounds.isSettled, false)))
+    .orderBy(asc(rounds.roundNumber));
+
+  let provisionalTotals: Array<{ userId: number; userName: string; userEmail: string; correctCount: number }> = officialStandings.map(({ userId, userName, userEmail, correctCount }) => ({
+    userId,
+    userName,
+    userEmail,
+    correctCount,
+  }));
+  let completedMatchCount = 0;
+  const liveRoundNumbers: number[] = [];
+
+  for (const liveRound of liveRounds) {
+    const roundMatches = await getMatchesByRound(liveRound.id);
+    const completedValidMatches = getValidSettlementMatches(roundMatches).filter(match => match.result !== null);
+    if (completedValidMatches.length === 0) continue;
+
+    provisionalTotals = addLiveCorrectCounts(
+      provisionalTotals,
+      completedValidMatches,
+      (await getPredictionsByRound(liveRound.id)).map(entry => ({
+        userId: entry.prediction.userId,
+        matchId: entry.match.id,
+        prediction: entry.prediction.prediction,
+      })),
+    );
+    completedMatchCount += completedValidMatches.length;
+    liveRoundNumbers.push(liveRound.roundNumber);
+  }
+
+  return {
+    standings: addStandingMovements(
+      provisionalTotals,
+      officialStandings.map(({ userId, userName, correctCount }) => ({ userId, userName, correctCount })),
+    ),
+    completedMatchCount,
+    liveRoundNumbers,
+  };
 }
 
 export async function getChampionsLeagueBracket() {

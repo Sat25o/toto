@@ -434,6 +434,7 @@ export const appRouter = router({
 
   standings: router({
     list: protectedProcedure.query(() => db.getStandings()),
+    live: protectedProcedure.query(() => db.getLiveStandings()),
   }),
 
   winner: router({

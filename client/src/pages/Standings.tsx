@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowDown, ArrowUp, Minus, Trophy, Medal } from "lucide-react";
+import { ArrowDown, ArrowUp, Minus, Trophy, Medal, Radio } from "lucide-react";
 import { sortCumulativeStandings } from "@/lib/standingsRanking";
 import { STANDINGS_START_ROUND } from "@shared/league";
 
@@ -15,7 +15,13 @@ export default function Standings() {
 
   // Fetch standings
   const { data: standings, isLoading } = trpc.standings.list.useQuery();
+  const { data: liveStandings, isLoading: isLiveLoading } = trpc.standings.live.useQuery(undefined, {
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: true,
+  });
   const sortedStandings = sortCumulativeStandings(standings ?? []);
+  const sortedLiveStandings = sortCumulativeStandings(liveStandings?.standings ?? []);
+  const hasLiveResults = (liveStandings?.completedMatchCount ?? 0) > 0;
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -68,12 +74,52 @@ export default function Standings() {
         </div>
       </div>
 
-      {/* Standings Table */}
+      {/* Live standings */}
       <div className="max-w-4xl mx-auto">
+        <Card className="mb-6 overflow-hidden border-emerald-200">
+          <CardHeader className="border-b border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
+            <div className="flex flex-wrap items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-slate-900"><Radio className="h-5 w-5 text-emerald-600" /> Classificação em direto</CardTitle>
+              <Badge className="bg-emerald-600 text-white">Provisória</Badge>
+            </div>
+            <CardDescription>
+              {hasLiveResults
+                ? `${liveStandings?.completedMatchCount} jogo(s) com resultado registado${liveStandings?.liveRoundNumbers?.length ? ` · Jornada${liveStandings.liveRoundNumbers.length > 1 ? "s" : ""} ${liveStandings.liveRoundNumbers.join(", ")}` : ""}`
+                : "Aguarda os primeiros resultados das jornadas em curso. Atualiza automaticamente a cada 10 segundos."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {isLiveLoading ? (
+              <div className="space-y-2 p-4"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
+            ) : hasLiveResults ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead><tr className="border-b border-emerald-100 bg-emerald-50/50">
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-600">Posição</th>
+                    <th className="px-6 py-3 text-left text-sm font-semibold text-slate-600">Apostador</th>
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-slate-600">Variação</th>
+                    <th className="px-6 py-3 text-right text-sm font-semibold text-slate-600">Acertos</th>
+                  </tr></thead>
+                  <tbody>{sortedLiveStandings.map((entry, index) => {
+                    const isCurrentUser = user?.id === entry.userId;
+                    return <tr key={entry.userId} className={`border-b border-emerald-50 ${isCurrentUser ? "bg-blue-50" : "hover:bg-emerald-50/50"}`}>
+                      <td className="px-6 py-4"><div className="flex items-center gap-3">{getMedalIcon(index)}</div></td>
+                      <td className="px-6 py-4"><div className="font-semibold text-slate-900">{entry.userName || "Utilizador"}{isCurrentUser && <Badge className="ml-2 bg-blue-100 text-blue-800">Você</Badge>}</div></td>
+                      <td className="px-4 py-4 text-center">{getMovementIndicator(entry)}</td>
+                      <td className="px-6 py-4 text-right"><div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-700">{entry.correctCount}</div></td>
+                    </tr>;
+                  })}</tbody>
+                </table>
+              </div>
+            ) : <div className="p-6 text-center text-sm text-slate-600">Quando o primeiro resultado for registado, o ranking provisório aparece aqui.</div>}
+          </CardContent>
+        </Card>
+
+        {/* Official standings table */}
         <Card className="border-slate-200/50 overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-b border-slate-200">
-            <CardTitle className="text-slate-900">Ranking da Temporada</CardTitle>
-            <CardDescription>Total de acertos acumulados desde a Jornada {STANDINGS_START_ROUND}</CardDescription>
+            <CardTitle className="text-slate-900">Classificação oficial</CardTitle>
+            <CardDescription>Total de acertos confirmados desde a Jornada {STANDINGS_START_ROUND}</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {isLoading ? (
@@ -154,8 +200,7 @@ export default function Standings() {
           <CardContent className="pt-6">
             <p className="text-blue-900 text-sm">
               <span className="font-semibold">Como funciona:</span> A classificação começa na Jornada {STANDINGS_START_ROUND}.
-              O ranking é atualizado automaticamente após cada jornada ser finalizada e soma cada resultado
-              acertado (1, X ou 2). As setas comparam a posição atual com a classificação antes da última jornada finalizada. Os acertos da Jornada 1 ficam apenas no Histórico.
+              A área em direto soma os resultados já registados, mas só a classificação oficial é confirmada no fecho da jornada. As setas comparam a posição com o ranking oficial antes da jornada em curso. Os acertos da Jornada 1 ficam apenas no Histórico.
             </p>
           </CardContent>
         </Card>
