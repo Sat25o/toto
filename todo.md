@@ -435,3 +435,10 @@
 - [x] Recalcular o ranking em direto sem alterar a classificação oficial
 - [x] Mostrar a classificação provisória e o número de jogos atualizados
 - [x] Testar a atualização após cada resultado e a preservação do ranking oficial
+
+## Design Móvel da Classificação
+
+- [x] Substituir as tabelas largas por cartões compactos em telemóvel
+- [x] Mostrar posição, nome, movimento e acertos sem corte de conteúdo
+- [x] Preservar a tabela detalhada para computador
+- [x] Validar a Classificação em telemóvel e computador
