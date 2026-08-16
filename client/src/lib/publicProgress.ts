@@ -13,7 +13,7 @@ export function getActivePublicMatches(matches: ProgressMatch[]) {
   const backupMatch = matches.find(match => match.isBackup);
   const activeMainMatches = mainMatches.filter(match => !match.isPostponed);
   const postponedMainCount = mainMatches.length - activeMainMatches.length;
-  return postponedMainCount === 1 && backupMatch ? [...activeMainMatches, backupMatch] : activeMainMatches;
+  return postponedMainCount > 0 && backupMatch && !backupMatch.isPostponed ? [...activeMainMatches, backupMatch] : activeMainMatches;
 }
 
 export type PublicPrediction = {

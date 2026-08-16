@@ -50,6 +50,17 @@ describe("progresso público acumulado", () => {
     expect(getParticipantProgress(matchesWithBackup, predictions, Number.POSITIVE_INFINITY, true).status).toBe("winner");
   });
 
+  it("considera apenas os jogos válidos quando há vários adiamentos", () => {
+    const matchesWithMultiplePostponements: ProgressMatch[] = [
+      ...allMatches.map(match => (match.id === 1 || match.id === 2 ? { ...match, isPostponed: true, result: null } : match)),
+      { id: 7, matchOrder: 7, result: "1", isBackup: true },
+    ];
+    const predictions = [3, 4, 5, 6, 7].map(matchId => ({ matchId, prediction: "1" as const }));
+
+    expect(getActivePublicMatches(matchesWithMultiplePostponements).map(match => match.id)).toEqual([3, 4, 5, 6, 7]);
+    expect(getParticipantProgress(matchesWithMultiplePostponements, predictions, Number.POSITIVE_INFINITY, true).status).toBe("winner");
+  });
+
   it("elimina a vermelho quem não completou os seis palpites depois do fecho", () => {
     const progress = getParticipantProgress(allMatches, [
       { matchId: 1, prediction: "1" },

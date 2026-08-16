@@ -420,3 +420,11 @@
 ## Regra de Jogos Adiados
 
 - [x] Adicionar uma regra ativa e editável sobre adiamentos e jogo suplente
+
+## Múltiplos Jogos Adiados
+
+- [x] Permitir marcar mais do que um jogo principal como adiado
+- [x] Usar o jogo suplente disponível e fechar com os restantes jogos válidos
+- [x] Calcular vencedor, classificação e prémio pelos jogos efetivamente válidos
+- [x] Atualizar a informação pública e administrativa sobre múltiplos adiamentos
+- [x] Testar o fecho com vários jogos adiados

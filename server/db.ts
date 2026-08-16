@@ -497,15 +497,6 @@ export async function updateMatchPostponed(matchId: number, isPostponed: boolean
   if (!matchRound[0]) throw new Error("Jogo não encontrado");
   assertRoundResultsAreEditable(matchRound[0].isSettled);
 
-  if (isPostponed && !matchRound[0].isBackup) {
-    const siblingMatches = await getMatchesByRound(matchRound[0].roundId);
-    const hasBackup = siblingMatches.some(match => match.isBackup);
-    const otherPostponedMainMatches = siblingMatches.filter(match => !match.isBackup && match.isPostponed && match.id !== matchId);
-    if (hasBackup && otherPostponedMainMatches.length > 0) {
-      throw new Error("Esta jornada já tem um jogo principal adiado e o suplente já foi ativado");
-    }
-  }
-
   return db.transaction(async tx => {
     await tx
       .update(matches)

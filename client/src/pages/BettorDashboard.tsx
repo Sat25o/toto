@@ -364,7 +364,7 @@ export default function BettorDashboard() {
                               </Badge>
                             )}
                           </div>
-                          {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Um jogo principal foi adiado: este palpite passa a contar." : "Faça o palpite: só conta se um jogo principal for adiado."}</p>}
+                          {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Há jogos principais adiados: este palpite passa a contar." : "Faça o palpite: só conta se houver jogos principais adiados."}</p>}
                           {match.result && (
                             <Badge className="bg-blue-100 text-blue-800 ml-2">
                               Resultado: {match.result}

@@ -226,7 +226,7 @@ export default function AdminPanel() {
     const backupMatch = roundData.matches.find(match => match.isBackup);
     const activeMainMatches = mainMatches.filter(match => !match.isPostponed);
     const postponedMainCount = mainMatches.length - activeMainMatches.length;
-    return postponedMainCount === 1 && backupMatch ? [...activeMainMatches, backupMatch] : activeMainMatches;
+    return postponedMainCount > 0 && backupMatch && !backupMatch.isPostponed ? [...activeMainMatches, backupMatch] : activeMainMatches;
   })();
 
   const handleDeadlineUpdate = () => {
@@ -451,7 +451,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
                     ))}
-                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">O jogo suplente só passa a contar se um dos seis jogos principais for marcado como adiado/anulado.</p>
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">O jogo suplente passa a contar se existir pelo menos um jogo principal adiado/anulado. Se houver mais adiamentos, a jornada fecha pelos restantes jogos válidos.</p>
                   </div>
 
                   <Button
@@ -607,7 +607,7 @@ export default function AdminPanel() {
                               </p>
                               {match.isBackup && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">Jogo suplente</span>}
                               </div>
-                              <p className="text-sm text-slate-600">{match.isBackup ? "Só conta se um jogo principal for adiado" : `Jogo principal ${match.matchOrder}`}</p>
+                              <p className="text-sm text-slate-600">{match.isBackup ? "Conta se houver jogos principais adiados" : `Jogo principal ${match.matchOrder}`}</p>
                             </div>
 
                             {roundData.round.isSettled && match.isPostponed ? (

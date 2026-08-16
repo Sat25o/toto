@@ -12,17 +12,13 @@ export function getValidSettlementMatches(matches: SettlementMatch[]) {
   const postponedMainCount = mainMatches.length - activeMainMatches.length;
 
   if (postponedMainCount === 0) return activeMainMatches;
-  if (postponedMainCount === 1 && backupMatch) return [...activeMainMatches, backupMatch];
+  if (backupMatch && !backupMatch.isPostponed) return [...activeMainMatches, backupMatch];
   return activeMainMatches;
 }
 
 export function assertRoundCanBeSettled(matches: SettlementMatch[]) {
   const validMatches = getValidSettlementMatches(matches);
-  const hasBackup = matches.some(match => match.isBackup);
-  if (hasBackup && validMatches.length !== 6) {
-    throw new Error("A jornada precisa de exatamente seis jogos ativos; verifique os adiamentos e o jogo suplente");
-  }
-  if (!hasBackup && validMatches.length === 0) {
+  if (validMatches.length === 0) {
     throw new Error("A jornada tem de ter pelo menos um jogo válido");
   }
   if (validMatches.some(match => match.result === null)) {

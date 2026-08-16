@@ -35,8 +35,8 @@ describe("fecho de jornada com jogo adiado", () => {
     expect(assertRoundCanBeSettled(matchesWithBackup)).toHaveLength(6);
   });
 
-  it("impede fechar uma jornada com suplente se forem adiados dois jogos principais", () => {
-    const invalidMatches = [
+  it("fecha pelos jogos válidos quando são adiados dois jogos principais", () => {
+    const matchesWithMultiplePostponements = [
       { id: 1, isPostponed: true, isBackup: false, result: null },
       { id: 2, isPostponed: true, isBackup: false, result: null },
       { id: 3, isPostponed: false, isBackup: false, result: "X" as const },
@@ -46,6 +46,7 @@ describe("fecho de jornada com jogo adiado", () => {
       { id: 7, isPostponed: false, isBackup: true, result: "2" as const },
     ];
 
-    expect(() => assertRoundCanBeSettled(invalidMatches)).toThrow("seis jogos ativos");
+    expect(assertRoundCanBeSettled(matchesWithMultiplePostponements).map(match => match.id)).toEqual([3, 4, 5, 6, 7]);
+    expect(getWinnerIdsForValidMatches(new Map([[10, 5], [11, 4]]), 5)).toEqual([10]);
   });
 });
