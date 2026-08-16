@@ -315,7 +315,8 @@ export const appRouter = router({
                 awayTeam: z.string().trim().min(1).max(100),
               }),
             )
-            .length(6),
+            .min(6)
+            .max(7),
         }),
       )
       .mutation(async ({ input }) => {
@@ -338,10 +339,10 @@ export const appRouter = router({
               z.object({
                 homeTeam: z.string().trim().min(1).max(100),
                 awayTeam: z.string().trim().min(1).max(100),
-                matchOrder: z.number().int().min(1).max(6),
+                matchOrder: z.number().int().min(1).max(7),
               }),
             )
-            .length(6),
+            .length(7),
         }),
       )
       .mutation(async ({ input }) => {
@@ -359,7 +360,10 @@ export const appRouter = router({
         });
         const round = await db.getRoundByNumber(input.roundNumber);
         if (!round) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível criar a jornada" });
-        await db.createMatches(round.id, input.matches);
+        await db.createMatches(
+          round.id,
+          input.matches.map((match, index) => ({ ...match, isBackup: index === 6 })),
+        );
         return round;
       }),
   }),

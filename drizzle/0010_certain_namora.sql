@@ -1,0 +1,1 @@
+ALTER TABLE `matches` ADD `isBackup` boolean DEFAULT false NOT NULL;

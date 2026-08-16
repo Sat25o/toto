@@ -71,6 +71,13 @@
       "when": 1786875777268,
       "tag": "0009_cloudy_kate_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1786877876735,
+      "tag": "0010_certain_namora",
+      "breakpoints": true
     }
   ]
 }

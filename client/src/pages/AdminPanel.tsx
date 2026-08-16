@@ -220,6 +220,15 @@ export default function AdminPanel() {
     return null;
   }
 
+  const activeMatchesForSettlement = (() => {
+    if (!roundData) return [];
+    const mainMatches = roundData.matches.filter(match => !match.isBackup);
+    const backupMatch = roundData.matches.find(match => match.isBackup);
+    const activeMainMatches = mainMatches.filter(match => !match.isPostponed);
+    const postponedMainCount = mainMatches.length - activeMainMatches.length;
+    return postponedMainCount === 1 && backupMatch ? [...activeMainMatches, backupMatch] : activeMainMatches;
+  })();
+
   const handleDeadlineUpdate = () => {
     if (!selectedRoundId || !deadlineDraft) return;
     const nextDeadline = new Date(deadlineDraft);
@@ -235,9 +244,10 @@ export default function AdminPanel() {
   };
 
   const handleMatchesUpdate = () => {
-    if (!selectedRoundId || matchDraft.length !== 6) return;
+    const expectedMatchCount = roundData?.matches.length ?? 6;
+    if (!selectedRoundId || matchDraft.length !== expectedMatchCount) return;
     if (matchDraft.some(match => !match.homeTeam.trim() || !match.awayTeam.trim())) {
-      toast.error("Indique a equipa da casa e a equipa visitante nos seis jogos.");
+      toast.error("Indique a equipa da casa e a equipa visitante em todos os jogos.");
       return;
     }
     updateMatchesMutation.mutate({
@@ -325,7 +335,7 @@ export default function AdminPanel() {
             <Card className="border-slate-200/50">
               <CardHeader>
                 <CardTitle className="text-slate-900">Criar Nova Jornada</CardTitle>
-                <CardDescription>Defina os jogos, prémio e prazo de apostas</CardDescription>
+                <CardDescription>Defina os seis jogos principais, o jogo suplente, prémio e prazo de apostas</CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateRound} className="space-y-6">
@@ -401,11 +411,11 @@ export default function AdminPanel() {
 
                   {/* Matches */}
                   <div className="space-y-4">
-                    <Label className="text-slate-700 font-semibold">6 Jogos</Label>
+                    <Label className="text-slate-700 font-semibold">6 jogos principais + 1 jogo suplente</Label>
                     {newRoundForm.matches.map((match, i) => (
-                      <div key={i} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div key={i} className={`grid grid-cols-1 gap-3 rounded-lg border p-4 md:grid-cols-3 ${i === 6 ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
                         <div>
-                          <Label className="text-sm text-slate-600">Jogo {i + 1} - Casa</Label>
+                          <Label className={`text-sm ${i === 6 ? "font-semibold text-amber-900" : "text-slate-600"}`}>{i === 6 ? "Jogo suplente - Casa" : `Jogo ${i + 1} - Casa`}</Label>
                           <Input
                             type="text"
                             placeholder="ex: Benfica"
@@ -424,7 +434,7 @@ export default function AdminPanel() {
                           <span className="text-slate-600 font-semibold">vs</span>
                         </div>
                         <div>
-                          <Label className="text-sm text-slate-600">Visitante</Label>
+                          <Label className={`text-sm ${i === 6 ? "font-semibold text-amber-900" : "text-slate-600"}`}>{i === 6 ? "Jogo suplente - Visitante" : "Visitante"}</Label>
                           <Input
                             type="text"
                             placeholder="ex: Porto"
@@ -441,6 +451,7 @@ export default function AdminPanel() {
                         </div>
                       </div>
                     ))}
+                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">O jogo suplente só passa a contar se um dos seis jogos principais for marcado como adiado/anulado.</p>
                   </div>
 
                   <Button
@@ -558,7 +569,7 @@ export default function AdminPanel() {
                                 </div>
                               ))}
                             </div>
-                            <Button type="button" onClick={handleMatchesUpdate} disabled={matchDraft.length !== 6 || updateMatchesMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
+                            <Button type="button" onClick={handleMatchesUpdate} disabled={matchDraft.length !== totalMatches || updateMatchesMutation.isPending} className="w-full bg-blue-600 hover:bg-blue-700 sm:w-auto">
                               <Save className="mr-2 h-4 w-4" />
                               {updateMatchesMutation.isPending ? "A guardar…" : "Guardar jogos"}
                             </Button>
@@ -574,12 +585,12 @@ export default function AdminPanel() {
                       </CardHeader>
                       <CardContent className="grid gap-4 md:grid-cols-2">
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                          <p className="font-semibold text-emerald-900">Concluíram os 6/6 ({completedParticipants.length})</p>
-                          {completedParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-emerald-800">{completedParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/6)</span></p>)}</div> : <p className="mt-2 text-sm text-emerald-800">Ainda ninguém completou os seis palpites.</p>}
+                          <p className="font-semibold text-emerald-900">Concluíram os {totalMatches}/{totalMatches} ({completedParticipants.length})</p>
+                          {completedParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-emerald-800">{completedParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/{totalMatches})</span></p>)}</div> : <p className="mt-2 text-sm text-emerald-800">Ainda ninguém completou todos os palpites.</p>}
                         </div>
                         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
                           <p className="font-semibold text-amber-900">Faltam completar ({pendingParticipants.length})</p>
-                          {pendingParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-amber-800">{pendingParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/6)</span></p>)}</div> : <p className="mt-2 text-sm text-amber-800">Todos os participantes completaram a jornada.</p>}
+                          {pendingParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-amber-800">{pendingParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/{totalMatches})</span></p>)}</div> : <p className="mt-2 text-sm text-amber-800">Todos os participantes completaram a jornada.</p>}
                         </div>
                       </CardContent>
                     </Card>
@@ -590,10 +601,13 @@ export default function AdminPanel() {
                         <Card key={match.id} className="border-slate-200/50">
                           <CardContent className="pt-4">
                             <div className="mb-4">
+                              <div className="flex flex-wrap items-center gap-2">
                               <p className="font-semibold text-slate-900">
                                 {match.homeTeam} vs {match.awayTeam}
                               </p>
-                              <p className="text-sm text-slate-600">Jogo {match.matchOrder}</p>
+                              {match.isBackup && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-900">Jogo suplente</span>}
+                              </div>
+                              <p className="text-sm text-slate-600">{match.isBackup ? "Só conta se um jogo principal for adiado" : `Jogo principal ${match.matchOrder}`}</p>
                             </div>
 
                             {roundData.round.isSettled && match.isPostponed ? (
@@ -645,7 +659,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* Calculate Winner Button */}
-                    {roundData.matches.every(m => m.isPostponed || m.result) && roundData.matches.some(m => !m.isPostponed) && !roundData.round.isSettled && (
+                    {activeMatchesForSettlement.length > 0 && activeMatchesForSettlement.every(match => match.result) && !roundData.round.isSettled && (
                       <Button
                         onClick={handleCalculateWinner}
                         disabled={calculateWinnerMutation.isPending}

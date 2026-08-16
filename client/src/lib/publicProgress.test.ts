@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getParticipantProgress, type ProgressMatch } from "./publicProgress";
+import { getActivePublicMatches, getParticipantProgress, type ProgressMatch } from "./publicProgress";
 
 const allMatches: ProgressMatch[] = [1, 2, 3, 4, 5, 6].map(matchOrder => ({
   id: matchOrder,
@@ -37,6 +37,17 @@ describe("progresso público acumulado", () => {
     expect(progress.status).toBe("winner");
     expect(progress.correctCount).toBe(5);
     expect(progress.missingMatchIds).toEqual([]);
+  });
+
+  it("substitui um jogo principal adiado pelo jogo suplente", () => {
+    const matchesWithBackup: ProgressMatch[] = [
+      ...allMatches.map(match => match.id === 2 ? { ...match, isPostponed: true, result: null } : match),
+      { id: 7, matchOrder: 7, result: "1", isBackup: true },
+    ];
+    const predictions = [1, 3, 4, 5, 6, 7].map(matchId => ({ matchId, prediction: "1" as const }));
+
+    expect(getActivePublicMatches(matchesWithBackup).map(match => match.id)).toEqual([1, 3, 4, 5, 6, 7]);
+    expect(getParticipantProgress(matchesWithBackup, predictions, Number.POSITIVE_INFINITY, true).status).toBe("winner");
   });
 
   it("elimina a vermelho quem não completou os seis palpites depois do fecho", () => {

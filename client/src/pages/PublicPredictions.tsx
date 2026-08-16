@@ -1,7 +1,7 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { getParticipantProgress } from "@/lib/publicProgress";
+import { getActivePublicMatches, getParticipantProgress } from "@/lib/publicProgress";
 import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
@@ -83,7 +83,8 @@ export default function PublicPredictions() {
     : [];
   const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
   const publicSummary = summarizePublicRound(participantCards);
-  const validMatchCount = publicRound?.matches.filter(match => !match.isPostponed).length ?? 6;
+  const activeMatchIds = new Set(publicRound ? getActivePublicMatches(publicRound.matches).map(match => match.id) : []);
+  const validMatchCount = publicRound ? activeMatchIds.size : 6;
   const identicalPredictionGroups = publicRound
     ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
     : [];
@@ -235,10 +236,13 @@ export default function PublicPredictions() {
                         {publicRound.matches.map(match => {
                           const prediction = participant.predictions.find(item => item.matchId === match.id)?.prediction ?? null;
                           const isPostponed = match.isPostponed;
+                          const isInactiveBackup = match.isBackup && !activeMatchIds.has(match.id);
                           const resultKnown = match.result !== null && !isPostponed;
                           const correct = resultKnown && prediction === match.result;
                           const failed = resultKnown && !correct;
-                          const cellClass = isPostponed
+                          const cellClass = isInactiveBackup
+                            ? "border-amber-100 bg-amber-50/60 text-amber-900"
+                            : isPostponed
                             ? "border-amber-200 bg-amber-50 text-amber-950"
                             : !resultKnown
                             ? "border-slate-200 bg-white/70 text-slate-600"
@@ -250,7 +254,7 @@ export default function PublicPredictions() {
                             <div key={match.id} className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${cellClass}`}>
                               <span className="truncate">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
                               <span className="shrink-0 font-bold" title={isPostponed ? "Jogo adiado/anulado — não conta para esta jornada" : resultKnown ? `Resultado: ${match.result}` : "Resultado por confirmar"}>
-                                {isPostponed ? "Adiado" : `${prediction ?? "—"}${resultKnown ? ` / ${match.result}` : ""}`}
+                                {isInactiveBackup ? "Suplente" : isPostponed ? "Adiado" : `${prediction ?? "—"}${resultKnown ? ` / ${match.result}` : ""}`}
                               </span>
                             </div>
                           );

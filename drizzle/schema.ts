@@ -81,7 +81,7 @@ export const roundWinners = mysqlTable(
 export type RoundWinner = typeof roundWinners.$inferSelect;
 
 /**
- * Matches (Jogos) - 6 matches per round
+ * Matches (Jogos) - 6 jogos principais e, em jornadas novas, 1 jogo suplente
  */
 export const matches = mysqlTable("matches", {
   id: int("id").autoincrement().primaryKey(),
@@ -90,7 +90,8 @@ export const matches = mysqlTable("matches", {
   awayTeam: varchar("awayTeam", { length: 100 }).notNull(),
   result: mysqlEnum("result", ["1", "X", "2"]), // Official result (null until entered)
   isPostponed: boolean("isPostponed").default(false).notNull(),
-  matchOrder: int("matchOrder").notNull(), // Order within the round (1-6)
+  isBackup: boolean("isBackup").default(false).notNull(),
+  matchOrder: int("matchOrder").notNull(), // Ordem dentro da jornada (1-7)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

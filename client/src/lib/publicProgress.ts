@@ -5,7 +5,16 @@ export type ProgressMatch = {
   matchOrder: number;
   result: PredictionChoice | null;
   isPostponed?: boolean;
+  isBackup?: boolean;
 };
+
+export function getActivePublicMatches(matches: ProgressMatch[]) {
+  const mainMatches = matches.filter(match => !match.isBackup);
+  const backupMatch = matches.find(match => match.isBackup);
+  const activeMainMatches = mainMatches.filter(match => !match.isPostponed);
+  const postponedMainCount = mainMatches.length - activeMainMatches.length;
+  return postponedMainCount === 1 && backupMatch ? [...activeMainMatches, backupMatch] : activeMainMatches;
+}
 
 export type PublicPrediction = {
   matchId: number;
@@ -33,7 +42,7 @@ export function getParticipantProgress(
   eliminateIncompletePredictions = false,
 ): ParticipantProgress {
   const predictionByMatch = new Map(predictions.map(item => [item.matchId, item.prediction]));
-  const validMatches = matches.filter(match => !match.isPostponed);
+  const validMatches = getActivePublicMatches(matches);
   const missingMatchIds = validMatches
     .filter(match => predictionByMatch.get(match.id) === undefined || predictionByMatch.get(match.id) === null)
     .map(match => match.id);

@@ -408,3 +408,11 @@
 - [x] Acumular automaticamente o prémio sem vencedor para a jornada seguinte
 - [x] Mostrar claramente o jogo adiado nas áreas de administração, histórico e apostas públicas
 - [x] Testar o fecho de jornada com jogo adiado e a transição do prémio
+
+## Jogo Suplente para Novas Jornadas
+
+- [x] Preservar as Jornadas 1 e 2 atuais com os seis jogos já definidos
+- [x] Permitir criar jornadas novas com seis jogos principais e um jogo suplente
+- [x] Ativar o jogo suplente automaticamente quando um jogo principal é adiado
+- [x] Contar sempre seis jogos ativos em classificação, vencedor e prémio
+- [x] Testar jornadas novas com e sem adiamento de jogo principal

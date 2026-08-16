@@ -405,11 +405,11 @@ export async function updateRoundDeadline(roundId: number, bettingDeadline: Date
 
 export async function createMatches(
   roundId: number,
-  matchesData: Array<{ homeTeam: string; awayTeam: string; matchOrder: number }>,
+  matchesData: Array<{ homeTeam: string; awayTeam: string; matchOrder: number; isBackup?: boolean }>,
 ) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
-  return db.insert(matches).values(matchesData.map(match => ({ ...match, roundId })));
+  return db.insert(matches).values(matchesData.map(match => ({ ...match, roundId, isBackup: match.isBackup ?? false })));
 }
 
 export async function getMatchesByRound(roundId: number) {
@@ -431,13 +431,14 @@ export async function updateRoundMatches(
   const currentMatches = await getMatchesByRound(roundId);
   const currentMatchIds = new Set(currentMatches.map(match => match.id));
   const submittedMatchIds = new Set(matchesData.map(match => match.id));
+  const expectedMatchCount = currentMatches.length;
   if (
-    currentMatches.length !== 6 ||
-    matchesData.length !== 6 ||
-    submittedMatchIds.size !== 6 ||
+    (expectedMatchCount !== 6 && expectedMatchCount !== 7) ||
+    matchesData.length !== expectedMatchCount ||
+    submittedMatchIds.size !== expectedMatchCount ||
     Array.from(submittedMatchIds).some(matchId => !currentMatchIds.has(matchId))
   ) {
-    throw new Error("Os seis jogos da jornada têm de ser enviados corretamente");
+    throw new Error("Todos os jogos da jornada têm de ser enviados corretamente");
   }
 
   const predictionCount = await db
@@ -488,13 +489,22 @@ export async function updateMatchPostponed(matchId: number, isPostponed: boolean
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
   const matchRound = await db
-    .select({ isSettled: rounds.isSettled })
+    .select({ isSettled: rounds.isSettled, roundId: matches.roundId, isBackup: matches.isBackup })
     .from(matches)
     .innerJoin(rounds, eq(matches.roundId, rounds.id))
     .where(eq(matches.id, matchId))
     .limit(1);
   if (!matchRound[0]) throw new Error("Jogo não encontrado");
   assertRoundResultsAreEditable(matchRound[0].isSettled);
+
+  if (isPostponed && !matchRound[0].isBackup) {
+    const siblingMatches = await getMatchesByRound(matchRound[0].roundId);
+    const hasBackup = siblingMatches.some(match => match.isBackup);
+    const otherPostponedMainMatches = siblingMatches.filter(match => !match.isBackup && match.isPostponed && match.id !== matchId);
+    if (hasBackup && otherPostponedMainMatches.length > 0) {
+      throw new Error("Esta jornada já tem um jogo principal adiado e o suplente já foi ativado");
+    }
+  }
 
   return db.transaction(async tx => {
     await tx
@@ -758,7 +768,6 @@ export async function calculateRoundWinner(roundId: number) {
   const round = await getRound(roundId);
   if (!round) throw new Error("Jornada não encontrada");
   const roundMatches = await db.select().from(matches).where(eq(matches.roundId, roundId));
-  if (roundMatches.length !== 6) throw new Error("A jornada tem de ter seis jogos");
   const validMatches = assertRoundCanBeSettled(roundMatches);
   const validMatchIds = new Set(validMatches.map(match => match.id));
 

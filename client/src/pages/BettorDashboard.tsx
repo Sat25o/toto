@@ -341,14 +341,16 @@ export default function BettorDashboard() {
                   )?.prediction.prediction;
                   const userPrediction = optimisticPredictions[match.id] ?? savedPrediction;
 
+                  const backupIsActive = match.isBackup && roundData.matches.some(item => !item.isBackup && item.isPostponed);
+
                   return (
-                    <Card key={match.id} className="border-slate-200/50 hover:border-blue-200 transition-all">
+                    <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "border-slate-200/50 hover:border-blue-200"}`}>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex-1">
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-semibold text-slate-500">
-                                Jogo {match.matchOrder}
+                              <span className={`text-sm font-semibold ${match.isBackup ? "text-amber-800" : "text-slate-500"}`}>
+                                {match.isBackup ? "Jogo suplente" : `Jogo ${match.matchOrder}`}
                               </span>
                               <div className="flex-1">
                                 <p className="font-semibold text-slate-900">
@@ -356,7 +358,13 @@ export default function BettorDashboard() {
                                 </p>
                               </div>
                             </div>
+                            {match.isBackup && (
+                              <Badge className={backupIsActive ? "bg-amber-200 text-amber-950" : "bg-amber-100 text-amber-900"}>
+                                {backupIsActive ? "Em uso" : "Reserva"}
+                              </Badge>
+                            )}
                           </div>
+                          {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Um jogo principal foi adiado: este palpite passa a contar." : "Faça o palpite: só conta se um jogo principal for adiado."}</p>}
                           {match.result && (
                             <Badge className="bg-blue-100 text-blue-800 ml-2">
                               Resultado: {match.result}

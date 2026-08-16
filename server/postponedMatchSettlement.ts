@@ -1,16 +1,30 @@
 export type SettlementMatch = {
   id: number;
   isPostponed: boolean;
+  isBackup?: boolean;
   result: "1" | "X" | "2" | null;
 };
 
 export function getValidSettlementMatches(matches: SettlementMatch[]) {
-  return matches.filter(match => !match.isPostponed);
+  const mainMatches = matches.filter(match => !match.isBackup);
+  const backupMatch = matches.find(match => match.isBackup);
+  const activeMainMatches = mainMatches.filter(match => !match.isPostponed);
+  const postponedMainCount = mainMatches.length - activeMainMatches.length;
+
+  if (postponedMainCount === 0) return activeMainMatches;
+  if (postponedMainCount === 1 && backupMatch) return [...activeMainMatches, backupMatch];
+  return activeMainMatches;
 }
 
 export function assertRoundCanBeSettled(matches: SettlementMatch[]) {
   const validMatches = getValidSettlementMatches(matches);
-  if (validMatches.length === 0) throw new Error("A jornada tem de ter pelo menos um jogo válido");
+  const hasBackup = matches.some(match => match.isBackup);
+  if (hasBackup && validMatches.length !== 6) {
+    throw new Error("A jornada precisa de exatamente seis jogos ativos; verifique os adiamentos e o jogo suplente");
+  }
+  if (!hasBackup && validMatches.length === 0) {
+    throw new Error("A jornada tem de ter pelo menos um jogo válido");
+  }
   if (validMatches.some(match => match.result === null)) {
     throw new Error("Introduza os resultados de todos os jogos válidos antes de calcular o vencedor");
   }

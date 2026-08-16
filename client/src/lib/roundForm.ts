@@ -4,7 +4,7 @@ export type DraftMatch = {
 };
 
 export const createEmptyMatches = (): DraftMatch[] =>
-  Array.from({ length: 6 }, () => ({ homeTeam: "", awayTeam: "" }));
+  Array.from({ length: 7 }, () => ({ homeTeam: "", awayTeam: "" }));
 
 export const updateDraftMatch = (
   matches: DraftMatch[],
