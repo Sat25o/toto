@@ -22,7 +22,7 @@ const statusAppearance = {
     card: "border-amber-300 bg-amber-50",
     badge: "bg-amber-200 text-amber-950",
     label: "Em jogo",
-    description: "Continua elegível para acertar os 6 jogos",
+    description: "Continua elegível nos jogos válidos",
     icon: CircleDotDashed,
   },
   eliminated: {
@@ -36,7 +36,7 @@ const statusAppearance = {
     card: "border-emerald-400 bg-emerald-50",
     badge: "bg-emerald-200 text-emerald-950",
     label: "Vencedor",
-    description: "Acertou os 6 resultados",
+    description: "Acertou todos os jogos válidos",
     icon: Trophy,
   },
 } as const;
@@ -83,6 +83,7 @@ export default function PublicPredictions() {
     : [];
   const visibleParticipantCards = participantCards.filter(({ participant, progress }) => shouldShowParticipant(participant.name, progress.status, searchQuery, statusFilter));
   const publicSummary = summarizePublicRound(participantCards);
+  const validMatchCount = publicRound?.matches.filter(match => !match.isPostponed).length ?? 6;
   const identicalPredictionGroups = publicRound
     ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
     : [];
@@ -214,7 +215,7 @@ export default function PublicPredictions() {
                   const StatusIcon = appearance.icon;
                   const isCurrentParticipant = participant.id === user.id;
                   const description = progress.eliminationReason === "incomplete_predictions"
-                    ? `Não completou os 6 palpites (${6 - progress.missingMatchIds.length}/6 preenchidos)`
+                    ? `Não completou os ${validMatchCount} palpites válidos (${validMatchCount - progress.missingMatchIds.length}/${validMatchCount} preenchidos)`
                     : appearance.description;
 
                   return (
@@ -233,10 +234,13 @@ export default function PublicPredictions() {
                       <div className="mt-4 grid gap-2">
                         {publicRound.matches.map(match => {
                           const prediction = participant.predictions.find(item => item.matchId === match.id)?.prediction ?? null;
-                          const resultKnown = match.result !== null;
+                          const isPostponed = match.isPostponed;
+                          const resultKnown = match.result !== null && !isPostponed;
                           const correct = resultKnown && prediction === match.result;
                           const failed = resultKnown && !correct;
-                          const cellClass = !resultKnown
+                          const cellClass = isPostponed
+                            ? "border-amber-200 bg-amber-50 text-amber-950"
+                            : !resultKnown
                             ? "border-slate-200 bg-white/70 text-slate-600"
                             : correct
                               ? "border-emerald-200 bg-emerald-100 text-emerald-950"
@@ -245,8 +249,8 @@ export default function PublicPredictions() {
                           return (
                             <div key={match.id} className={`flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm ${cellClass}`}>
                               <span className="truncate">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
-                              <span className="shrink-0 font-bold" title={resultKnown ? `Resultado: ${match.result}` : "Resultado por confirmar"}>
-                                {prediction ?? "—"}{resultKnown ? ` / ${match.result}` : ""}
+                              <span className="shrink-0 font-bold" title={isPostponed ? "Jogo adiado/anulado — não conta para esta jornada" : resultKnown ? `Resultado: ${match.result}` : "Resultado por confirmar"}>
+                                {isPostponed ? "Adiado" : `${prediction ?? "—"}${resultKnown ? ` / ${match.result}` : ""}`}
                               </span>
                             </div>
                           );

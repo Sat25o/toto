@@ -400,3 +400,11 @@
 - [x] Comparar a posição atual com a classificação antes da última jornada finalizada
 - [x] Mostrar indicadores de subida, descida e posição estável
 - [x] Testar a variação de posições e a apresentação do ranking
+
+## Jogos Adiados e Prémio Acumulado
+
+- [x] Permitir marcar um jogo como adiado/anulado para a jornada
+- [x] Calcular vencedores, classificação e estados públicos apenas pelos jogos válidos
+- [x] Acumular automaticamente o prémio sem vencedor para a jornada seguinte
+- [x] Mostrar claramente o jogo adiado nas áreas de administração, histórico e apostas públicas
+- [x] Testar o fecho de jornada com jogo adiado e a transição do prémio

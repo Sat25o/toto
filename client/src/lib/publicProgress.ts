@@ -4,6 +4,7 @@ export type ProgressMatch = {
   id: number;
   matchOrder: number;
   result: PredictionChoice | null;
+  isPostponed?: boolean;
 };
 
 export type PublicPrediction = {
@@ -32,17 +33,18 @@ export function getParticipantProgress(
   eliminateIncompletePredictions = false,
 ): ParticipantProgress {
   const predictionByMatch = new Map(predictions.map(item => [item.matchId, item.prediction]));
-  const missingMatchIds = matches
+  const validMatches = matches.filter(match => !match.isPostponed);
+  const missingMatchIds = validMatches
     .filter(match => predictionByMatch.get(match.id) === undefined || predictionByMatch.get(match.id) === null)
     .map(match => match.id);
-  const evaluatedMatches = matches.filter(
+  const evaluatedMatches = validMatches.filter(
     match => match.matchOrder <= throughMatchOrder && match.result !== null,
   );
   const failedMatchIds = evaluatedMatches
     .filter(match => predictionByMatch.get(match.id) !== match.result)
     .map(match => match.id);
   const correctCount = evaluatedMatches.length - failedMatchIds.length;
-  const allResultsKnown = matches.length === 6 && matches.every(match => match.result !== null);
+  const allResultsKnown = validMatches.length > 0 && validMatches.every(match => match.result !== null);
 
   if (eliminateIncompletePredictions && missingMatchIds.length > 0) {
     return {
@@ -66,7 +68,7 @@ export function getParticipantProgress(
     };
   }
 
-  if (allResultsKnown && evaluatedMatches.length === matches.length) {
+  if (allResultsKnown && evaluatedMatches.length === validMatches.length) {
     return {
       status: "winner",
       correctCount,

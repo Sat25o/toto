@@ -375,6 +375,16 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar o resultado" });
         }
       }),
+    setPostponed: adminProcedure
+      .input(z.object({ matchId: z.number().int().positive(), isPostponed: z.boolean() }))
+      .mutation(async ({ input }) => {
+        try {
+          await db.updateMatchPostponed(input.matchId, input.isPostponed);
+          return { success: true };
+        } catch (error) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar o estado do jogo" });
+        }
+      }),
   }),
 
   predictions: router({

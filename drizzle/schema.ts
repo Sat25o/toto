@@ -51,6 +51,8 @@ export const rounds = mysqlTable("rounds", {
   roundNumber: int("roundNumber").notNull().unique(),
   prize: text("prize"), // Informational prize description
   prizeAmount: decimal("prizeAmount", { precision: 10, scale: 2 }), // Informational monetary value for equal split
+  carriedPrizeAmount: decimal("carriedPrizeAmount", { precision: 10, scale: 2 }).default("0.00").notNull(),
+  prizeRolledOver: boolean("prizeRolledOver").default(false).notNull(),
   bettingDeadline: timestamp("bettingDeadline").notNull(),
   winnerId: int("winnerId"), // Legacy first winner ID for backwards compatibility
   isSettled: boolean("isSettled").default(false).notNull(),
@@ -87,6 +89,7 @@ export const matches = mysqlTable("matches", {
   homeTeam: varchar("homeTeam", { length: 100 }).notNull(),
   awayTeam: varchar("awayTeam", { length: 100 }).notNull(),
   result: mysqlEnum("result", ["1", "X", "2"]), // Official result (null until entered)
+  isPostponed: boolean("isPostponed").default(false).notNull(),
   matchOrder: int("matchOrder").notNull(), // Order within the round (1-6)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),

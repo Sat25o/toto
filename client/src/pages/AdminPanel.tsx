@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Pencil, Plus, Save } from "lucide-react";
+import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
@@ -84,6 +84,14 @@ export default function AdminPanel() {
     },
   });
 
+  const updatePostponedMutation = trpc.matches.setPostponed.useMutation({
+    onSuccess: (_, variables) => {
+      toast.success(variables.isPostponed ? "Jogo marcado como adiado/anulado nesta jornada." : "Jogo voltou a contar para a jornada.");
+      void refetchRoundData();
+    },
+    onError: error => toast.error(error.message || "Não foi possível atualizar o estado do jogo"),
+  });
+
   const updateDeadlineMutation = trpc.rounds.updateDeadline.useMutation({
     onSuccess: () => {
       toast.success("Data e hora limite atualizadas.");
@@ -105,7 +113,7 @@ export default function AdminPanel() {
   const calculateWinnerMutation = trpc.winner.calculate.useMutation({
     onSuccess: (data) => {
       if (data.winnerCount === 0) {
-        toast.success("Jornada fechada sem vencedores com seis acertos.");
+        toast.success(`Jornada fechada sem vencedores nos ${data.validMatchCount} jogo(s) válido(s). O prémio acumula para a próxima jornada.`);
       } else {
         const shareMessage = data.prizeShare === null ? "" : ` €${data.prizeShare.toFixed(2)} para cada vencedor.`;
         toast.success(`${data.winnerCount} vencedor(es) identificado(s).${shareMessage}`);
@@ -166,6 +174,10 @@ export default function AdminPanel() {
   const handleUpdateResult = (matchId: number, result: "1" | "X" | "2") => {
     updateResultMutation.mutate({ matchId, result });
     setResultForm(prev => ({ ...prev, [matchId]: result }));
+  };
+
+  const handlePostponedMatch = (matchId: number, isPostponed: boolean) => {
+    updatePostponedMutation.mutate({ matchId, isPostponed });
   };
 
   const handleCalculateWinner = () => {
@@ -584,11 +596,27 @@ export default function AdminPanel() {
                               <p className="text-sm text-slate-600">Jogo {match.matchOrder}</p>
                             </div>
 
-                            {roundData.round.isSettled && match.result ? (
+                            {roundData.round.isSettled && match.isPostponed ? (
+                              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                <p className="font-semibold text-amber-900">Jogo adiado/anulado — não conta para esta jornada.</p>
+                              </div>
+                            ) : roundData.round.isSettled && match.result ? (
                               <div className="bg-green-50 rounded-lg p-3 border border-green-200">
                                 <p className="text-green-800 font-semibold">
                                   Resultado: <span className="text-lg">{match.result}</span>
                                 </p>
+                              </div>
+                            ) : match.isPostponed ? (
+                              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                  <div>
+                                    <p className="font-semibold text-amber-900">Jogo adiado/anulado nesta jornada</p>
+                                    <p className="mt-1 text-sm text-amber-800">Não contará para acertos, vencedores nem classificação.</p>
+                                  </div>
+                                  <Button type="button" variant="outline" className="border-amber-300 bg-white text-amber-900 hover:bg-amber-100" onClick={() => handlePostponedMatch(match.id, false)} disabled={updatePostponedMutation.isPending}>
+                                    <Undo2 className="mr-2 h-4 w-4" /> Voltar a considerar
+                                  </Button>
+                                </div>
                               </div>
                             ) : (
                               <div>
@@ -606,6 +634,9 @@ export default function AdminPanel() {
                                     </button>;
                                   })}
                                 </div>
+                                <Button type="button" variant="outline" className="mt-3 border-amber-300 text-amber-900 hover:bg-amber-50" onClick={() => handlePostponedMatch(match.id, true)} disabled={updatePostponedMutation.isPending}>
+                                  <Clock3 className="mr-2 h-4 w-4" /> Marcar como adiado/anulado
+                                </Button>
                               </div>
                             )}
                           </CardContent>
@@ -614,7 +645,7 @@ export default function AdminPanel() {
                     </div>
 
                     {/* Calculate Winner Button */}
-                    {roundData.matches.every(m => m.result) && !roundData.round.isSettled && (
+                    {roundData.matches.every(m => m.isPostponed || m.result) && roundData.matches.some(m => !m.isPostponed) && !roundData.round.isSettled && (
                       <Button
                         onClick={handleCalculateWinner}
                         disabled={calculateWinnerMutation.isPending}
@@ -629,14 +660,14 @@ export default function AdminPanel() {
                         <CardContent className="pt-4">
                           {roundData.winners.length > 0 ? (
                             <div className="space-y-1 text-green-800">
-                              <p className="font-semibold">✓ {roundData.winners.length} vencedor(es) com seis acertos</p>
+                              <p className="font-semibold">✓ {roundData.winners.length} vencedor(es) com todos os jogos válidos acertados</p>
                               <p className="text-sm">{roundData.winners.map(winner => winner.userName).join(", ")}</p>
                               {roundData.winners[0]?.prizeShare && (
                                 <p className="text-sm font-semibold">Prémio por vencedor: €{Number(roundData.winners[0].prizeShare).toFixed(2)}</p>
                               )}
                             </div>
                           ) : (
-                            <p className="font-semibold text-green-800">Jornada fechada sem vencedores.</p>
+                            <p className="font-semibold text-green-800">Jornada fechada sem vencedores. O prémio acumula para a jornada seguinte.</p>
                           )}
                         </CardContent>
                       </Card>

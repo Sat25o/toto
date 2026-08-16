@@ -10,6 +10,8 @@ import { assertRoundMatchesAreEditable } from "./matchEditing";
 import { CHAMPIONS_LEAGUE_EDITION, CHAMPIONS_LEAGUE_QUALIFICATION_ROUND, CHAMPIONS_LEAGUE_QUALIFIED_COUNT, STANDINGS_START_ROUND } from "../shared/league";
 import { buildChampionsLeagueFixtures } from "./championsLeagueBracket";
 import { addStandingMovements } from "./standingsMovement";
+import { assertRoundCanBeSettled, getValidSettlementMatches, getWinnerIdsForValidMatches } from "./postponedMatchSettlement";
+import { getPrizeCarryOver } from "./prizeRollover";
 import {
   adminMessages,
   championsLeagueEntries,
@@ -336,11 +338,30 @@ export async function createRound(data: {
 }) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
-  return db.insert(rounds).values({
-    roundNumber: data.roundNumber,
-    prize: data.prize,
-    prizeAmount: data.prizeAmount?.toFixed(2),
-    bettingDeadline: data.bettingDeadline,
+  const previousRound = await getRoundByNumber(data.roundNumber - 1);
+  const previousWinners = previousRound?.isSettled ? await getRoundWinners(previousRound.id) : [];
+  const carryOverAmount = previousRound
+    ? getPrizeCarryOver({
+        isSettled: previousRound.isSettled,
+        prizeRolledOver: previousRound.prizeRolledOver,
+        winnerCount: previousWinners.length,
+        prizeAmount: previousRound.prizeAmount === null ? null : Number(previousRound.prizeAmount),
+      })
+    : 0;
+  const basePrizeAmount = data.prizeAmount ?? 0;
+  const totalPrizeAmount = basePrizeAmount + carryOverAmount;
+
+  await db.transaction(async tx => {
+    await tx.insert(rounds).values({
+      roundNumber: data.roundNumber,
+      prize: data.prize,
+      prizeAmount: totalPrizeAmount > 0 ? totalPrizeAmount.toFixed(2) : undefined,
+      carriedPrizeAmount: carryOverAmount.toFixed(2),
+      bettingDeadline: data.bettingDeadline,
+    });
+    if (carryOverAmount > 0 && previousRound) {
+      await tx.update(rounds).set({ prizeRolledOver: true }).where(eq(rounds.id, previousRound.id));
+    }
   });
 }
 
@@ -451,6 +472,22 @@ export async function updateMatchResult(matchId: number, result: "1" | "X" | "2"
   if (!db) throw new Error("Base de dados indisponível");
 
   const matchRound = await db
+    .select({ isSettled: rounds.isSettled, isPostponed: matches.isPostponed })
+    .from(matches)
+    .innerJoin(rounds, eq(matches.roundId, rounds.id))
+    .where(eq(matches.id, matchId))
+    .limit(1);
+  if (!matchRound[0]) throw new Error("Jogo não encontrado");
+  assertRoundResultsAreEditable(matchRound[0].isSettled);
+  if (matchRound[0].isPostponed) throw new Error("Retire primeiro a marcação de jogo adiado para introduzir um resultado");
+
+  return db.update(matches).set({ result }).where(eq(matches.id, matchId));
+}
+
+export async function updateMatchPostponed(matchId: number, isPostponed: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+  const matchRound = await db
     .select({ isSettled: rounds.isSettled })
     .from(matches)
     .innerJoin(rounds, eq(matches.roundId, rounds.id))
@@ -459,7 +496,15 @@ export async function updateMatchResult(matchId: number, result: "1" | "X" | "2"
   if (!matchRound[0]) throw new Error("Jogo não encontrado");
   assertRoundResultsAreEditable(matchRound[0].isSettled);
 
-  return db.update(matches).set({ result }).where(eq(matches.id, matchId));
+  return db.transaction(async tx => {
+    await tx
+      .update(matches)
+      .set(isPostponed ? { isPostponed: true, result: null } : { isPostponed: false })
+      .where(eq(matches.id, matchId));
+    if (isPostponed) {
+      await tx.update(predictions).set({ isCorrect: "pending" }).where(eq(predictions.matchId, matchId));
+    }
+  });
 }
 
 // ============ PREDICTIONS ============
@@ -713,14 +758,18 @@ export async function calculateRoundWinner(roundId: number) {
   const round = await getRound(roundId);
   if (!round) throw new Error("Jornada não encontrada");
   const roundMatches = await db.select().from(matches).where(eq(matches.roundId, roundId));
-  if (roundMatches.length !== 6 || roundMatches.some(match => match.result === null)) {
-    throw new Error("Introduza os resultados dos seis jogos antes de calcular o vencedor");
-  }
+  if (roundMatches.length !== 6) throw new Error("A jornada tem de ter seis jogos");
+  const validMatches = assertRoundCanBeSettled(roundMatches);
+  const validMatchIds = new Set(validMatches.map(match => match.id));
 
   const roundPredictions = await getPredictionsByRound(roundId);
   const correctByUser = new Map<number, number>();
 
   for (const entry of roundPredictions) {
+    if (!validMatchIds.has(entry.match.id)) {
+      await db.update(predictions).set({ isCorrect: "pending" }).where(eq(predictions.id, entry.prediction.id));
+      continue;
+    }
     const isCorrect = entry.prediction.prediction === entry.match.result;
     await db
       .update(predictions)
@@ -732,9 +781,7 @@ export async function calculateRoundWinner(roundId: number) {
     );
   }
 
-  const winnerIds = Array.from(correctByUser.entries())
-    .filter(([, correct]) => correct === 6)
-    .map(([userId]) => userId);
+  const winnerIds = getWinnerIdsForValidMatches(correctByUser, validMatches.length);
   const prizeAmount = round.prizeAmount === null ? null : Number(round.prizeAmount);
   const prizeShare = calculateEqualPrizeShare(prizeAmount, winnerIds.length);
 
@@ -759,7 +806,7 @@ export async function calculateRoundWinner(roundId: number) {
     await generateChampionsLeagueBracket();
   }
 
-  return { winnerIds, winnerCount: winnerIds.length, prizeAmount, prizeShare };
+  return { winnerIds, winnerCount: winnerIds.length, prizeAmount, prizeShare, validMatchCount: validMatches.length };
 }
 
 // ============ EMAIL NOTIFICATIONS ============

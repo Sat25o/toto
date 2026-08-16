@@ -30,6 +30,15 @@ describe("progresso público acumulado", () => {
     expect(progress.correctCount).toBe(6);
   });
 
+  it("ignora um jogo adiado ao apurar um boletim completo", () => {
+    const matchesWithPostponed = allMatches.map(match => match.id === 6 ? { ...match, result: null, isPostponed: true } : match);
+    const predictions = allMatches.slice(0, 5).map(match => ({ matchId: match.id, prediction: "1" as const }));
+    const progress = getParticipantProgress(matchesWithPostponed, predictions, Number.POSITIVE_INFINITY, true);
+    expect(progress.status).toBe("winner");
+    expect(progress.correctCount).toBe(5);
+    expect(progress.missingMatchIds).toEqual([]);
+  });
+
   it("elimina a vermelho quem não completou os seis palpites depois do fecho", () => {
     const progress = getParticipantProgress(allMatches, [
       { matchId: 1, prediction: "1" },
