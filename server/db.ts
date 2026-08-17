@@ -12,6 +12,7 @@ import { buildChampionsLeagueFixtures } from "./championsLeagueBracket";
 import { addStandingMovements } from "./standingsMovement";
 import { assertRoundCanBeSettled, getValidSettlementMatches, getWinnerIdsForValidMatches } from "./postponedMatchSettlement";
 import { getPrizeCarryOver } from "./prizeRollover";
+import { calculateAutomaticRoundPrize } from "./automaticPrize";
 import { addLiveCorrectCounts } from "./liveStandings";
 import {
   adminMessages,
@@ -333,34 +334,31 @@ export async function registerUserFromInvitation(data: {
 
 export async function createRound(data: {
   roundNumber: number;
-  prize?: string;
-  prizeAmount?: number;
   bettingDeadline: Date;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
   const previousRound = await getRoundByNumber(data.roundNumber - 1);
   const previousWinners = previousRound?.isSettled ? await getRoundWinners(previousRound.id) : [];
-  const carryOverAmount = previousRound
-    ? getPrizeCarryOver({
+  const automaticPrize = calculateAutomaticRoundPrize(
+    previousRound
+      ? {
         isSettled: previousRound.isSettled,
         prizeRolledOver: previousRound.prizeRolledOver,
         winnerCount: previousWinners.length,
         prizeAmount: previousRound.prizeAmount === null ? null : Number(previousRound.prizeAmount),
-      })
-    : 0;
-  const basePrizeAmount = data.prizeAmount ?? 0;
-  const totalPrizeAmount = basePrizeAmount + carryOverAmount;
+      }
+      : undefined,
+  );
 
   await db.transaction(async tx => {
     await tx.insert(rounds).values({
       roundNumber: data.roundNumber,
-      prize: data.prize,
-      prizeAmount: totalPrizeAmount > 0 ? totalPrizeAmount.toFixed(2) : undefined,
-      carriedPrizeAmount: carryOverAmount.toFixed(2),
+      prizeAmount: automaticPrize.totalPrizeAmount.toFixed(2),
+      carriedPrizeAmount: automaticPrize.carriedPrizeAmount.toFixed(2),
       bettingDeadline: data.bettingDeadline,
     });
-    if (carryOverAmount > 0 && previousRound) {
+    if (automaticPrize.carriedPrizeAmount > 0 && previousRound) {
       await tx.update(rounds).set({ prizeRolledOver: true }).where(eq(rounds.id, previousRound.id));
     }
   });

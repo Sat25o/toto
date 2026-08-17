@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
+import { Coins, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
@@ -45,7 +45,6 @@ export default function AdminPanel() {
   // Form states
   const [newRoundForm, setNewRoundForm] = useState({
     roundNumber: "",
-    prizeAmount: "",
     deadline: "",
     matches: createEmptyMatches(),
   });
@@ -60,7 +59,6 @@ export default function AdminPanel() {
       toast.success("Jornada criada com sucesso!");
       setNewRoundForm({
         roundNumber: "",
-        prizeAmount: "",
         deadline: "",
         matches: createEmptyMatches(),
       });
@@ -129,7 +127,6 @@ export default function AdminPanel() {
     try {
       const roundNumber = parseInt(newRoundForm.roundNumber);
       const deadline = new Date(newRoundForm.deadline);
-      const prizeAmount = newRoundForm.prizeAmount === "" ? undefined : Number(newRoundForm.prizeAmount);
 
       if (isNaN(roundNumber) || roundNumber < 1 || roundNumber > 34) {
         toast.error("Número da jornada deve estar entre 1 e 34");
@@ -138,11 +135,6 @@ export default function AdminPanel() {
 
       if (deadline <= new Date()) {
         toast.error("Prazo deve ser no futuro");
-        return;
-      }
-
-      if (prizeAmount !== undefined && (!Number.isFinite(prizeAmount) || prizeAmount < 0)) {
-        toast.error("O valor do prémio deve ser um número positivo ou zero");
         return;
       }
 
@@ -159,7 +151,6 @@ export default function AdminPanel() {
 
       createRoundMutation.mutate({
         roundNumber,
-        prizeAmount,
         bettingDeadline: deadline,
         matches,
       });
@@ -355,22 +346,13 @@ export default function AdminPanel() {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
+                    <Coins className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
                     <div>
-                      <Label htmlFor="prizeAmount" className="text-slate-700">
-                        Valor do Prémio (€)
-                      </Label>
-                      <Input
-                        id="prizeAmount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        placeholder="ex: 100"
-                        value={newRoundForm.prizeAmount}
-                        onChange={(e) =>
-                          setNewRoundForm({ ...newRoundForm, prizeAmount: e.target.value })
-                        }
-                        className="mt-1 border-slate-300"
-                      />
+                      <p className="font-semibold">Prémio automático: 170 € por jornada</p>
+                      <p className="mt-1 text-sm text-emerald-900">Sem vencedor, o valor acumula automaticamente para a jornada seguinte. Após existir vencedor, a próxima jornada volta a começar em 170 €.</p>
                     </div>
                   </div>
 

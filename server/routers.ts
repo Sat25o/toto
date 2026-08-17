@@ -331,8 +331,6 @@ export const appRouter = router({
       .input(
         z.object({
           roundNumber: z.number().int().min(1).max(34),
-          prize: z.string().max(500).optional(),
-          prizeAmount: z.number().nonnegative().max(99_999_999).optional(),
           bettingDeadline: z.date(),
           matches: z
             .array(
@@ -354,8 +352,6 @@ export const appRouter = router({
         }
         await db.createRound({
           roundNumber: input.roundNumber,
-          prize: input.prize,
-          prizeAmount: input.prizeAmount,
           bettingDeadline: input.bettingDeadline,
         });
         const round = await db.getRoundByNumber(input.roundNumber);

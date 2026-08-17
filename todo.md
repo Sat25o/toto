@@ -454,3 +454,11 @@
 - [x] Remover o campo opcional de descrição do prémio do formulário
 - [x] Preservar o valor, divisão e acumulação automática do prémio
 - [x] Testar a criação de jornadas sem descrição de prémio
+
+## Prémio Automático
+
+- [x] Definir 170 € como valor base fixo de cada jornada
+- [x] Acumular automaticamente o valor total após uma jornada sem vencedor
+- [x] Recomeçar o prémio em 170 € depois de uma jornada com vencedor
+- [x] Remover a introdução manual do valor do prémio
+- [x] Testar a sequência 170 € → 340 € → 510 € e o reinício após vitória
