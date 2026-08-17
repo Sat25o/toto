@@ -462,3 +462,9 @@
 - [x] Recomeçar o prémio em 170 € depois de uma jornada com vencedor
 - [x] Remover a introdução manual do valor do prémio
 - [x] Testar a sequência 170 € → 340 € → 510 € e o reinício após vitória
+
+## Prémio nos Cartões de Jornada
+
+- [x] Mostrar o valor acumulado do prémio em cada cartão de jornada do apostador
+- [x] Garantir leitura clara em computador e telemóvel
+- [x] Validar a apresentação sem alterar a lógica de prémios

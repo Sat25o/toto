@@ -9,12 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
 import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
 import { getDashboardMessages } from "@/lib/dashboardMessages";
+import { formatRoundPrize } from "@/lib/roundPrize";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -251,10 +252,24 @@ export default function BettorDashboard() {
                         : "border-slate-200 hover:border-slate-300 text-slate-700"
                     }`}
                   >
-                    <div className="font-semibold">Jornada {round.roundNumber}</div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="font-semibold">Jornada {round.roundNumber}</div>
+                      {formatRoundPrize(round.prizeAmount) && (
+                        <Badge className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-50">
+                          <Coins className="mr-1 h-3.5 w-3.5" /> {formatRoundPrize(round.prizeAmount)}
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-sm text-slate-600">
                       Limite: {formatDeadline(round.bettingDeadline)}
                     </div>
+                    {formatRoundPrize(round.prizeAmount) ? (
+                      <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-700">
+                        <Coins className="h-3.5 w-3.5" /> Prémio acumulado
+                      </div>
+                    ) : round.prize ? (
+                      <div className="mt-1 text-xs font-medium text-emerald-700">Prémio: {round.prize}</div>
+                    ) : null}
                     {round.isSettled && (
                       <Badge className="mt-2 bg-green-100 text-green-800">Finalizada</Badge>
                     )}
@@ -290,11 +305,13 @@ export default function BettorDashboard() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
-                      {roundData.round.prize && (
-                        <CardDescription className="text-blue-700 font-semibold mt-1">
-                          Prémio: {roundData.round.prize}
+                      {formatRoundPrize(roundData.round.prizeAmount) ? (
+                        <CardDescription className="mt-1 flex items-center gap-1 font-semibold text-emerald-700">
+                          <Coins className="h-4 w-4" /> Prémio acumulado: {formatRoundPrize(roundData.round.prizeAmount)}
                         </CardDescription>
-                      )}
+                      ) : roundData.round.prize ? (
+                        <CardDescription className="mt-1 font-semibold text-blue-700">Prémio: {roundData.round.prize}</CardDescription>
+                      ) : null}
                     </div>
                     {isDeadlinePassed ? (
                       <Badge className="bg-red-100 text-red-800">Prazo Encerrado</Badge>
