@@ -442,3 +442,9 @@
 - [x] Mostrar posição, nome, movimento e acertos sem corte de conteúdo
 - [x] Preservar a tabela detalhada para computador
 - [x] Validar a Classificação em telemóvel e computador
+
+## Seletores de Equipas Liga Betclic
+
+- [x] Disponibilizar as 18 equipas da Liga Betclic nos seis jogos principais
+- [x] Manter campos livres no sétimo jogo suplente para equipas de qualquer liga
+- [x] Testar a lista de equipas e a criação de sete jogos

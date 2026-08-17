@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { createEmptyMatches, updateDraftMatch } from "@/lib/roundForm";
+import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { splitRoundParticipation } from "@/lib/roundParticipation";
 import { InstallAppButton } from "@/components/InstallAppButton";
@@ -412,42 +412,69 @@ export default function AdminPanel() {
                   {/* Matches */}
                   <div className="space-y-4">
                     <Label className="text-slate-700 font-semibold">6 jogos principais + 1 jogo suplente</Label>
+                    <p className="text-sm text-slate-600">Nos seis jogos principais, escolha as equipas da Liga Betclic. O suplente aceita equipas de qualquer liga.</p>
                     {newRoundForm.matches.map((match, i) => (
                       <div key={i} className={`grid grid-cols-1 gap-3 rounded-lg border p-4 md:grid-cols-3 ${i === 6 ? "border-amber-300 bg-amber-50" : "border-slate-200 bg-slate-50"}`}>
                         <div>
                           <Label className={`text-sm ${i === 6 ? "font-semibold text-amber-900" : "text-slate-600"}`}>{i === 6 ? "Jogo suplente - Casa" : `Jogo ${i + 1} - Casa`}</Label>
-                          <Input
-                            type="text"
-                            placeholder="ex: Benfica"
-                            value={match.homeTeam}
-                            onChange={(e) =>
-                              setNewRoundForm(current => ({
-                                ...current,
-                                matches: updateDraftMatch(current.matches, i, "homeTeam", e.target.value),
-                              }))
-                            }
-                            className="mt-1 border-slate-300"
-                            required
-                          />
+                          {i === 6 ? (
+                            <Input
+                              type="text"
+                              placeholder="ex: Benfica"
+                              value={match.homeTeam}
+                              onChange={(e) =>
+                                setNewRoundForm(current => ({
+                                  ...current,
+                                  matches: updateDraftMatch(current.matches, i, "homeTeam", e.target.value),
+                                }))
+                              }
+                              className="mt-1 border-slate-300"
+                              required
+                            />
+                          ) : (
+                            <select
+                              aria-label={`Jogo ${i + 1} - equipa da casa`}
+                              value={match.homeTeam}
+                              onChange={(e) => setNewRoundForm(current => ({ ...current, matches: updateDraftMatch(current.matches, i, "homeTeam", e.target.value) }))}
+                              className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                              required
+                            >
+                              <option value="">Selecionar equipa</option>
+                              {LIGA_BETCLIC_TEAMS.map(team => <option key={team} value={team}>{team}</option>)}
+                            </select>
+                          )}
                         </div>
                         <div className="flex items-end justify-center">
                           <span className="text-slate-600 font-semibold">vs</span>
                         </div>
                         <div>
                           <Label className={`text-sm ${i === 6 ? "font-semibold text-amber-900" : "text-slate-600"}`}>{i === 6 ? "Jogo suplente - Visitante" : "Visitante"}</Label>
-                          <Input
-                            type="text"
-                            placeholder="ex: Porto"
-                            value={match.awayTeam}
-                            onChange={(e) =>
-                              setNewRoundForm(current => ({
-                                ...current,
-                                matches: updateDraftMatch(current.matches, i, "awayTeam", e.target.value),
-                              }))
-                            }
-                            className="mt-1 border-slate-300"
-                            required
-                          />
+                          {i === 6 ? (
+                            <Input
+                              type="text"
+                              placeholder="ex: Porto"
+                              value={match.awayTeam}
+                              onChange={(e) =>
+                                setNewRoundForm(current => ({
+                                  ...current,
+                                  matches: updateDraftMatch(current.matches, i, "awayTeam", e.target.value),
+                                }))
+                              }
+                              className="mt-1 border-slate-300"
+                              required
+                            />
+                          ) : (
+                            <select
+                              aria-label={`Jogo ${i + 1} - equipa visitante`}
+                              value={match.awayTeam}
+                              onChange={(e) => setNewRoundForm(current => ({ ...current, matches: updateDraftMatch(current.matches, i, "awayTeam", e.target.value) }))}
+                              className="mt-1 h-10 w-full rounded-md border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                              required
+                            >
+                              <option value="">Selecionar equipa</option>
+                              {LIGA_BETCLIC_TEAMS.map(team => <option key={team} value={team}>{team}</option>)}
+                            </select>
+                          )}
                         </div>
                       </div>
                     ))}
