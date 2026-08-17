@@ -45,7 +45,6 @@ export default function AdminPanel() {
   // Form states
   const [newRoundForm, setNewRoundForm] = useState({
     roundNumber: "",
-    prize: "",
     prizeAmount: "",
     deadline: "",
     matches: createEmptyMatches(),
@@ -61,7 +60,6 @@ export default function AdminPanel() {
       toast.success("Jornada criada com sucesso!");
       setNewRoundForm({
         roundNumber: "",
-        prize: "",
         prizeAmount: "",
         deadline: "",
         matches: createEmptyMatches(),
@@ -161,7 +159,6 @@ export default function AdminPanel() {
 
       createRoundMutation.mutate({
         roundNumber,
-        prize: newRoundForm.prize || undefined,
         prizeAmount,
         bettingDeadline: deadline,
         matches,
@@ -375,21 +372,6 @@ export default function AdminPanel() {
                         className="mt-1 border-slate-300"
                       />
                     </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="prize" className="text-slate-700">
-                      Descrição do Prémio (opcional)
-                    </Label>
-                    <Input
-                      id="prize"
-                      type="text"
-                      placeholder="ex: voucher de restaurante"
-                      value={newRoundForm.prize}
-                      onChange={(e) => setNewRoundForm({ ...newRoundForm, prize: e.target.value })}
-                      className="mt-1 border-slate-300"
-                    />
-                    <p className="mt-1 text-xs text-slate-500">Se houver vários vencedores, o valor indicado é dividido igualmente.</p>
                   </div>
 
                   {/* Deadline */}

@@ -448,3 +448,9 @@
 - [x] Disponibilizar as 18 equipas da Liga Betclic nos seis jogos principais
 - [x] Manter campos livres no sétimo jogo suplente para equipas de qualquer liga
 - [x] Testar a lista de equipas e a criação de sete jogos
+
+## Simplificação do Prémio
+
+- [x] Remover o campo opcional de descrição do prémio do formulário
+- [x] Preservar o valor, divisão e acumulação automática do prémio
+- [x] Testar a criação de jornadas sem descrição de prémio
