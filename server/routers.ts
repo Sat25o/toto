@@ -327,15 +327,6 @@ export const appRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível atualizar os jogos" });
         }
       }),
-    clearResults: adminProcedure
-      .input(z.object({ roundId: z.number().int().positive() }))
-      .mutation(async ({ input }) => {
-        try {
-          return { success: true, ...(await db.clearRoundResults(input.roundId)) };
-        } catch (error) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Não foi possível limpar os resultados" });
-        }
-      }),
     create: adminProcedure
       .input(
         z.object({

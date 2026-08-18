@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -108,16 +107,6 @@ export default function AdminPanel() {
     onError: error => toast.error(error.message || "Não foi possível atualizar os jogos"),
   });
 
-  const clearRoundResultsMutation = trpc.rounds.clearResults.useMutation({
-    onSuccess: async (data) => {
-      setResultForm({});
-      toast.success(`${data.clearedMatches} resultado(s) removido(s). Os palpites dos participantes foram preservados.`);
-      await refetchRoundData();
-      await utils.rounds.list.invalidate();
-    },
-    onError: error => toast.error(error.message || "Não foi possível limpar os resultados"),
-  });
-
   // Calculate winner mutation
   const calculateWinnerMutation = trpc.winner.calculate.useMutation({
     onSuccess: (data) => {
@@ -193,11 +182,6 @@ export default function AdminPanel() {
     calculateWinnerMutation.mutate({ roundId: selectedRoundId });
   };
 
-  const handleClearRoundResults = () => {
-    if (!selectedRoundId) return;
-    clearRoundResultsMutation.mutate({ roundId: selectedRoundId });
-  };
-
   useEffect(() => {
     if (!roundData?.round) {
       setDeadlineDraft("");
@@ -241,6 +225,10 @@ export default function AdminPanel() {
     const postponedMainCount = mainMatches.length - activeMainMatches.length;
     return postponedMainCount > 0 && backupMatch && !backupMatch.isPostponed ? [...activeMainMatches, backupMatch] : activeMainMatches;
   })();
+  const resultsAreAvailable = Boolean(roundData && new Date() >= new Date(roundData.round.bettingDeadline));
+  const resultsAvailableAt = roundData
+    ? new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(roundData.round.bettingDeadline))
+    : "";
 
   const handleDeadlineUpdate = () => {
     if (!selectedRoundId || !deadlineDraft) return;
@@ -274,7 +262,6 @@ export default function AdminPanel() {
   };
 
   const totalMatches = roundData?.matches.length ?? 6;
-  const selectedResultsCount = roundData?.matches.filter(match => match.result !== null).length ?? 0;
   const { completed: completedParticipants, pending: pendingParticipants } = splitRoundParticipation(participation ?? [], totalMatches);
   const totalPredictions = (participation ?? []).reduce((total, participant) => total + participant.predictionCount, 0);
   const matchEditingBlockedReason = !roundData
@@ -624,47 +611,10 @@ export default function AdminPanel() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-amber-200 bg-amber-50/40">
-                      <CardHeader>
-                        <CardTitle className="text-base text-slate-900">Limpar seleção de resultados</CardTitle>
-                        <CardDescription>Remove os resultados oficiais desta jornada, mas mantém todos os palpites dos participantes.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-amber-900">
-                          {selectedResultsCount > 0 ? `${selectedResultsCount} resultado(s) selecionado(s).` : "Ainda não existem resultados selecionados."}
-                        </p>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="border-amber-400 bg-white text-amber-950 hover:bg-amber-100"
-                              disabled={roundData.round.isSettled || selectedResultsCount === 0 || clearRoundResultsMutation.isPending}
-                            >
-                              <Undo2 className="mr-2 h-4 w-4" />
-                              {clearRoundResultsMutation.isPending ? "A limpar…" : "Limpar resultados"}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Limpar os resultados da Jornada {roundData.round.roundNumber}?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Serão removidos os {selectedResultsCount} resultado(s) oficiais selecionados. Os palpites dos participantes não serão apagados e voltarão ao estado pendente.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction className="bg-amber-700 hover:bg-amber-800" onClick={handleClearRoundResults}>
-                                Sim, limpar resultados
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </CardContent>
-                    </Card>
-
-                    {/* Matches Results */}
-                    <div className="space-y-3">
+                    {resultsAreAvailable ? (
+                      <>
+                        {/* Matches Results */}
+                        <div className="space-y-3">
                       {roundData.matches.map((match) => (
                         <Card key={match.id} className="border-slate-200/50">
                           <CardContent className="pt-4">
@@ -724,17 +674,29 @@ export default function AdminPanel() {
                           </CardContent>
                         </Card>
                       ))}
-                    </div>
+                        </div>
 
-                    {/* Calculate Winner Button */}
-                    {activeMatchesForSettlement.length > 0 && activeMatchesForSettlement.every(match => match.result) && !roundData.round.isSettled && (
-                      <Button
-                        onClick={handleCalculateWinner}
-                        disabled={calculateWinnerMutation.isPending}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        Calcular Vencedor
-                      </Button>
+                        {/* Calculate Winner Button */}
+                        {activeMatchesForSettlement.length > 0 && activeMatchesForSettlement.every(match => match.result) && !roundData.round.isSettled && (
+                          <Button
+                            onClick={handleCalculateWinner}
+                            disabled={calculateWinnerMutation.isPending}
+                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            Calcular Vencedor
+                          </Button>
+                        )}
+                      </>
+                    ) : (
+                      <Card className="border-blue-200 bg-blue-50/60">
+                        <CardHeader>
+                          <CardTitle className="text-base text-slate-900">Resultados bloqueados</CardTitle>
+                          <CardDescription>Os jogos e os controlos 1 / X / 2 ficarão disponíveis quando fechar o prazo de apostas.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-sm font-medium text-blue-900">Disponível a partir de {resultsAvailableAt}.</p>
+                        </CardContent>
+                      </Card>
                     )}
 
                     {roundData.round.isSettled && (

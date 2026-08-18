@@ -494,3 +494,10 @@
 - [x] Manter o valor sugerido de 170 € para novas jornadas
 - [x] Preservar prémios, vencedores e acumulados das jornadas já existentes
 - [x] Testar a acumulação com valores base diferentes
+
+## Proteção de Resultados Antes do Prazo
+
+- [x] Bloquear a introdução de resultados no servidor enquanto as apostas estiverem abertas
+- [x] Ocultar os jogos e controlos de resultados no Gerir Resultados antes do prazo
+- [x] Retirar o botão de limpar resultados, que deixa de ser necessário
+- [x] Testar a disponibilidade dos resultados após o fecho das apostas
