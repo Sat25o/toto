@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRoundPrize } from "./roundPrize";
+import { formatRoundPrize, getRoundPrizeLabel } from "./roundPrize";
 
 describe("formatRoundPrize", () => {
   it("formata o valor acumulado do prémio em euros", () => {
@@ -11,5 +11,11 @@ describe("formatRoundPrize", () => {
     expect(formatRoundPrize(null)).toBeNull();
     expect(formatRoundPrize(undefined)).toBeNull();
     expect(formatRoundPrize("invalido")).toBeNull();
+  });
+
+  it("recupera o prémio acumulado pelo valor transportado quando necessário", () => {
+    expect(getRoundPrizeLabel({ prizeAmount: "510.00", carriedPrizeAmount: "340.00" })).toBe("510 €");
+    expect(getRoundPrizeLabel({ prizeAmount: null, carriedPrizeAmount: "340.00" })).toBe("510 €");
+    expect(getRoundPrizeLabel({ prizeAmount: null, carriedPrizeAmount: null })).toBe("170 €");
   });
 });

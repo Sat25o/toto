@@ -1,4 +1,4 @@
-const CACHE_NAME = "liga-toto-talhao-v2";
+const CACHE_NAME = "liga-toto-talhao-v3";
 
 self.addEventListener("install", () => {
   self.skipWaiting();

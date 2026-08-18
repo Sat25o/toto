@@ -468,3 +468,9 @@
 - [x] Mostrar o valor acumulado do prémio em cada cartão de jornada do apostador
 - [x] Garantir leitura clara em computador e telemóvel
 - [x] Validar a apresentação sem alterar a lógica de prémios
+
+## Correção de Prémio Visível
+
+- [x] Diagnosticar o prémio acumulado em falta na Jornada 3
+- [x] Corrigir a apresentação para mostrar sempre o valor acumulado disponível
+- [x] Validar a Jornada 3 e preservar os valores de jornadas anteriores
