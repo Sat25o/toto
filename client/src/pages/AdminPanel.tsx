@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Coins, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -105,6 +106,16 @@ export default function AdminPanel() {
     onError: error => toast.error(error.message || "Não foi possível atualizar os jogos"),
   });
 
+  const clearRoundResultsMutation = trpc.rounds.clearResults.useMutation({
+    onSuccess: async (data) => {
+      setResultForm({});
+      toast.success(`${data.clearedMatches} resultado(s) removido(s). Os palpites dos participantes foram preservados.`);
+      await refetchRoundData();
+      await utils.rounds.list.invalidate();
+    },
+    onError: error => toast.error(error.message || "Não foi possível limpar os resultados"),
+  });
+
   // Calculate winner mutation
   const calculateWinnerMutation = trpc.winner.calculate.useMutation({
     onSuccess: (data) => {
@@ -171,6 +182,11 @@ export default function AdminPanel() {
   const handleCalculateWinner = () => {
     if (!selectedRoundId) return;
     calculateWinnerMutation.mutate({ roundId: selectedRoundId });
+  };
+
+  const handleClearRoundResults = () => {
+    if (!selectedRoundId) return;
+    clearRoundResultsMutation.mutate({ roundId: selectedRoundId });
   };
 
   useEffect(() => {
@@ -249,6 +265,7 @@ export default function AdminPanel() {
   };
 
   const totalMatches = roundData?.matches.length ?? 6;
+  const selectedResultsCount = roundData?.matches.filter(match => match.result !== null).length ?? 0;
   const { completed: completedParticipants, pending: pendingParticipants } = splitRoundParticipation(participation ?? [], totalMatches);
   const totalPredictions = (participation ?? []).reduce((total, participant) => total + participant.predictionCount, 0);
   const matchEditingBlockedReason = !roundData
@@ -583,6 +600,45 @@ export default function AdminPanel() {
                           <p className="font-semibold text-amber-900">Faltam completar ({pendingParticipants.length})</p>
                           {pendingParticipants.length > 0 ? <div className="mt-2 space-y-1 text-sm text-amber-800">{pendingParticipants.map(participant => <p key={participant.userId}>{participant.userName} <span className="font-semibold">({participant.predictionCount}/{totalMatches})</span></p>)}</div> : <p className="mt-2 text-sm text-amber-800">Todos os participantes completaram a jornada.</p>}
                         </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-amber-200 bg-amber-50/40">
+                      <CardHeader>
+                        <CardTitle className="text-base text-slate-900">Limpar seleção de resultados</CardTitle>
+                        <CardDescription>Remove os resultados oficiais desta jornada, mas mantém todos os palpites dos participantes.</CardDescription>
+                      </CardHeader>
+                      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p className="text-sm text-amber-900">
+                          {selectedResultsCount > 0 ? `${selectedResultsCount} resultado(s) selecionado(s).` : "Ainda não existem resultados selecionados."}
+                        </p>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="border-amber-400 bg-white text-amber-950 hover:bg-amber-100"
+                              disabled={roundData.round.isSettled || selectedResultsCount === 0 || clearRoundResultsMutation.isPending}
+                            >
+                              <Undo2 className="mr-2 h-4 w-4" />
+                              {clearRoundResultsMutation.isPending ? "A limpar…" : "Limpar resultados"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Limpar os resultados da Jornada {roundData.round.roundNumber}?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Serão removidos os {selectedResultsCount} resultado(s) oficiais selecionados. Os palpites dos participantes não serão apagados e voltarão ao estado pendente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction className="bg-amber-700 hover:bg-amber-800" onClick={handleClearRoundResults}>
+                                Sim, limpar resultados
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </CardContent>
                     </Card>
 

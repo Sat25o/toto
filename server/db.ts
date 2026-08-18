@@ -1,10 +1,11 @@
-import { and, asc, desc, eq, gte, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, isNull, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import bcrypt from "bcrypt";
 import { createHash } from "node:crypto";
 import { calculateEqualPrizeShare } from "./settlement";
 import { assertUserCanBeDeleted } from "./userDeletion";
 import { assertRoundResultsAreEditable } from "./resultEditing";
+import { getRoundResultClearUpdates } from "./resultClearing";
 import { assertRoundDeadlineCanBeUpdated } from "./roundDeadline";
 import { assertRoundMatchesAreEditable } from "./matchEditing";
 import { CHAMPIONS_LEAGUE_EDITION, CHAMPIONS_LEAGUE_QUALIFICATION_ROUND, CHAMPIONS_LEAGUE_QUALIFIED_COUNT, STANDINGS_START_ROUND } from "../shared/league";
@@ -482,6 +483,30 @@ export async function updateMatchResult(matchId: number, result: "1" | "X" | "2"
   if (matchRound[0].isPostponed) throw new Error("Retire primeiro a marcação de jogo adiado para introduzir um resultado");
 
   return db.update(matches).set({ result }).where(eq(matches.id, matchId));
+}
+
+/** Remove os resultados oficiais de uma jornada aberta, preservando todos os palpites submetidos. */
+export async function clearRoundResults(roundId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Base de dados indisponível");
+
+  const round = await getRound(roundId);
+  if (!round) throw new Error("Jornada não encontrada");
+  const updates = getRoundResultClearUpdates(round.isSettled);
+  const roundMatches = await db.select({ id: matches.id }).from(matches).where(eq(matches.roundId, roundId));
+  const matchIds = roundMatches.map(match => match.id);
+
+  await db.transaction(async tx => {
+    await tx.update(matches).set(updates.matchUpdate).where(eq(matches.roundId, roundId));
+    if (matchIds.length > 0) {
+      await tx
+        .update(predictions)
+        .set(updates.predictionUpdate)
+        .where(inArray(predictions.matchId, matchIds));
+    }
+  });
+
+  return { clearedMatches: roundMatches.length };
 }
 
 export async function updateMatchPostponed(matchId: number, isPostponed: boolean) {

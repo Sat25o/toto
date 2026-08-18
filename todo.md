@@ -474,3 +474,10 @@
 - [x] Diagnosticar o prémio acumulado em falta na Jornada 3
 - [x] Corrigir a apresentação para mostrar sempre o valor acumulado disponível
 - [x] Validar a Jornada 3 e preservar os valores de jornadas anteriores
+
+## Limpeza de Resultados pelo Administrador
+
+- [x] Criar uma ação administrativa para remover todos os resultados de uma jornada
+- [x] Garantir que a limpeza não remove palpites dos participantes
+- [x] Adicionar botão de limpeza com confirmação no Gerir Resultados
+- [x] Testar a limpeza e a reposição dos estados dos palpites
