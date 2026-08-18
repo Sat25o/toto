@@ -481,3 +481,16 @@
 - [x] Garantir que a limpeza não remove palpites dos participantes
 - [x] Adicionar botão de limpeza com confirmação no Gerir Resultados
 - [x] Testar a limpeza e a reposição dos estados dos palpites
+
+## Simplificação do Formulário de Jornada
+
+- [x] Remover o cartão informativo do prémio automático no formulário de criação
+- [x] Preservar a lógica atual de prémio e acumulação enquanto se define o modelo variável
+
+## Prémio Base Editável por Jornada
+
+- [x] Permitir definir o valor base em euros ao criar cada jornada
+- [x] Somar automaticamente o acumulado anterior ao valor base definido
+- [x] Manter o valor sugerido de 170 € para novas jornadas
+- [x] Preservar prémios, vencedores e acumulados das jornadas já existentes
+- [x] Testar a acumulação com valores base diferentes

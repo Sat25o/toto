@@ -336,6 +336,7 @@ export async function registerUserFromInvitation(data: {
 export async function createRound(data: {
   roundNumber: number;
   bettingDeadline: Date;
+  basePrizeAmount: number;
 }) {
   const db = await getDb();
   if (!db) throw new Error("Base de dados indisponível");
@@ -350,6 +351,7 @@ export async function createRound(data: {
         prizeAmount: previousRound.prizeAmount === null ? null : Number(previousRound.prizeAmount),
       }
       : undefined,
+    data.basePrizeAmount,
   );
 
   await db.transaction(async tx => {

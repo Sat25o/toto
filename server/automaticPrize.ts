@@ -6,14 +6,14 @@ export function calculateAutomaticRoundPrize(previousRound?: {
   prizeRolledOver: boolean;
   winnerCount: number;
   prizeAmount: number | null;
-}) {
+}, basePrizeAmount = BASE_ROUND_PRIZE_AMOUNT) {
   const carriedPrizeAmount = previousRound
     ? getPrizeCarryOver(previousRound)
     : 0;
 
   return {
-    basePrizeAmount: BASE_ROUND_PRIZE_AMOUNT,
+    basePrizeAmount,
     carriedPrizeAmount,
-    totalPrizeAmount: BASE_ROUND_PRIZE_AMOUNT + carriedPrizeAmount,
+    totalPrizeAmount: basePrizeAmount + carriedPrizeAmount,
   };
 }

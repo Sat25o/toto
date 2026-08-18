@@ -341,6 +341,7 @@ export const appRouter = router({
         z.object({
           roundNumber: z.number().int().min(1).max(34),
           bettingDeadline: z.date(),
+          basePrizeAmount: z.number().positive().max(10_000),
           matches: z
             .array(
               z.object({
@@ -362,6 +363,7 @@ export const appRouter = router({
         await db.createRound({
           roundNumber: input.roundNumber,
           bettingDeadline: input.bettingDeadline,
+          basePrizeAmount: input.basePrizeAmount,
         });
         const round = await db.getRoundByNumber(input.roundNumber);
         if (!round) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Não foi possível criar a jornada" });

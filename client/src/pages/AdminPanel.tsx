@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Coins, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
+import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
@@ -46,6 +46,7 @@ export default function AdminPanel() {
   // Form states
   const [newRoundForm, setNewRoundForm] = useState({
     roundNumber: "",
+    basePrizeAmount: "170",
     deadline: "",
     matches: createEmptyMatches(),
   });
@@ -60,6 +61,7 @@ export default function AdminPanel() {
       toast.success("Jornada criada com sucesso!");
       setNewRoundForm({
         roundNumber: "",
+        basePrizeAmount: "170",
         deadline: "",
         matches: createEmptyMatches(),
       });
@@ -137,6 +139,7 @@ export default function AdminPanel() {
 
     try {
       const roundNumber = parseInt(newRoundForm.roundNumber);
+      const basePrizeAmount = Number(newRoundForm.basePrizeAmount);
       const deadline = new Date(newRoundForm.deadline);
 
       if (isNaN(roundNumber) || roundNumber < 1 || roundNumber > 34) {
@@ -146,6 +149,11 @@ export default function AdminPanel() {
 
       if (deadline <= new Date()) {
         toast.error("Prazo deve ser no futuro");
+        return;
+      }
+
+      if (!Number.isFinite(basePrizeAmount) || basePrizeAmount <= 0 || basePrizeAmount > 10_000) {
+        toast.error("Indique um valor base de prémio válido.");
         return;
       }
 
@@ -162,6 +170,7 @@ export default function AdminPanel() {
 
       createRoundMutation.mutate({
         roundNumber,
+        basePrizeAmount,
         bettingDeadline: deadline,
         matches,
       });
@@ -344,7 +353,7 @@ export default function AdminPanel() {
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleCreateRound} className="space-y-6">
-                  {/* Round Number and Prize */}
+                  {/* Round Number and Base Prize */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="roundNumber" className="text-slate-700">
@@ -363,13 +372,25 @@ export default function AdminPanel() {
                         required
                       />
                     </div>
-                  </div>
-
-                  <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
-                    <Coins className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700" />
                     <div>
-                      <p className="font-semibold">Prémio automático: 170 € por jornada</p>
-                      <p className="mt-1 text-sm text-emerald-900">Sem vencedor, o valor acumula automaticamente para a jornada seguinte. Após existir vencedor, a próxima jornada volta a começar em 170 €.</p>
+                      <Label htmlFor="basePrizeAmount" className="text-slate-700">
+                        Valor base desta jornada (€)
+                      </Label>
+                      <Input
+                        id="basePrizeAmount"
+                        type="number"
+                        min="0.01"
+                        max="10000"
+                        step="0.01"
+                        inputMode="decimal"
+                        value={newRoundForm.basePrizeAmount}
+                        onChange={(e) =>
+                          setNewRoundForm({ ...newRoundForm, basePrizeAmount: e.target.value })
+                        }
+                        className="mt-1 border-slate-300"
+                        required
+                      />
+                      <p className="mt-1 text-xs text-slate-500">Sugestão: 170 €. Qualquer acumulado anterior é somado automaticamente.</p>
                     </div>
                   </div>
 
