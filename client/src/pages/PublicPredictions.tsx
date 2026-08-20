@@ -100,7 +100,7 @@ export default function PublicPredictions() {
         </div>
         <Button
           variant="outline"
-          onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")}
+          onClick={() => setLocation("/dashboard")}
           className="self-start border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white sm:self-auto"
         >
           Voltar

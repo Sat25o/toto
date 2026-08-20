@@ -661,3 +661,9 @@
 - [x] Mover os avisos para dentro da grelha principal das caixas
 - [x] Alinhar largura e margens com Jornadas e palpites
 - [x] Validar o alinhamento em computador e telemóvel
+
+## Retornos do Dashboard e Menu Admin
+
+- [x] Fazer Apostas Públicas e Liga dos Campeões regressarem ao Dashboard do apostador
+- [x] Remover Apostas Públicas da navegação do painel admin
+- [x] Validar os destinos de retorno para apostador e administrador

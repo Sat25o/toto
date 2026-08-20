@@ -306,14 +306,6 @@ export default function AdminPanel() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setLocation("/public-predictions")}
-              className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
-              title="Consultar as apostas publicadas depois do fim do prazo"
-            >
-              Apostas públicas
-            </Button>
-            <Button
-              variant="outline"
               onClick={() => setLocation("/league-management")}
               className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Editar regras e publicar avisos no Dashboard"
