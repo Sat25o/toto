@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
@@ -32,7 +32,6 @@ export default function BettorDashboard() {
   const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const hasSelectedInitialOpenRound = useRef(false);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -86,13 +85,6 @@ export default function BettorDashboard() {
     return () => window.clearInterval(timer);
   }, []);
 
-  useEffect(() => {
-    if (!rounds || hasSelectedInitialOpenRound.current) return;
-    const nextOpenRound = getNextOpenRound(rounds, new Date());
-    if (nextOpenRound) setSelectedRoundId(nextOpenRound.id);
-    hasSelectedInitialOpenRound.current = true;
-  }, [rounds]);
-
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
@@ -143,9 +135,7 @@ export default function BettorDashboard() {
   }
 
   const handleRoundSelection = (roundId: number) => {
-    const nextRoundId = roundFilter === "open" && roundId === nextOpenRound?.id
-      ? roundId
-      : toggleRoundSelection(selectedRoundId, roundId);
+    const nextRoundId = toggleRoundSelection(selectedRoundId, roundId);
     // Reset synchronously while changing or closing a round, never after a prediction click.
     setOptimisticPredictions({});
     setPendingMatchId(null);
@@ -154,10 +144,6 @@ export default function BettorDashboard() {
 
   const handleRoundFilter = (filter: Exclude<DashboardRoundFilter, "all">) => {
     setRoundFilter(filter);
-    if (filter === "open") {
-      setSelectedRoundId(nextOpenRound?.id ?? null);
-      return;
-    }
     setSelectedRoundId(null);
   };
 
@@ -247,13 +233,13 @@ export default function BettorDashboard() {
 
       {nextOpenRound && dashboardCountdown && (
         <section className="mx-auto mb-6 max-w-6xl">
-          <Card className="border-blue-200 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm">
-            <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-white/15 p-2"><Clock className="h-5 w-5" /></div>
-                <div><p className="text-sm font-medium text-blue-100">Jornada {nextOpenRound.roundNumber} · apostas abertas</p><p className="text-lg font-bold">Tempo até ao fecho</p></div>
+          <Card className="max-w-xl border-slate-200 bg-white shadow-sm">
+            <CardContent className="flex items-center justify-between gap-3 p-3 sm:p-4">
+              <div className="flex min-w-0 items-center gap-2.5">
+                <div className="shrink-0 rounded-lg bg-blue-600 p-2 text-white"><Clock className="h-4 w-4" /></div>
+                <div><p className="text-xs font-medium text-slate-500">Jornada {nextOpenRound.roundNumber} · apostas abertas</p><p className="text-sm font-semibold text-slate-900">Fecha em</p></div>
               </div>
-              <p className="font-mono text-3xl font-bold tracking-wide sm:text-4xl">{dashboardCountdown.label}</p>
+              <p className="shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 font-mono text-lg font-bold tracking-wide text-white sm:px-3 sm:text-xl">{dashboardCountdown.label}</p>
             </CardContent>
           </Card>
         </section>

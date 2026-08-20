@@ -548,3 +548,10 @@
 - [x] Selecionar automaticamente a jornada aberta com prazo mais próximo
 - [x] Mostrar as jornadas concluídas apenas após tocar em Finalizadas
 - [x] Preservar a seleção manual depois do carregamento inicial
+
+## Jornada Aberta Recolhida e Contagem Compacta
+
+- [x] Manter o filtro Abertas ativo sem abrir automaticamente a jornada
+- [x] Permitir abrir e fechar a jornada aberta ao tocar no respetivo cartão
+- [x] Tornar o cartão de contagem mais compacto e com melhor contraste
+- [x] Testar o comportamento e a leitura em computador e telemóvel
