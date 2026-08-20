@@ -527,3 +527,11 @@
 - [x] Atualizar a contagem automaticamente sem recarregar a página
 - [x] Mostrar o prazo encerrado após o limite de apostas
 - [x] Testar a contagem em computador e telemóvel
+
+## Filtros e Contagem Visível no Dashboard
+
+- [x] Mostrar a contagem no cartão da jornada aberta sem exigir seleção
+- [x] Adicionar filtros rápidos de jornadas Abertas e Finalizadas
+- [x] Manter jornadas fechadas em andamento recolhidas até serem selecionadas
+- [x] Testar a filtragem e a contagem em computador e telemóvel
+- [x] Colocar a contagem num cartão próprio fora da lista de jornadas

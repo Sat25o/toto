@@ -18,6 +18,7 @@ import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
+import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -28,6 +29,7 @@ export default function BettorDashboard() {
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("all");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
@@ -148,7 +150,6 @@ export default function BettorDashboard() {
   };
 
   const isDeadlinePassed = roundData?.round && currentTime > new Date(roundData.round.bettingDeadline);
-  const bettingCountdown = roundData?.round ? getBettingCountdown(roundData.round.bettingDeadline, currentTime) : null;
   const formatDeadline = (deadline: Date | string) =>
     new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(deadline));
   const predictionProgress = getPredictionProgress(
@@ -158,6 +159,9 @@ export default function BettorDashboard() {
   );
   const dashboardMessages = getDashboardMessages(adminMessages ?? []);
   const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
+  const nextOpenRound = rounds ? getNextOpenRound(rounds, currentTime) : undefined;
+  const dashboardCountdown = nextOpenRound ? getBettingCountdown(nextOpenRound.bettingDeadline, currentTime) : null;
+  const visibleRounds = filterDashboardRounds(orderedRounds, roundFilter, currentTime);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -222,6 +226,20 @@ export default function BettorDashboard() {
         </div>
       </div>
 
+      {nextOpenRound && dashboardCountdown && (
+        <section className="mx-auto mb-6 max-w-6xl">
+          <Card className="border-blue-200 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm">
+            <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-full bg-white/15 p-2"><Clock className="h-5 w-5" /></div>
+                <div><p className="text-sm font-medium text-blue-100">Jornada {nextOpenRound.roundNumber} · apostas abertas</p><p className="text-lg font-bold">Tempo até ao fecho</p></div>
+              </div>
+              <p className="font-mono text-3xl font-bold tracking-wide sm:text-4xl">{dashboardCountdown.label}</p>
+            </CardContent>
+          </Card>
+        </section>
+      )}
+
       {dashboardMessages.length > 0 && (
         <section className="mx-auto mb-6 max-w-6xl">
           <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-amber-600" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
@@ -242,17 +260,35 @@ export default function BettorDashboard() {
           <Card className="border-slate-200/50 sticky top-4">
             <CardHeader>
               <CardTitle className="text-slate-900">Jornadas</CardTitle>
-              <CardDescription>Selecione uma jornada para apostar</CardDescription>
+              <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
+                {([
+                  ["all", "Todas"],
+                  ["open", "Abertas"],
+                  ["settled", "Finalizadas"],
+                ] as const).map(([filter, label]) => (
+                  <Button
+                    key={filter}
+                    type="button"
+                    size="sm"
+                    variant={roundFilter === filter ? "default" : "ghost"}
+                    onClick={() => { setRoundFilter(filter); setSelectedRoundId(null); }}
+                    className={roundFilter === filter ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-600 hover:bg-white"}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
               {roundsLoading ? (
                 <>
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </>
-              ) : orderedRounds.length > 0 ? (
-                orderedRounds.map((round) => (
+              ) : visibleRounds.length > 0 ? (
+                visibleRounds.map((round) => (
                   <button
                     key={round.id}
                     onClick={() => handleRoundSelection(round.id)}
@@ -288,7 +324,7 @@ export default function BettorDashboard() {
                   </button>
                 ))
               ) : (
-                <p className="text-slate-500 text-sm">Nenhuma jornada disponível</p>
+                <p className="text-slate-500 text-sm">Não existem jornadas neste filtro</p>
               )}
             </CardContent>
           </Card>
@@ -336,15 +372,6 @@ export default function BettorDashboard() {
                     <Clock className="w-4 h-4" />
                     Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
                   </div>
-                  {bettingCountdown && (
-                    <div className={`mt-3 flex items-center justify-between gap-3 rounded-lg border p-3 ${bettingCountdown.isClosed ? "border-red-200 bg-red-50" : "border-blue-200 bg-blue-50"}`}>
-                      <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
-                        <Clock className={bettingCountdown.isClosed ? "h-4 w-4 text-red-600" : "h-4 w-4 text-blue-600"} />
-                        {bettingCountdown.isClosed ? "Apostas encerradas" : "Fecha em"}
-                      </div>
-                      <p className={`font-mono text-lg font-bold tracking-wide ${bettingCountdown.isClosed ? "text-red-700" : "text-blue-700"}`}>{bettingCountdown.label}</p>
-                    </div>
-                  )}
                   <div className="mt-4 rounded-lg border border-blue-100 bg-white/70 p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
