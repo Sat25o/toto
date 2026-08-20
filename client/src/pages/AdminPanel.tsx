@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronDown, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
@@ -327,15 +326,25 @@ export default function AdminPanel() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto">
-        <Tabs value={activeAdminSection ?? ""} onValueChange={value => setActiveAdminSection(value as "create" | "manage")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 border border-red-100 bg-white shadow-sm">
-            <TabsTrigger value="create" onClick={() => activeAdminSection === "create" && setActiveAdminSection(null)}>
+        <div className="w-full">
+          <div className="grid w-full grid-cols-2 gap-2 rounded-xl border border-red-100 bg-white p-2 shadow-sm">
+            <Button
+              type="button"
+              variant={activeAdminSection === "create" ? "default" : "outline"}
+              onClick={() => setActiveAdminSection(current => current === "create" ? null : "create")}
+              className={activeAdminSection === "create" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-transparent text-slate-700 hover:border-red-100 hover:bg-red-50"}
+            >
               Criar Jornada <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${activeAdminSection === "create" ? "rotate-180" : ""}`} />
-            </TabsTrigger>
-            <TabsTrigger value="manage" onClick={() => activeAdminSection === "manage" && setActiveAdminSection(null)}>
+            </Button>
+            <Button
+              type="button"
+              variant={activeAdminSection === "manage" ? "default" : "outline"}
+              onClick={() => setActiveAdminSection(current => current === "manage" ? null : "manage")}
+              className={activeAdminSection === "manage" ? "bg-primary text-primary-foreground hover:bg-primary/90" : "border-transparent text-slate-700 hover:border-red-100 hover:bg-red-50"}
+            >
               Gerir Resultados <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${activeAdminSection === "manage" ? "rotate-180" : ""}`} />
-            </TabsTrigger>
-          </TabsList>
+            </Button>
+          </div>
 
           {activeAdminSection === null && (
             <Card className="league-panel mt-6 border-dashed">
@@ -346,7 +355,7 @@ export default function AdminPanel() {
           )}
 
           {/* Create Round Tab */}
-          <TabsContent value="create" className="mt-6">
+          {activeAdminSection === "create" && (<div className="mt-6">
             <Card className="league-panel">
               <CardHeader>
                 <CardTitle className="text-slate-900">Criar Nova Jornada</CardTitle>
@@ -495,10 +504,10 @@ export default function AdminPanel() {
                 </form>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>)}
 
           {/* Manage Results Tab */}
-          <TabsContent value="manage" className="mt-6">
+          {activeAdminSection === "manage" && (<div className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Rounds List */}
               <div className="lg:col-span-1">
@@ -734,8 +743,8 @@ export default function AdminPanel() {
                 ) : null}
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>)}
+        </div>
       </div>
     </div>
   );

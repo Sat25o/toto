@@ -649,3 +649,9 @@
 - [x] Permitir abrir e fechar cada área administrativa por toque
 - [x] Ampliar os avisos da administração em computador
 - [x] Validar o comportamento em computador e telemóvel
+
+## Correção dos Alternadores do Admin
+
+- [x] Substituir os separadores que fecham no próprio clique
+- [x] Garantir que cada clique abre ou fecha apenas uma vez
+- [x] Validar os dois controlos administrativos
