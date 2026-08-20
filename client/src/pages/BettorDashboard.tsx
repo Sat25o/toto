@@ -332,21 +332,21 @@ export default function BettorDashboard() {
         </div>
       </div>
 
-      {dashboardMessages.length > 0 && (
-        <section className="mx-auto mb-6 max-w-7xl">
-          <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
-          <div className="grid gap-3">
-            {dashboardMessages.map(message => (
-              <Card key={message.id} className={message.isPinned ? "league-soft-red" : "league-panel"}>
-                <CardContent className="pt-4"><div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p></CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Rounds List */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {dashboardMessages.length > 0 && (
+          <section className="lg:col-span-3">
+            <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
+            <div className="grid gap-3">
+              {dashboardMessages.map(message => (
+                <Card key={message.id} className={message.isPinned ? "league-soft-red" : "league-panel"}>
+                  <CardContent className="pt-4"><div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p></CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* Rounds Sidebar */}
         <div className="lg:col-span-1">
           <Card className="league-panel sticky top-4">

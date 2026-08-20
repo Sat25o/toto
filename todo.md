@@ -655,3 +655,9 @@
 - [x] Substituir os separadores que fecham no próprio clique
 - [x] Garantir que cada clique abre ou fecha apenas uma vez
 - [x] Validar os dois controlos administrativos
+
+## Avisos Integrados no Dashboard
+
+- [x] Mover os avisos para dentro da grelha principal das caixas
+- [x] Alinhar largura e margens com Jornadas e palpites
+- [x] Validar o alinhamento em computador e telemóvel
