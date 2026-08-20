@@ -178,6 +178,7 @@
     border: 1px solid oklch(0.98 0 0 / 0.14);
     border-radius: 9999px;
     content: "";
+    pointer-events: none;
   }
 
   .league-header-content {

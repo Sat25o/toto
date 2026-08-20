@@ -620,3 +620,17 @@
 - [x] Colocar o botão hamburger à esquerda no cabeçalho móvel
 - [x] Colocar o contador discreto à direita no cabeçalho móvel
 - [x] Validar o alinhamento e a leitura em telemóvel
+
+## Navegação e Botões de Voltar
+
+- [x] Verificar todos os botões de voltar e os respetivos destinos
+- [x] Corrigir os atalhos de retorno que não navegam corretamente
+- [x] Definir onde manter Voltar e onde usar apenas o menu
+- [x] Validar a navegação em computador e telemóvel
+
+## Correção dos Retornos por Perfil
+
+- [x] Corrigir Apostas Públicas e Liga dos Campeões para apostadores
+- [x] Corrigir Utilizadores, Apostas Públicas e Regras para administradores
+- [x] Garantir que cada retorno usa a área de origem correta
+- [x] Testar todos os destinos reportados
