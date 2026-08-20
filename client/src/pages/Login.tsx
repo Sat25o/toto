@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -42,7 +43,12 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Login Card */}
         <Card className="border-slate-200/50 shadow-lg">
-          <CardHeader>
+          <CardHeader className="items-center text-center">
+            <img
+              src={SITE_EMBLEM_URL}
+              alt="Emblema Liga Toto Talho"
+              className="mx-auto mb-2 h-20 w-20 rounded-2xl object-cover shadow-md"
+            />
             <CardTitle className="text-slate-900">Fazer Login</CardTitle>
             <CardDescription>Entre com seu email e password</CardDescription>
           </CardHeader>

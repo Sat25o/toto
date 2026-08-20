@@ -501,3 +501,10 @@
 - [x] Ocultar os jogos e controlos de resultados no Gerir Resultados antes do prazo
 - [x] Retirar o botão de limpar resultados, que deixa de ser necessário
 - [x] Testar a disponibilidade dos resultados após o fecho das apostas
+
+## Identidade Visual Aprovada
+
+- [x] Aplicar o emblema completo como logótipo visível do site
+- [x] Aplicar a lata Cristal simples como ícone da aplicação instalada
+- [x] Atualizar o manifesto e o serviço de cache da aplicação
+- [x] Validar os logótipos em computador e telemóvel

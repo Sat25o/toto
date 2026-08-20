@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { toast } from "sonner";
-import { Trophy } from "lucide-react";
 
 export default function Register() {
   const [, setLocation] = useLocation();
@@ -69,10 +69,12 @@ export default function Register() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Trophy className="w-8 h-8 text-blue-600" />
-            <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
-          </div>
+          <img
+            src={SITE_EMBLEM_URL}
+            alt="Emblema Liga Toto Talho"
+            className="mx-auto mb-4 h-24 w-24 rounded-2xl object-cover shadow-lg"
+          />
+          <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
           <p className="text-slate-600">Prognósticos 34 Jornadas</p>
         </div>
 
