@@ -21,7 +21,7 @@ export default function LeagueInfo() {
   if (authLoading || !user) return <div className="flex min-h-screen items-center justify-center text-slate-600">A carregar…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50/40 p-4 sm:p-6 lg:p-8">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
       <div className="mx-auto max-w-5xl">
         <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>

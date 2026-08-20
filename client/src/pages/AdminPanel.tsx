@@ -279,28 +279,29 @@ export default function AdminPanel() {
             : null;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="league-page min-h-screen overflow-x-hidden p-3 sm:p-5 lg:p-8">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="league-header mx-auto mb-6 max-w-7xl sm:mb-8">
+        <div className="league-header-content flex flex-col items-start justify-between gap-4 p-4 sm:p-5 lg:flex-row lg:items-center">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">Painel de Administração</h1>
-            <p className="text-sm text-slate-600 sm:text-base">Gerencie jornadas, resultados e vencedores</p>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Gestão da competição</p>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">Painel de administração</h1>
+            <p className="text-sm text-slate-200 sm:text-base">Jornadas, resultados e participantes num só lugar.</p>
           </div>
-          <nav aria-label="Ações de administração" className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:justify-end">
+          <nav aria-label="Ações de administração" className="league-nav flex w-full max-w-full gap-2 overflow-x-auto pb-1 lg:w-auto lg:pb-0">
             <Button
               variant="outline"
               onClick={() => setLocation("/dashboard")}
-              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
+              className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Submeter os seus próprios palpites como participante"
             >
               Os meus palpites
             </Button>
-            <InstallAppButton className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm" />
+            <InstallAppButton className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white" />
             <Button
               variant="outline"
               onClick={() => setLocation("/users")}
-              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
+              className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Gerir apostadores, estados de conta e convites"
             >
               Utilizadores
@@ -308,7 +309,7 @@ export default function AdminPanel() {
             <Button
               variant="outline"
               onClick={() => setLocation("/public-predictions")}
-              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
+              className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Consultar as apostas publicadas depois do fim do prazo"
             >
               Apostas públicas
@@ -316,7 +317,7 @@ export default function AdminPanel() {
             <Button
               variant="outline"
               onClick={() => setLocation("/league-management")}
-              className="h-11 w-full justify-center whitespace-normal border-slate-300 px-3 text-xs sm:h-10 sm:w-auto sm:text-sm"
+              className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Editar regras e publicar avisos no Dashboard"
             >
               Regras e avisos
@@ -328,14 +329,14 @@ export default function AdminPanel() {
       {/* Tabs */}
       <div className="max-w-7xl mx-auto">
         <Tabs defaultValue="create" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-slate-200">
+          <TabsList className="grid w-full grid-cols-2 border border-red-100 bg-white shadow-sm">
             <TabsTrigger value="create">Criar Jornada</TabsTrigger>
             <TabsTrigger value="manage">Gerir Resultados</TabsTrigger>
           </TabsList>
 
           {/* Create Round Tab */}
           <TabsContent value="create" className="mt-6">
-            <Card className="border-slate-200/50">
+            <Card className="league-panel">
               <CardHeader>
                 <CardTitle className="text-slate-900">Criar Nova Jornada</CardTitle>
                 <CardDescription>Defina os seis jogos principais, o jogo suplente, prémio e prazo de apostas</CardDescription>

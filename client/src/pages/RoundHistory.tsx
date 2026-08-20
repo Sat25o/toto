@@ -54,14 +54,15 @@ export default function RoundHistory() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto mb-8 max-w-6xl">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
+      <div className="league-header mx-auto mb-6 max-w-6xl sm:mb-8">
+        <div className="league-header-content flex flex-col items-start justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Histórico de Jornadas</h1>
-            <p className="text-slate-600">Palpites e resultados de todas as jornadas finalizadas</p>
+            <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Arquivo da Liga</p>
+            <h1 className="text-2xl font-bold text-white sm:text-3xl">Histórico de jornadas</h1>
+            <p className="text-slate-200">Palpites e resultados de todas as jornadas finalizadas</p>
           </div>
-          <Button variant="outline" onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")} className="border-slate-300">
+          <Button variant="outline" onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white">
             Voltar
           </Button>
         </div>
@@ -69,11 +70,11 @@ export default function RoundHistory() {
 
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
         <div className="lg:col-span-1">
-          <Card className="sticky top-4 border-slate-200/50">
+          <Card className="league-panel sticky top-4">
             <CardHeader><CardTitle className="text-slate-900">Jornadas Finalizadas</CardTitle><CardDescription>Selecione para ver os palpites</CardDescription></CardHeader>
             <CardContent className="max-h-96 space-y-2 overflow-y-auto">
               {roundsLoading ? <><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></> : completedRounds.length > 0 ? completedRounds.map(round => (
-                <button key={round.id} onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-blue-300 bg-blue-50 text-blue-900" : "border-slate-200 text-slate-700 hover:border-slate-300"}`}>
+                <button key={round.id} onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-red-300 bg-red-50 text-red-950" : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"}`}>
                   <div className="font-semibold">Jornada {round.roundNumber}</div>
                   <div className="text-sm text-slate-600">{new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}</div>
                   <Badge className="mt-2 bg-yellow-100 text-xs text-yellow-800"><Trophy className="mr-1 h-3 w-3" /> Finalizada</Badge>
@@ -85,12 +86,12 @@ export default function RoundHistory() {
 
         <div className="lg:col-span-3">
           {selectedRoundId === null ? (
-            <Card className="border-slate-200/50"><CardContent className="py-12 text-center"><Trophy className="mx-auto mb-4 h-12 w-12 text-slate-300" /><p className="text-slate-600">Selecione uma jornada para ver os palpites de todos os participantes</p></CardContent></Card>
+            <Card className="league-panel"><CardContent className="py-12 text-center"><Trophy className="mx-auto mb-4 h-12 w-12 text-slate-300" /><p className="text-slate-600">Selecione uma jornada para ver os palpites de todos os participantes</p></CardContent></Card>
           ) : roundDataLoading || predictionsLoading ? (
             <div className="space-y-4"><Skeleton className="h-20 w-full" /><Skeleton className="h-48 w-full" /></div>
           ) : roundData ? (
             <div className="space-y-4">
-              <Card className="border-slate-200/50 bg-gradient-to-r from-blue-50 to-blue-100/50"><CardHeader><div className="flex items-center justify-between"><div><CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>{roundData.round.prize && <CardDescription className="mt-1 font-semibold text-blue-700">Prémio: {roundData.round.prize}</CardDescription>}</div><Badge className="bg-yellow-100 text-yellow-800"><Trophy className="mr-1 h-4 w-4" /> Finalizada</Badge></div></CardHeader></Card>
+              <Card className="league-soft-red"><CardHeader><div className="flex items-center justify-between"><div><CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>{roundData.round.prize && <CardDescription className="mt-1 font-semibold text-primary">Prémio: {roundData.round.prize}</CardDescription>}</div><Badge className="bg-yellow-100 text-yellow-800"><Trophy className="mr-1 h-4 w-4" /> Finalizada</Badge></div></CardHeader></Card>
 
               <Card className="border-yellow-200 bg-yellow-50"><CardContent className="pt-4">
                 {roundData.winners.length > 0 ? <div className="space-y-1"><p className="flex items-center gap-2 font-semibold text-yellow-900"><Trophy className="h-4 w-4" /> Vencedores: {roundData.winners.map(winner => winner.userName).join(", ")}</p><p className="text-sm text-yellow-800">{roundData.winners.length} participante(s) acertaram todos os jogos válidos.</p>{roundData.winners[0]?.prizeShare && <p className="text-sm font-semibold text-yellow-900">Parte do prémio por vencedor: €{Number(roundData.winners[0].prizeShare).toFixed(2)}</p>}</div> : <p className="font-semibold text-yellow-900">Não houve vencedores nesta jornada.</p>}

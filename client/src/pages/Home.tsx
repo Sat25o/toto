@@ -15,17 +15,17 @@ export default function Home() {
     }
   }, [isAuthenticated, loading, setLocation, user]);
 
-  if (loading || isAuthenticated) return <div className="min-h-screen bg-slate-50" />;
+  if (loading || isAuthenticated) return <div className="league-page" />;
 
   return (
-    <main className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-      <div className="flex flex-col items-center gap-6">
+    <main className="league-page flex min-h-screen items-center justify-center p-6">
+      <div className="flex flex-col items-center gap-6 rounded-[2rem] border border-white/70 bg-white/70 p-7 shadow-[0_24px_55px_rgba(30,41,59,0.12)] backdrop-blur sm:p-9">
         <img
           src={SITE_EMBLEM_URL}
           alt="Emblema Liga Toto Talho"
-          className="h-24 w-24 rounded-2xl object-cover shadow-lg sm:h-28 sm:w-28"
+          className="h-28 w-28 rounded-[1.75rem] border border-white/60 object-cover shadow-xl sm:h-32 sm:w-32"
         />
-        <Button onClick={() => startLogin()} size="lg" className="bg-blue-600 px-10 py-6 text-base text-white hover:bg-blue-700">
+        <Button onClick={() => startLogin()} size="lg" className="bg-primary px-10 py-6 text-base text-primary-foreground shadow-lg shadow-red-900/20 hover:bg-primary/90">
           Entrar
         </Button>
       </div>

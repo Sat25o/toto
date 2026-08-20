@@ -70,21 +70,21 @@ export function InstallAppButton({ className = "" }: { className?: string }) {
           </DialogHeader>
           {samsungInternet ? (
             <ol className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>No Samsung Internet, procure o ícone <strong>+</strong> junto à barra de endereço e toque nele.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong>Ecrã inicial</strong>. Se não houver o ícone +, abra o menu do navegador e escolha <strong>Adicionar ao ecrã inicial</strong>.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span><span>Não use <strong>Instalar mesmo assim</strong> no aviso do Play Protect; este atalho abre o site com segurança.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">1</span><span>No Samsung Internet, procure o ícone <strong>+</strong> junto à barra de endereço e toque nele.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">2</span><span>Escolha <strong>Ecrã inicial</strong>. Se não houver o ícone +, abra o menu do navegador e escolha <strong>Adicionar ao ecrã inicial</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">3</span><span>Não use <strong>Instalar mesmo assim</strong> no aviso do Play Protect; este atalho abre o site com segurança.</span></li>
             </ol>
           ) : iosDevice ? (
             <ol className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>No Safari, toque em <strong className="inline-flex items-center gap-1"><Share className="h-4 w-4" /> Partilhar</strong>.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Escolha <strong className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Adicionar ao ecrã principal</strong>.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span><span>Confirme em <strong>Adicionar</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">1</span><span>No Safari, toque em <strong className="inline-flex items-center gap-1"><Share className="h-4 w-4" /> Partilhar</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">2</span><span>Escolha <strong className="inline-flex items-center gap-1"><Plus className="h-4 w-4" /> Adicionar ao ecrã principal</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">3</span><span>Confirme em <strong>Adicionar</strong>.</span></li>
             </ol>
           ) : (
             <ol className="space-y-3 text-sm text-slate-700">
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">1</span><span>Abra a Liga Toto Talho no <strong>Chrome</strong>.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">2</span><span>Abra o menu <strong>⋮</strong> e escolha <strong>Instalar app</strong> ou <strong>Adicionar ao ecrã principal</strong>.</span></li>
-              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-700">3</span><span>Não descarregue nem aceite instalar aplicações APK.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">1</span><span>Abra a Liga Toto Talho no <strong>Chrome</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">2</span><span>Abra o menu <strong>⋮</strong> e escolha <strong>Instalar app</strong> ou <strong>Adicionar ao ecrã principal</strong>.</span></li>
+              <li className="flex items-center gap-3"><span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-bold text-primary">3</span><span>Não descarregue nem aceite instalar aplicações APK.</span></li>
             </ol>
           )}
         </DialogContent>

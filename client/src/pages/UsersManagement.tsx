@@ -123,20 +123,21 @@ export default function UsersManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto mb-8 flex max-w-6xl items-center justify-between gap-4">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
+      <div className="league-header mx-auto mb-6 flex max-w-6xl flex-col gap-4 p-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h1 className="flex items-center gap-2 text-3xl font-bold text-slate-900">
-            <Users className="h-8 w-8 text-blue-600" /> Gestão de utilizadores
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Gestão de acesso</p>
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl">
+            <Users className="h-7 w-7 text-red-200" /> Gestão de utilizadores
           </h1>
-          <p className="text-slate-600">Liga Toto Talho · gestão de apostadores e acessos</p>
+          <p className="text-slate-200">Liga Toto Talho · gestão de apostadores e acessos</p>
         </div>
-        <Button variant="outline" onClick={() => setLocation("/admin")}>Voltar ao painel</Button>
+        <Button variant="outline" onClick={() => setLocation("/admin")} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white">Voltar ao painel</Button>
       </div>
 
       <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-3">
         {user.isSuperAdmin ? (
-          <Card className="border-blue-200 lg:col-span-1">
+          <Card className="league-panel lg:col-span-1">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-slate-900"><MailPlus className="h-5 w-5 text-blue-600" /> Convidar apostador</CardTitle>
               <CardDescription>O convite é pessoal, válido durante 7 dias e só pode ser usado uma vez.</CardDescription>
@@ -157,16 +158,16 @@ export default function UsersManagement() {
                 </Select>
               </div>
               <Button
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                 disabled={!inviteEmail || createInviteMutation.isPending}
                 onClick={() => createInviteMutation.mutate({ email: inviteEmail, role: inviteRole })}
               >
                 {createInviteMutation.isPending ? "A criar…" : "Criar convite"}
               </Button>
               {latestInviteUrl && (
-                <div className="space-y-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
-                  <p className="text-xs font-semibold text-blue-900">Link pronto a enviar</p>
-                  <p className="break-all text-xs text-blue-800">{latestInviteUrl}</p>
+                <div className="space-y-2 rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-xs font-semibold text-red-950">Link pronto a enviar</p>
+                  <p className="break-all text-xs text-red-800">{latestInviteUrl}</p>
                   <Button variant="outline" size="sm" className="w-full" onClick={copyInvite} title="Copiar link de convite">
                     <Copy className="mr-2 h-4 w-4" /> Copiar link
                   </Button>
@@ -183,7 +184,7 @@ export default function UsersManagement() {
           </Card>
         )}
 
-        <Card className="border-slate-200/70 lg:col-span-2">
+          <Card className="league-panel lg:col-span-2">
           <CardHeader>
             <CardTitle className="text-slate-900">Apostadores registados</CardTitle>
             <CardDescription>{users?.length ?? 0} conta(s) criadas</CardDescription>

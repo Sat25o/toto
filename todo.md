@@ -593,3 +593,11 @@
 - [x] Abrir automaticamente a jornada com apostas abertas ao entrar no Dashboard
 - [x] Preservar a possibilidade de fechar e reabrir manualmente o cartão
 - [x] Validar e sincronizar o comportamento inicial
+
+## Redesign Vermelho e Responsivo
+
+- [x] Definir tokens de cor, tipografia, superfícies e estados com vermelho predominante
+- [x] Redesenhar a navegação e o Dashboard do apostador para computador e telemóvel
+- [x] Melhorar Classificação, Histórico, Apostas Públicas e Liga dos Campeões para leitura rápida
+- [x] Redesenhar a área administrativa sem alterar os fluxos de gestão
+- [x] Validar todos os ecrãs principais em computador e telemóvel

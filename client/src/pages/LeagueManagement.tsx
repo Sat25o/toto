@@ -38,17 +38,17 @@ export default function LeagueManagement() {
   if (authLoading || !user || user.role !== "admin") return <div className="flex min-h-screen items-center justify-center text-slate-600">A carregar…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
-      <header className="mx-auto mb-8 flex max-w-6xl flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div><h1 className="flex items-center gap-2 text-3xl font-bold text-slate-900"><Megaphone className="h-8 w-8 text-blue-600" /> Regras e mensagens</h1><p className="mt-1 text-slate-600">Edite regras e publique avisos no Dashboard dos apostadores.</p></div>
-        <Button variant="outline" onClick={() => setLocation("/admin")}><ChevronLeft className="mr-2 h-4 w-4" /> Painel</Button>
+    <div className="league-page p-3 sm:p-5 lg:p-8">
+      <header className="league-header mx-auto mb-6 flex max-w-6xl flex-col gap-4 p-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+        <div><p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Comunicação da Liga</p><h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl"><Megaphone className="h-7 w-7 text-red-200" /> Regras e mensagens</h1><p className="mt-1 text-slate-200">Edite regras e publique avisos no Dashboard dos apostadores.</p></div>
+        <Button variant="outline" onClick={() => setLocation("/admin")} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white"><ChevronLeft className="mr-2 h-4 w-4" /> Painel</Button>
       </header>
 
       <main className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-2">
         <section className="space-y-6">
-          <Card className="border-blue-100"><CardHeader><CardTitle className="flex items-center gap-2 text-slate-900"><BookOpen className="h-5 w-5 text-blue-600" /> Regras da Liga</CardTitle><CardDescription>As regras ativas aparecem na página Regras e avisos.</CardDescription></CardHeader><CardContent className="space-y-4">
+          <Card className="league-panel"><CardHeader><CardTitle className="flex items-center gap-2 text-slate-900"><BookOpen className="h-5 w-5 text-primary" /> Regras da Liga</CardTitle><CardDescription>As regras ativas aparecem na página Regras e avisos.</CardDescription></CardHeader><CardContent className="space-y-4">
             <Textarea value={newRule} onChange={event => setNewRule(event.target.value)} placeholder="Escreva uma nova regra…" className="min-h-24" />
-            <Button disabled={newRule.trim().length < 3 || createRule.isPending} onClick={() => createRule.mutate({ content: newRule })} className="w-full bg-blue-600 hover:bg-blue-700"><Plus className="mr-2 h-4 w-4" /> Adicionar regra</Button>
+            <Button disabled={newRule.trim().length < 3 || createRule.isPending} onClick={() => createRule.mutate({ content: newRule })} className="w-full bg-primary text-primary-foreground hover:bg-primary/90"><Plus className="mr-2 h-4 w-4" /> Adicionar regra</Button>
           </CardContent></Card>
           <div className="space-y-3">{rules?.map((rule, index) => editingRule?.id === rule.id ? (
             <Card key={rule.id} className="border-blue-200"><CardContent className="space-y-3 pt-5"><Textarea value={editingRule.content} onChange={event => setEditingRule({ ...editingRule, content: event.target.value })} /><label className="flex items-center justify-between text-sm text-slate-700">Regra visível <Switch checked={editingRule.isActive} onCheckedChange={isActive => setEditingRule({ ...editingRule, isActive })} /></label><div className="flex gap-2"><Button size="sm" onClick={() => updateRule.mutate(editingRule)}><Save className="mr-1 h-4 w-4" /> Guardar</Button><Button size="sm" variant="outline" onClick={() => setEditingRule(null)}>Cancelar</Button></div></CardContent></Card>

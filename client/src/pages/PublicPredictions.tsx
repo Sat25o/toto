@@ -91,16 +91,17 @@ export default function PublicPredictions() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-3 sm:p-6 lg:p-8">
-      <header className="max-w-7xl mx-auto mb-6 sm:mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
+      <header className="league-header mx-auto mb-6 flex max-w-7xl flex-col gap-4 p-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">Apostas Públicas</h1>
-          <p className="mt-1 text-sm sm:text-base text-slate-600">Acompanhamento acumulado após o fecho das apostas</p>
+          <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Jogo limpo</p>
+          <h1 className="text-2xl font-bold text-white sm:text-3xl">Apostas públicas</h1>
+          <p className="mt-1 text-sm text-slate-200 sm:text-base">Acompanhamento acumulado após o fecho das apostas</p>
         </div>
         <Button
           variant="outline"
           onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")}
-          className="border-slate-300 self-start sm:self-auto"
+          className="self-start border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white sm:self-auto"
         >
           Voltar
         </Button>
@@ -108,7 +109,7 @@ export default function PublicPredictions() {
 
       <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 sm:gap-6">
         <aside>
-          <Card className="border-slate-200/50 lg:sticky lg:top-4">
+          <Card className="league-panel lg:sticky lg:top-4">
             <CardHeader>
               <CardTitle className="text-slate-900">Jornadas Fechadas</CardTitle>
               <CardDescription>Selecione uma jornada para acompanhar os palpites</CardDescription>
@@ -126,8 +127,8 @@ export default function PublicPredictions() {
                     onClick={() => setSelectedRoundId(current => current === round.id ? null : round.id)}
                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
                       selectedRoundId === round.id
-                        ? "border-blue-300 bg-blue-50 text-blue-900"
-                        : "border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                        ? "border-red-300 bg-red-50 text-red-950"
+                        : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
                     }`}
                   >
                     <div className="font-semibold">Jornada {round.roundNumber}</div>
@@ -143,7 +144,7 @@ export default function PublicPredictions() {
 
         <section>
           {selectedRoundId === null ? (
-            <Card className="border-slate-200/50">
+            <Card className="league-panel">
               <CardContent className="py-16 text-center">
                 <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <p className="text-slate-600">Selecione uma jornada para ver o estado de cada apostador.</p>
@@ -162,7 +163,7 @@ export default function PublicPredictions() {
               </TabsList>
 
               <TabsContent value="apostadores" className="mt-0 space-y-5">
-              <Card className="border-slate-200/50">
+              <Card className="league-panel">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-slate-900">Resumo da jornada</CardTitle>
                   <CardDescription>Toque num cartão para filtrar. Amarelo = em jogo; vermelho = eliminado; verde = vencedor.</CardDescription>
@@ -170,7 +171,7 @@ export default function PublicPredictions() {
                 <CardContent className="space-y-3">
                   <div className="flex gap-2">
                     <div className="relative min-w-0 flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" /><Input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder="Procurar apostador" className="pl-9" /></div>
-                    <Button size="sm" variant="outline" onClick={() => { setSearchQuery(""); setStatusFilter("all"); }} title="Limpar pesquisa e filtro">Todos</Button>
+                    <Button size="sm" variant="outline" onClick={() => { setSearchQuery(""); setStatusFilter("all"); }} title="Limpar pesquisa e filtro">Limpar</Button>
                   </div>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   <button
@@ -221,10 +222,10 @@ export default function PublicPredictions() {
                     : appearance.description;
 
                   return (
-                    <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card} ${isCurrentParticipant ? "ring-2 ring-blue-500 ring-offset-2" : ""}`}>
+                      <article key={participant.id} className={`rounded-xl border p-4 shadow-sm ${appearance.card} ${isCurrentParticipant ? "ring-2 ring-primary ring-offset-2" : ""}`}>
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold text-slate-900">{participant.name}</h2>{isCurrentParticipant && <Badge className="bg-blue-600 text-white" title="Este é o seu cartão de palpites">Os meus palpites</Badge>}</div>
+                          <div className="flex flex-wrap items-center gap-2"><h2 className="truncate font-bold text-slate-900">{participant.name}</h2>{isCurrentParticipant && <Badge className="bg-primary text-primary-foreground" title="Este é o seu cartão de palpites">Os meus palpites</Badge>}</div>
                           <p className="mt-1 text-xs text-slate-600">{description}</p>
                         </div>
                         <Badge title={description} className={`shrink-0 ${appearance.badge}`}>

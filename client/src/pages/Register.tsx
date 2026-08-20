@@ -46,8 +46,8 @@ export default function Register() {
 
   if (!invitationToken || !invitedEmail) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-slate-200/50 shadow-lg">
+      <div className="league-page flex min-h-screen items-center justify-center p-4">
+        <Card className="league-panel w-full max-w-md shadow-xl">
           <CardHeader>
             <CardTitle className="text-slate-900">Registo por convite</CardTitle>
             <CardDescription>
@@ -55,7 +55,7 @@ export default function Register() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setLocation("/login")}>
+            <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => setLocation("/login")}>
               Ir para o login
             </Button>
           </CardContent>
@@ -65,21 +65,22 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="league-page flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
           <img
             src={SITE_EMBLEM_URL}
             alt="Emblema Liga Toto Talho"
-            className="mx-auto mb-4 h-24 w-24 rounded-2xl object-cover shadow-lg"
+            className="mx-auto mb-4 h-28 w-28 rounded-[1.75rem] border border-red-100 object-cover shadow-xl"
           />
+          <p className="league-label">Registo por convite</p>
           <h1 className="text-2xl font-bold text-slate-900">Liga Toto Talho</h1>
-          <p className="text-slate-600">Prognósticos 34 Jornadas</p>
+          <p className="text-slate-600">Ativa a tua conta para entrar na competição.</p>
         </div>
 
         {/* Register Card */}
-        <Card className="border-slate-200/50 shadow-lg">
+        <Card className="league-panel shadow-xl">
           <CardHeader>
             <CardTitle className="text-slate-900">Ativar convite</CardTitle>
             <CardDescription>Defina os seus dados para entrar na Liga Toto Talho</CardDescription>
@@ -88,12 +89,12 @@ export default function Register() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <Label htmlFor="name" className="text-slate-700">
-                  Nome Completo
+                  Nome completo
                 </Label>
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Seu Nome"
+                  placeholder="O teu nome"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -108,7 +109,7 @@ export default function Register() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="teu@email.com"
                   value={email}
                   required
                   readOnly
@@ -118,7 +119,7 @@ export default function Register() {
 
               <div>
                 <Label htmlFor="password" className="text-slate-700">
-                  Password
+                  Palavra-passe
                 </Label>
                 <Input
                   id="password"
@@ -133,7 +134,7 @@ export default function Register() {
 
               <div>
                 <Label htmlFor="confirmPassword" className="text-slate-700">
-                  Confirmar Password
+                  Confirmar palavra-passe
                 </Label>
                 <Input
                   id="confirmPassword"
@@ -149,7 +150,7 @@ export default function Register() {
               <Button
                 type="submit"
                 disabled={isLoading || registerMutation.isPending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-primary text-primary-foreground shadow-md shadow-red-900/15 hover:bg-primary/90"
               >
                 {isLoading || registerMutation.isPending ? "A criar conta..." : "Ativar conta"}
               </Button>
@@ -158,7 +159,7 @@ export default function Register() {
             <div className="mt-6 text-center">
               <button
                 onClick={() => setLocation("/login")}
-                className="text-sm font-semibold text-blue-600 hover:text-blue-700"
+                className="text-sm font-semibold text-primary hover:text-primary/80"
               >
                 Já tem conta? Fazer login
               </button>

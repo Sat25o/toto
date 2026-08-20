@@ -30,15 +30,15 @@ export default function ChampionsLeague() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-amber-50/70 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="league-header mb-6 flex flex-col justify-between gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
           <div>
-            <div className="mb-2 flex items-center gap-2"><Medal className="h-7 w-7 text-amber-600" /><Badge className="bg-amber-100 text-amber-900">Competição especial</Badge></div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Liga dos Campeões</h1>
-            <p className="mt-1 text-slate-600">Eliminatórias entre os 16 melhores da Liga Toto Talho.</p>
+            <div className="mb-2 flex items-center gap-2"><Medal className="h-6 w-6 text-red-200" /><Badge className="border border-white/20 bg-white/10 text-white">Competição especial</Badge></div>
+            <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">Liga dos Campeões</h1>
+            <p className="mt-1 text-slate-200">Eliminatórias entre os 16 melhores da Liga Toto Talho.</p>
           </div>
-          <Button variant="outline" onClick={() => setLocation("/dashboard")} title="Voltar ao Dashboard">Voltar ao Dashboard</Button>
+          <Button variant="outline" onClick={() => setLocation("/dashboard")} title="Voltar ao Dashboard" className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white">Voltar ao Dashboard</Button>
         </div>
 
         <Card className="mb-6 overflow-hidden border-amber-200 bg-gradient-to-r from-amber-50 to-white shadow-sm">

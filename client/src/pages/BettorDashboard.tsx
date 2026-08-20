@@ -181,33 +181,34 @@ export default function BettorDashboard() {
   const visibleRounds = filterDashboardRounds(orderedRounds, roundFilter, currentTime);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
+    <div className="league-page p-3 sm:p-5 lg:p-8">
       {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="league-header mx-auto mb-6 max-w-6xl sm:mb-8">
+        <div className="league-header-content flex flex-col items-start justify-between gap-4 p-4 sm:p-5 lg:flex-row lg:items-center">
           <div className="flex items-center gap-3">
-            <img src={SITE_EMBLEM_URL} alt="Emblema da Liga Toto Talho" className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-slate-950 object-cover shadow-md sm:h-20 sm:w-20" />
+            <img src={SITE_EMBLEM_URL} alt="Emblema da Liga Toto Talho" className="h-16 w-16 shrink-0 rounded-2xl border border-white/20 bg-slate-950 object-cover shadow-xl sm:h-20 sm:w-20" />
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-              <p className="text-slate-600">Bem-vindo, {user.name}</p>
+              <p className="mb-1 text-xs font-bold uppercase tracking-[0.16em] text-red-200">Liga Toto Talho</p>
+              <h1 className="text-2xl font-bold text-white sm:text-3xl">O teu boletim</h1>
+              <p className="text-sm text-slate-200">Bem-vindo, {user.name}</p>
             </div>
           </div>
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+          <div className="league-nav flex w-full max-w-full items-center gap-2 overflow-x-auto pb-1 lg:w-auto lg:pb-0">
             {nextOpenRound && dashboardCountdown && (
               <div
-                className="order-first inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-700 bg-slate-950 px-2.5 text-xs font-medium text-white sm:order-none"
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-black/25 px-2.5 text-xs font-medium text-white"
                 title={`Jornada ${nextOpenRound.roundNumber}: tempo até ao fecho das apostas`}
               >
-                <Clock className="h-3.5 w-3.5 text-blue-300" />
+                <Clock className="h-3.5 w-3.5 text-red-200" />
                 <span className="text-slate-300">J{nextOpenRound.roundNumber}</span>
                 <span className="font-mono font-bold tracking-wide">{dashboardCountdown.days}d {dashboardCountdown.hours}:{dashboardCountdown.minutes}:{dashboardCountdown.seconds}</span>
               </div>
             )}
             {user.role === "admin" && (
-              <Button
-                variant="outline"
-                onClick={() => setLocation("/admin")}
-              className="border-slate-300"
+            <Button
+              variant="outline"
+              onClick={() => setLocation("/admin")}
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Voltar ao painel de gestão da competição"
             >
                 <ShieldCheck className="mr-2 h-4 w-4" /> Administração
@@ -216,7 +217,7 @@ export default function BettorDashboard() {
             <Button
               variant="outline"
               onClick={() => setLocation("/public-predictions")}
-              className="border-slate-300"
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Consultar as apostas de todos os participantes após o fecho do prazo"
             >
               <Globe2 className="mr-2 h-4 w-4" /> Apostas Públicas
@@ -224,14 +225,14 @@ export default function BettorDashboard() {
             <Button
               variant="outline"
               onClick={() => setLocation("/standings")}
-              className="border-slate-300"
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
             >
               <Trophy className="mr-2 h-4 w-4" /> Classificação
             </Button>
             <Button
               variant="outline"
               onClick={() => setLocation("/champions-league")}
-              className="border-amber-200 text-amber-900 hover:bg-amber-50"
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Consultar o formato e o calendário da Liga dos Campeões"
             >
               <Medal className="mr-2 h-4 w-4" /> Liga dos Campeões
@@ -239,14 +240,14 @@ export default function BettorDashboard() {
             <Button
               variant="outline"
               onClick={() => setLocation("/history")}
-              className="border-slate-300"
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
             >
               <History className="mr-2 h-4 w-4" /> Histórico
             </Button>
             <Button
               variant="outline"
               onClick={() => setLocation("/rules")}
-              className="border-slate-300"
+              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
               title="Consultar regras e avisos da Liga Toto Talho"
             >
               <BookOpen className="mr-2 h-4 w-4" /> Regras
@@ -258,10 +259,10 @@ export default function BettorDashboard() {
 
       {dashboardMessages.length > 0 && (
         <section className="mx-auto mb-6 max-w-6xl">
-          <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-amber-600" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
+          <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
           <div className="grid gap-3 md:grid-cols-2">
             {dashboardMessages.map(message => (
-              <Card key={message.id} className={message.isPinned ? "border-amber-200 bg-amber-50" : "border-slate-200/70"}>
+              <Card key={message.id} className={message.isPinned ? "league-soft-red" : "league-panel"}>
                 <CardContent className="pt-4"><div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p></CardContent>
               </Card>
             ))}
@@ -273,8 +274,9 @@ export default function BettorDashboard() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Rounds Sidebar */}
         <div className="lg:col-span-1">
-          <Card className="border-slate-200/50 sticky top-4">
+          <Card className="league-panel sticky top-4">
             <CardHeader>
+              <p className="league-label">Acompanha a época</p>
               <CardTitle className="text-slate-900">Jornadas</CardTitle>
               <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
             </CardHeader>
@@ -290,7 +292,7 @@ export default function BettorDashboard() {
                     size="sm"
                     variant={roundFilter === filter ? "default" : "ghost"}
                     onClick={() => handleRoundFilter(filter)}
-                    className={roundFilter === filter ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-600 hover:bg-white"}
+                    className={roundFilter === filter ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-slate-600 hover:bg-white"}
                   >
                     {label}
                   </Button>
@@ -309,8 +311,8 @@ export default function BettorDashboard() {
                     onClick={() => handleRoundSelection(round.id)}
                     className={`w-full text-left p-3 rounded-lg border transition-all ${
                       selectedRoundId === round.id
-                        ? "bg-blue-50 border-blue-300 text-blue-900"
-                        : "border-slate-200 hover:border-slate-300 text-slate-700"
+                        ? "border-red-300 bg-red-50 text-red-950 shadow-sm"
+                        : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
                     }`}
                   >
                     {/** O montante usa prizeAmount e recupera a acumulação por carriedPrizeAmount se necessário. */}
@@ -351,7 +353,7 @@ export default function BettorDashboard() {
         {/* Matches & Predictions */}
         <div className="lg:col-span-2">
           {selectedRoundId === null ? (
-            <Card className="border-slate-200/50">
+            <Card className="league-panel">
               <CardContent className="pt-12 pb-12 text-center">
                 <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
                 <p className="text-slate-600">Selecione uma jornada para começar</p>
@@ -369,7 +371,7 @@ export default function BettorDashboard() {
               {(() => {
                 const prizeLabel = getRoundPrizeLabel(roundData.round);
                 return (
-              <Card className="border-slate-200/50 bg-gradient-to-r from-blue-50 to-blue-100/50">
+              <Card className="league-soft-red">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
@@ -390,7 +392,7 @@ export default function BettorDashboard() {
                     <Clock className="w-4 h-4" />
                     Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
                   </div>
-                  <div className="mt-4 rounded-lg border border-blue-100 bg-white/70 p-3">
+                  <div className="mt-4 rounded-xl border border-red-100 bg-white/80 p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
                       <Badge className={predictionProgress.completed === predictionProgress.total ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
@@ -428,7 +430,7 @@ export default function BettorDashboard() {
                   const backupIsActive = match.isBackup && roundData.matches.some(item => !item.isBackup && item.isPostponed);
 
                   return (
-                    <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "border-slate-200/50 hover:border-blue-200"}`}>
+                    <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "league-panel hover:border-red-200"}`}>
                       <CardContent className="pt-4">
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex-1">
@@ -466,7 +468,7 @@ export default function BettorDashboard() {
                                 disabled={pendingMatchId === match.id}
                                 className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
                                   userPrediction === pred
-                                    ? "bg-blue-600 text-white"
+                                    ? "bg-primary text-primary-foreground"
                                     : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                                 }`}
                               >

@@ -39,18 +39,19 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="league-page flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Login Card */}
-        <Card className="border-slate-200/50 shadow-lg">
+        <Card className="league-panel overflow-hidden border-white/80 shadow-2xl shadow-slate-900/10">
           <CardHeader className="items-center text-center">
             <img
               src={SITE_EMBLEM_URL}
               alt="Emblema Liga Toto Talho"
-              className="mx-auto mb-2 h-20 w-20 rounded-2xl object-cover shadow-md"
+              className="mx-auto mb-3 h-24 w-24 rounded-[1.5rem] border border-red-100 object-cover shadow-xl"
             />
-            <CardTitle className="text-slate-900">Fazer Login</CardTitle>
-            <CardDescription>Entre com seu email e password</CardDescription>
+            <p className="league-label">Área privada</p>
+            <CardTitle className="text-2xl text-slate-900">Entrar na liga</CardTitle>
+            <CardDescription>Acede ao teu boletim e acompanha a jornada.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -61,7 +62,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                  placeholder="teu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -71,7 +72,7 @@ export default function Login() {
 
               <div>
                 <Label htmlFor="password" className="text-slate-700">
-                  Password
+                  Palavra-passe
                 </Label>
                 <Input
                   id="password"
@@ -87,9 +88,9 @@ export default function Login() {
               <Button
                 type="submit"
                 disabled={isLoading || loginMutation.isPending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full bg-primary text-primary-foreground shadow-md shadow-red-900/15 hover:bg-primary/90"
               >
-                {isLoading || loginMutation.isPending ? "Carregando..." : "Fazer Login"}
+                {isLoading || loginMutation.isPending ? "A entrar..." : "Entrar"}
               </Button>
             </form>
           </CardContent>
