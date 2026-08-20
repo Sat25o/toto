@@ -8,6 +8,7 @@ import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { toggleSummaryFilter } from "@/lib/summaryFilter";
 import { findIdenticalPredictionGroups } from "@/lib/identicalPredictions";
 import { openAllCopycatsDetails, toggleCopycatsDetail } from "@/lib/copycatsDetail";
+import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +75,7 @@ export default function PublicPredictions() {
 
   if (!user) return null;
 
-  const closedRounds = rounds?.filter(round => new Date(round.bettingDeadline) < new Date()) || [];
+  const closedRounds = rounds ? orderRoundsMostRecentFirst(rounds.filter(round => new Date(round.bettingDeadline) < new Date())) : [];
   const orderedParticipants = publicRound
     ? putCurrentParticipantFirst(publicRound.participants, user.id)
     : [];

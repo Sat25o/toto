@@ -9,6 +9,7 @@ import { Trophy } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getHistoryPredictionTone } from "@/lib/historyPredictionTone";
+import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 
 export default function RoundHistory() {
   const { user, loading: authLoading } = useAuth();
@@ -29,7 +30,7 @@ export default function RoundHistory() {
     if (!authLoading && !user) setLocation("/");
   }, [authLoading, setLocation, user]);
 
-  const completedRounds = rounds?.filter(round => round.isSettled) ?? [];
+  const completedRounds = rounds ? orderRoundsMostRecentFirst(rounds.filter(round => round.isSettled)) : [];
   const participants = useMemo(() => {
     const byId = new Map<number, string>();
     (allPredictions ?? []).forEach(entry => byId.set(entry.user.id, entry.user.name));

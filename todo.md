@@ -508,3 +508,15 @@
 - [x] Aplicar a lata Cristal simples como ícone da aplicação instalada
 - [x] Atualizar o manifesto e o serviço de cache da aplicação
 - [x] Validar os logótipos em computador e telemóvel
+
+## Jornadas Recentes no Topo
+
+- [x] Ordenar a lista de jornadas do apostador da mais recente para a mais antiga
+- [x] Manter a seleção da jornada atual estável após a ordenação
+- [x] Testar a apresentação em computador e telemóvel
+
+## Ordem Global das Jornadas
+
+- [x] Aplicar a ordem recente a todos os seletores e listas de jornadas
+- [x] Preservar tabelas cronológicas onde a ordem histórica seja necessária
+- [x] Validar cada área afetada sem alterar dados ou resultados

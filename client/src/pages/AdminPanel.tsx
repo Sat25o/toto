@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
+import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { splitRoundParticipation } from "@/lib/roundParticipation";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
@@ -262,6 +263,7 @@ export default function AdminPanel() {
   };
 
   const totalMatches = roundData?.matches.length ?? 6;
+  const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
   const { completed: completedParticipants, pending: pendingParticipants } = splitRoundParticipation(participation ?? [], totalMatches);
   const totalPredictions = (participation ?? []).reduce((total, participant) => total + participant.predictionCount, 0);
   const matchEditingBlockedReason = !roundData
@@ -498,8 +500,8 @@ export default function AdminPanel() {
                         <Skeleton className="h-10 w-full" />
                         <Skeleton className="h-10 w-full" />
                       </>
-                    ) : rounds && rounds.length > 0 ? (
-                      rounds.map((round) => (
+                    ) : orderedRounds.length > 0 ? (
+                      orderedRounds.map((round) => (
                         <button
                           key={round.id}
                           onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))}

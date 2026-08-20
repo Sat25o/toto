@@ -16,6 +16,7 @@ import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
 import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
+import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -148,6 +149,7 @@ export default function BettorDashboard() {
     roundData?.matches.length ?? 6,
   );
   const dashboardMessages = getDashboardMessages(adminMessages ?? []);
+  const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -241,8 +243,8 @@ export default function BettorDashboard() {
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </>
-              ) : rounds && rounds.length > 0 ? (
-                rounds.map((round) => (
+              ) : orderedRounds.length > 0 ? (
+                orderedRounds.map((round) => (
                   <button
                     key={round.id}
                     onClick={() => handleRoundSelection(round.id)}
