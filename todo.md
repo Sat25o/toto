@@ -662,6 +662,13 @@
 - [x] Alinhar largura e margens com Jornadas e palpites
 - [x] Validar o alinhamento em computador e telemóvel
 
+## Avisos Compactos no Mobile
+
+- [x] Mostrar pré-visualização curta dos avisos em telemóvel
+- [x] Permitir abrir e fechar o texto completo por toque
+- [x] Manter avisos fixados visualmente destacados
+- [x] Validar a leitura em computador e telemóvel
+
 ## Retornos do Dashboard e Menu Admin
 
 - [x] Fazer Apostas Públicas e Liga dos Campeões regressarem ao Dashboard do apostador

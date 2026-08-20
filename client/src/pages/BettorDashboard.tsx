@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins, Menu } from "lucide-react";
+import { BookOpen, ChevronDown, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -20,6 +20,7 @@ import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
 import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
 import { shouldAutoCollapseInitiallyOpenRound } from "@/lib/roundAutoCollapse";
+import { toggleExpandedMessage } from "@/lib/expandableMessages";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +36,7 @@ export default function BettorDashboard() {
   const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [expandedMessageIds, setExpandedMessageIds] = useState<number[]>([]);
   const hasSelectedInitialOpenRound = useRef(false);
   const autoOpenedRoundId = useRef<number | null>(null);
 
@@ -338,11 +340,36 @@ export default function BettorDashboard() {
           <section className="lg:col-span-3">
             <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
             <div className="grid gap-3">
-              {dashboardMessages.map(message => (
-                <Card key={message.id} className={message.isPinned ? "league-soft-red" : "league-panel"}>
-                  <CardContent className="pt-4"><div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div><p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p></CardContent>
-                </Card>
-              ))}
+              {dashboardMessages.map(message => {
+                const isExpanded = expandedMessageIds.includes(message.id);
+                return (
+                  <Card key={message.id} className={message.isPinned ? "league-soft-red" : "league-panel"}>
+                    <CardContent className="p-0 sm:p-4">
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMessageIds(current => toggleExpandedMessage(current, message.id))}
+                        className="w-full p-4 text-left sm:hidden"
+                        aria-expanded={isExpanded}
+                        aria-label={`${isExpanded ? "Fechar" : "Ler"} aviso: ${message.title}`}
+                      >
+                        <div className="mb-2 flex items-start justify-between gap-3">
+                          <p className="font-semibold text-slate-900">{message.title}</p>
+                          <div className="flex shrink-0 items-center gap-2">
+                            {message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}
+                            <ChevronDown className={`h-4 w-4 text-primary transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                          </div>
+                        </div>
+                        <p className={`whitespace-pre-wrap text-sm leading-6 text-slate-700 ${isExpanded ? "" : "line-clamp-2"}`}>{message.content}</p>
+                        <span className="mt-2 inline-flex items-center text-xs font-bold uppercase tracking-wide text-primary">{isExpanded ? "Fechar aviso" : "Ler aviso"}</span>
+                      </button>
+                      <div className="hidden sm:block">
+                        <div className="mb-2 flex items-start justify-between gap-3"><p className="font-semibold text-slate-900">{message.title}</p>{message.isPinned && <Badge className="bg-amber-200 text-amber-900"><Pin className="mr-1 h-3 w-3" /> Fixado</Badge>}</div>
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{message.content}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </section>
         )}
