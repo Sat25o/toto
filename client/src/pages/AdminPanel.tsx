@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
+import { ChevronDown, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { z } from "zod";
 import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
@@ -28,6 +28,7 @@ export default function AdminPanel() {
   const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
+  const [activeAdminSection, setActiveAdminSection] = useState<"create" | "manage" | null>(null);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -326,11 +327,23 @@ export default function AdminPanel() {
 
       {/* Tabs */}
       <div className="max-w-7xl mx-auto">
-        <Tabs defaultValue="create" className="w-full">
+        <Tabs value={activeAdminSection ?? ""} onValueChange={value => setActiveAdminSection(value as "create" | "manage")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 border border-red-100 bg-white shadow-sm">
-            <TabsTrigger value="create">Criar Jornada</TabsTrigger>
-            <TabsTrigger value="manage">Gerir Resultados</TabsTrigger>
+            <TabsTrigger value="create" onClick={() => activeAdminSection === "create" && setActiveAdminSection(null)}>
+              Criar Jornada <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${activeAdminSection === "create" ? "rotate-180" : ""}`} />
+            </TabsTrigger>
+            <TabsTrigger value="manage" onClick={() => activeAdminSection === "manage" && setActiveAdminSection(null)}>
+              Gerir Resultados <ChevronDown className={`ml-2 h-4 w-4 transition-transform ${activeAdminSection === "manage" ? "rotate-180" : ""}`} />
+            </TabsTrigger>
           </TabsList>
+
+          {activeAdminSection === null && (
+            <Card className="league-panel mt-6 border-dashed">
+              <CardContent className="py-8 text-center text-sm text-slate-600">
+                Escolha <strong>Criar Jornada</strong> ou <strong>Gerir Resultados</strong> para abrir apenas a área necessária.
+              </CardContent>
+            </Card>
+          )}
 
           {/* Create Round Tab */}
           <TabsContent value="create" className="mt-6">

@@ -642,3 +642,10 @@
 - [x] Manter a jornada aberta expandida apenas enquanto faltarem palpites
 - [x] Fechar automaticamente a jornada quando o sétimo palpite for confirmado
 - [x] Preservar abertura, edição e fecho manual do cartão de jornada
+
+## Admin Recolhido e Avisos Amplos
+
+- [x] Manter Criar Jornada e Gerir Resultados fechados por defeito
+- [x] Permitir abrir e fechar cada área administrativa por toque
+- [x] Ampliar os avisos da administração em computador
+- [x] Validar o comportamento em computador e telemóvel
