@@ -18,7 +18,7 @@ import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
-import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { filterDashboardRounds, getNextOpenRound, toggleDashboardRoundFilter, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -263,9 +263,8 @@ export default function BettorDashboard() {
               <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
+              <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
                 {([
-                  ["all", "Todas"],
                   ["open", "Abertas"],
                   ["settled", "Finalizadas"],
                 ] as const).map(([filter, label]) => (
@@ -274,7 +273,7 @@ export default function BettorDashboard() {
                     type="button"
                     size="sm"
                     variant={roundFilter === filter ? "default" : "ghost"}
-                    onClick={() => { setRoundFilter(filter); setSelectedRoundId(null); }}
+                    onClick={() => { setRoundFilter(current => toggleDashboardRoundFilter(current, filter)); setSelectedRoundId(null); }}
                     className={roundFilter === filter ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-600 hover:bg-white"}
                   >
                     {label}

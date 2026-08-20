@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { filterDashboardRounds, getNextOpenRound } from "./dashboardRoundFilter";
+import { filterDashboardRounds, getNextOpenRound, toggleDashboardRoundFilter } from "./dashboardRoundFilter";
 
 const now = new Date("2026-08-20T12:00:00Z");
 const rounds = [
@@ -18,5 +18,11 @@ describe("dashboard round filtering", () => {
     expect(filterDashboardRounds(rounds, "open", now).map(round => round.roundNumber)).toEqual([3, 4]);
     expect(filterDashboardRounds(rounds, "settled", now).map(round => round.roundNumber)).toEqual([1]);
     expect(filterDashboardRounds(rounds, "all", now).map(round => round.roundNumber)).toEqual([1, 2, 3, 4]);
+  });
+
+  it("clears an active quick filter when the same button is pressed again", () => {
+    expect(toggleDashboardRoundFilter("all", "open")).toBe("open");
+    expect(toggleDashboardRoundFilter("open", "open")).toBe("all");
+    expect(toggleDashboardRoundFilter("open", "settled")).toBe("settled");
   });
 });

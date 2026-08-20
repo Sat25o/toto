@@ -535,3 +535,9 @@
 - [x] Manter jornadas fechadas em andamento recolhidas até serem selecionadas
 - [x] Testar a filtragem e a contagem em computador e telemóvel
 - [x] Colocar a contagem num cartão próprio fora da lista de jornadas
+
+## Simplificação dos Filtros de Jornadas
+
+- [x] Retirar o botão Todas dos filtros do dashboard
+- [x] Manter apenas os filtros Abertas e Finalizadas
+- [x] Validar o estado inicial da lista de jornadas

@@ -18,3 +18,7 @@ export function filterDashboardRounds<T extends DashboardRoundStatus>(rounds: T[
   if (filter === "settled") return rounds.filter(round => round.isSettled);
   return rounds;
 }
+
+export function toggleDashboardRoundFilter(currentFilter: DashboardRoundFilter, nextFilter: Exclude<DashboardRoundFilter, "all">): DashboardRoundFilter {
+  return currentFilter === nextFilter ? "all" : nextFilter;
+}
