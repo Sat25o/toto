@@ -17,6 +17,7 @@ import { getPredictionProgress } from "@/lib/predictionProgress";
 import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
+import { getBettingCountdown } from "@/lib/bettingCountdown";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -26,6 +27,7 @@ export default function BettorDashboard() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
@@ -75,6 +77,11 @@ export default function BettorDashboard() {
       setLocation("/login");
     }
   }, [authLoading, setLocation, user]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -140,7 +147,8 @@ export default function BettorDashboard() {
     submitPredictionMutation.mutate({ matchId, prediction });
   };
 
-  const isDeadlinePassed = roundData?.round && new Date() > new Date(roundData.round.bettingDeadline);
+  const isDeadlinePassed = roundData?.round && currentTime > new Date(roundData.round.bettingDeadline);
+  const bettingCountdown = roundData?.round ? getBettingCountdown(roundData.round.bettingDeadline, currentTime) : null;
   const formatDeadline = (deadline: Date | string) =>
     new Intl.DateTimeFormat("pt-PT", { dateStyle: "full", timeStyle: "short" }).format(new Date(deadline));
   const predictionProgress = getPredictionProgress(
@@ -328,6 +336,15 @@ export default function BettorDashboard() {
                     <Clock className="w-4 h-4" />
                     Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
                   </div>
+                  {bettingCountdown && (
+                    <div className={`mt-3 flex items-center justify-between gap-3 rounded-lg border p-3 ${bettingCountdown.isClosed ? "border-red-200 bg-red-50" : "border-blue-200 bg-blue-50"}`}>
+                      <div className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                        <Clock className={bettingCountdown.isClosed ? "h-4 w-4 text-red-600" : "h-4 w-4 text-blue-600"} />
+                        {bettingCountdown.isClosed ? "Apostas encerradas" : "Fecha em"}
+                      </div>
+                      <p className={`font-mono text-lg font-bold tracking-wide ${bettingCountdown.isClosed ? "text-red-700" : "text-blue-700"}`}>{bettingCountdown.label}</p>
+                    </div>
+                  )}
                   <div className="mt-4 rounded-lg border border-blue-100 bg-white/70 p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>

@@ -520,3 +520,10 @@
 - [x] Aplicar a ordem recente a todos os seletores e listas de jornadas
 - [x] Preservar tabelas cronológicas onde a ordem histórica seja necessária
 - [x] Validar cada área afetada sem alterar dados ou resultados
+
+## Contagem Decrescente de Apostas
+
+- [x] Mostrar o tempo restante até ao fecho da jornada selecionada
+- [x] Atualizar a contagem automaticamente sem recarregar a página
+- [x] Mostrar o prazo encerrado após o limite de apostas
+- [x] Testar a contagem em computador e telemóvel
