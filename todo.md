@@ -667,3 +667,8 @@
 - [x] Fazer Apostas Públicas e Liga dos Campeões regressarem ao Dashboard do apostador
 - [x] Remover Apostas Públicas da navegação do painel admin
 - [x] Validar os destinos de retorno para apostador e administrador
+
+## Retorno da Classificação
+
+- [x] Fazer a Classificação regressar sempre ao Dashboard
+- [x] Validar o retorno para utilizadores administradores e apostadores

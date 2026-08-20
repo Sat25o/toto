@@ -120,7 +120,7 @@ export default function Standings() {
             <h1 className="text-2xl font-bold text-white sm:text-3xl">Classificação geral</h1>
             <p className="mt-1 text-sm text-slate-200 sm:text-base">Ranking de apostadores por acertos desde a Jornada {STANDINGS_START_ROUND}</p>
           </div>
-          <Button variant="outline" onClick={() => setLocation(user.role === "admin" ? "/admin" : "/dashboard")} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white">Voltar</Button>
+          <Button variant="outline" onClick={() => setLocation("/dashboard")} className="border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white">Voltar</Button>
         </div>
       </div>
 
