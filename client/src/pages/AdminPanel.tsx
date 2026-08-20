@@ -15,7 +15,6 @@ import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { splitRoundParticipation } from "@/lib/roundParticipation";
-import { InstallAppButton } from "@/components/InstallAppButton";
 
 type MatchEditDraft = {
   id: number;
@@ -297,7 +296,6 @@ export default function AdminPanel() {
             >
               Os meus palpites
             </Button>
-            <InstallAppButton className="h-9 shrink-0 justify-center whitespace-nowrap border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white" />
             <Button
               variant="outline"
               onClick={() => setLocation("/users")}

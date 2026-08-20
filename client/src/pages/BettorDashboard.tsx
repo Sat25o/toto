@@ -19,6 +19,7 @@ import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
 import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { shouldAutoCollapseInitiallyOpenRound } from "@/lib/roundAutoCollapse";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -35,6 +36,7 @@ export default function BettorDashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const hasSelectedInitialOpenRound = useRef(false);
+  const autoOpenedRoundId = useRef<number | null>(null);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -93,10 +95,27 @@ export default function BettorDashboard() {
 
     const initialOpenRound = getNextOpenRound(rounds, new Date());
     if (initialOpenRound) {
+      autoOpenedRoundId.current = initialOpenRound.id;
       setSelectedRoundId(initialOpenRound.id);
     }
     hasSelectedInitialOpenRound.current = true;
   }, [rounds]);
+
+  useEffect(() => {
+    if (
+      !shouldAutoCollapseInitiallyOpenRound({
+        autoOpenedRoundId: autoOpenedRoundId.current,
+        selectedRoundId,
+        predictionCount: predictions?.length ?? 0,
+        matchCount: roundData?.matches.length ?? 0,
+      })
+    ) {
+      return;
+    }
+
+    autoOpenedRoundId.current = null;
+    setSelectedRoundId(null);
+  }, [predictions?.length, roundData?.matches.length, selectedRoundId]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -148,6 +167,7 @@ export default function BettorDashboard() {
   }
 
   const handleRoundSelection = (roundId: number) => {
+    autoOpenedRoundId.current = null;
     const nextRoundId = toggleRoundSelection(selectedRoundId, roundId);
     // Reset synchronously while changing or closing a round, never after a prediction click.
     setOptimisticPredictions({});
@@ -264,15 +284,14 @@ export default function BettorDashboard() {
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="h-10 w-10 shrink-0 border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                  className="h-10 shrink-0 border-white/25 bg-white/10 px-3 text-xs font-bold text-white hover:bg-white/20 hover:text-white"
                   aria-label="Abrir menu de navegação"
                   title="Abrir menu"
                 >
-                  <Menu className="h-5 w-5" />
+                  <Menu className="mr-1.5 h-5 w-5" /> Menu
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[86%] border-0 bg-slate-950 p-0 text-white sm:max-w-sm">
+              <SheetContent side="left" className="w-[86%] border-0 bg-slate-950 p-0 text-white sm:max-w-sm">
                 <SheetHeader className="border-b border-white/10 bg-gradient-to-br from-red-700 to-red-900 px-5 py-6 text-left">
                   <SheetTitle className="text-lg text-white">Menu da Liga</SheetTitle>
                   <SheetDescription className="text-red-100">Atalhos para consultar e gerir a competição.</SheetDescription>

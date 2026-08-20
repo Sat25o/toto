@@ -634,3 +634,11 @@
 - [x] Corrigir Utilizadores, Apostas Públicas e Regras para administradores
 - [x] Garantir que cada retorno usa a área de origem correta
 - [x] Testar todos os destinos reportados
+
+## Menu Explicativo e Jornada Completa
+
+- [x] Adicionar o rótulo Menu ao botão hamburger e abrir o painel pela esquerda
+- [x] Remover Instalar App Web do painel administrativo
+- [x] Manter a jornada aberta expandida apenas enquanto faltarem palpites
+- [x] Fechar automaticamente a jornada quando o sétimo palpite for confirmado
+- [x] Preservar abertura, edição e fecho manual do cartão de jornada
