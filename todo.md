@@ -614,3 +614,9 @@
 - [x] Agrupar os atalhos secundários num menu hamburger em telemóvel
 - [x] Incluir rótulos e descrições acessíveis para cada atalho do menu
 - [x] Validar abertura, fecho e navegação em computador e telemóvel
+
+## Alinhamento do Menu Mobile
+
+- [x] Colocar o botão hamburger à esquerda no cabeçalho móvel
+- [x] Colocar o contador discreto à direita no cabeçalho móvel
+- [x] Validar o alinhamento e a leitura em telemóvel

@@ -248,7 +248,7 @@ export default function BettorDashboard() {
             </Button>
             <InstallAppButton />
           </div>
-          <div className="flex w-full items-center justify-between gap-2 lg:hidden">
+          <div className="flex w-full flex-row-reverse items-center justify-between gap-2 lg:hidden">
             {nextOpenRound && dashboardCountdown ? (
               <div
                 className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-white/15 bg-black/25 px-2.5 py-2 text-xs font-medium text-white"
