@@ -10,14 +10,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
 import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
-import { filterDashboardRounds, getCurrentDashboardRound, orderDashboardRounds, type DashboardRoundFilter } from "@/lib/dashboardRoundControls";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -27,10 +26,8 @@ export default function BettorDashboard() {
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
-  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("all");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const hasAutoSelectedRound = useRef(false);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -78,16 +75,6 @@ export default function BettorDashboard() {
       setLocation("/login");
     }
   }, [authLoading, setLocation, user]);
-
-  useEffect(() => {
-    if (!rounds || selectedRoundId !== null || hasAutoSelectedRound.current) return;
-
-    const currentRound = getCurrentDashboardRound(rounds, new Date());
-    const fallbackRound = orderRoundsMostRecentFirst(rounds)[0];
-    const roundToSelect = currentRound ?? fallbackRound;
-    if (roundToSelect) setSelectedRoundId(roundToSelect.id);
-    hasAutoSelectedRound.current = true;
-  }, [rounds, selectedRoundId]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -162,9 +149,7 @@ export default function BettorDashboard() {
     roundData?.matches.length ?? 6,
   );
   const dashboardMessages = getDashboardMessages(adminMessages ?? []);
-  const currentDashboardRound = rounds ? getCurrentDashboardRound(rounds, new Date()) : undefined;
-  const orderedRounds = rounds ? orderDashboardRounds(rounds, currentDashboardRound?.id) : [];
-  const visibleRounds = filterDashboardRounds(orderedRounds, roundFilter, new Date());
+  const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-6 lg:p-8">
@@ -249,35 +234,17 @@ export default function BettorDashboard() {
           <Card className="border-slate-200/50 sticky top-4">
             <CardHeader>
               <CardTitle className="text-slate-900">Jornadas</CardTitle>
-              <CardDescription>A jornada mais recente aparece primeiro</CardDescription>
+              <CardDescription>Selecione uma jornada para apostar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-3 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
-                {([
-                  ["all", "Todas"],
-                  ["open", "Abertas"],
-                  ["settled", "Finalizadas"],
-                ] as const).map(([filter, label]) => (
-                  <Button
-                    key={filter}
-                    type="button"
-                    size="sm"
-                    variant={roundFilter === filter ? "default" : "ghost"}
-                    onClick={() => setRoundFilter(filter)}
-                    className={roundFilter === filter ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-600 hover:bg-white"}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
               {roundsLoading ? (
                 <>
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </>
-              ) : visibleRounds.length > 0 ? (
-                visibleRounds.map((round) => (
+              ) : orderedRounds.length > 0 ? (
+                orderedRounds.map((round) => (
                   <button
                     key={round.id}
                     onClick={() => handleRoundSelection(round.id)}
@@ -304,9 +271,6 @@ export default function BettorDashboard() {
                     <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-700">
                       <Coins className="h-3.5 w-3.5" /> Prémio acumulado: {prizeLabel}
                     </div>
-                    {currentDashboardRound?.id === round.id && (
-                      <Badge className="mt-2 bg-blue-100 text-blue-800 hover:bg-blue-100">Jornada atual</Badge>
-                    )}
                     {round.isSettled && (
                       <Badge className="mt-2 bg-green-100 text-green-800">Finalizada</Badge>
                     )}
@@ -316,7 +280,7 @@ export default function BettorDashboard() {
                   </button>
                 ))
               ) : (
-                <p className="text-slate-500 text-sm">Não existem jornadas neste filtro</p>
+                <p className="text-slate-500 text-sm">Nenhuma jornada disponível</p>
               )}
             </CardContent>
           </Card>
