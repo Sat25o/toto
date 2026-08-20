@@ -587,3 +587,9 @@
 - [x] Aumentar o emblema para tornar a lata Cristal legível
 - [x] Preservar o alinhamento do cabeçalho em computador e telemóvel
 - [x] Validar e sincronizar o novo tamanho
+
+## Jornada Aberta Expandida
+
+- [x] Abrir automaticamente a jornada com apostas abertas ao entrar no Dashboard
+- [x] Preservar a possibilidade de fechar e reabrir manualmente o cartão
+- [x] Validar e sincronizar o comportamento inicial

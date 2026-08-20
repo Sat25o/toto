@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
@@ -33,6 +33,7 @@ export default function BettorDashboard() {
   const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const hasSelectedInitialOpenRound = useRef(false);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -85,6 +86,16 @@ export default function BettorDashboard() {
     const timer = window.setInterval(() => setCurrentTime(new Date()), 1000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!rounds || hasSelectedInitialOpenRound.current) return;
+
+    const initialOpenRound = getNextOpenRound(rounds, new Date());
+    if (initialOpenRound) {
+      setSelectedRoundId(initialOpenRound.id);
+    }
+    hasSelectedInitialOpenRound.current = true;
+  }, [rounds]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
