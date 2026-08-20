@@ -569,3 +569,9 @@
 - [x] Garantir apresentação compacta e responsiva em telemóvel
 - [x] Remover o cartão de contagem separado do topo
 - [x] Adicionar ao GitHub o ficheiro de ícone referido pela aplicação
+
+## Reconciliação de Palpites da Jornada 3
+
+- [x] Comparar os sete palpites de cada participante com a tabela fornecida
+- [x] Corrigir diferenças e adicionar palpites em falta sem alterar outras jornadas
+- [x] Validar os 34 registos e gerar resumo completo para conferência
