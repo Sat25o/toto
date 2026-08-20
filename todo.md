@@ -562,3 +562,10 @@
 - [x] Manter a jornada e o fecho identificados no cartão compacto
 - [x] Guardar o emblema e o ícone Cristal aprovados no GitHub
 - [x] Testar a contagem e confirmar os ficheiros de marca no repositório
+
+## Contagem Discreta no Menu
+
+- [x] Mover a contagem para junto dos botões do menu do dashboard
+- [x] Garantir apresentação compacta e responsiva em telemóvel
+- [x] Remover o cartão de contagem separado do topo
+- [x] Adicionar ao GitHub o ficheiro de ícone referido pela aplicação

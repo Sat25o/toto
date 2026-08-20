@@ -177,7 +177,17 @@ export default function BettorDashboard() {
             <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
             <p className="text-slate-600">Bem-vindo, {user.name}</p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
+            {nextOpenRound && dashboardCountdown && (
+              <div
+                className="order-first inline-flex h-9 items-center gap-1.5 rounded-md border border-slate-700 bg-slate-950 px-2.5 text-xs font-medium text-white sm:order-none"
+                title={`Jornada ${nextOpenRound.roundNumber}: tempo até ao fecho das apostas`}
+              >
+                <Clock className="h-3.5 w-3.5 text-blue-300" />
+                <span className="text-slate-300">J{nextOpenRound.roundNumber}</span>
+                <span className="font-mono font-bold tracking-wide">{dashboardCountdown.days}d {dashboardCountdown.hours}:{dashboardCountdown.minutes}:{dashboardCountdown.seconds}</span>
+              </div>
+            )}
             {user.role === "admin" && (
               <Button
                 variant="outline"
@@ -230,32 +240,6 @@ export default function BettorDashboard() {
           </div>
         </div>
       </div>
-
-      {nextOpenRound && dashboardCountdown && (
-        <section className="mx-auto mb-6 max-w-6xl">
-          <Card className="max-w-2xl overflow-hidden border-slate-800 bg-slate-950 text-white shadow-md">
-            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-5">
-              <div className="flex shrink-0 items-center gap-2 border-b border-white/15 pb-3 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-5">
-                <Clock className="h-4 w-4 text-blue-300" />
-                <div><p className="text-sm font-semibold uppercase tracking-wide">Jornada <span className="text-red-400">{nextOpenRound.roundNumber}</span></p><p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">Fecha em</p></div>
-              </div>
-              <div className="grid flex-1 grid-cols-4 gap-2 text-center">
-                {[
-                  [dashboardCountdown.days, "DIAS"],
-                  [dashboardCountdown.hours, "HRS"],
-                  [dashboardCountdown.minutes, "MINS"],
-                  [dashboardCountdown.seconds, "SEGS"],
-                ].map(([value, label]) => (
-                  <div key={label} className="min-w-0 rounded-md bg-white/8 px-1.5 py-1.5">
-                    <p className="font-mono text-lg font-bold leading-none text-white sm:text-xl">{value}</p>
-                    <p className="mt-1 text-[9px] font-medium tracking-wider text-slate-400">{label}</p>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </section>
-      )}
 
       {dashboardMessages.length > 0 && (
         <section className="mx-auto mb-6 max-w-6xl">
