@@ -581,3 +581,9 @@
 - [x] Mostrar o emblema aprovado no cabeçalho do Dashboard
 - [x] Manter o emblema discreto e legível em computador e telemóvel
 - [x] Validar e sincronizar a atualização visual
+
+## Emblema Ampliado no Dashboard
+
+- [x] Aumentar o emblema para tornar a lata Cristal legível
+- [x] Preservar o alinhamento do cabeçalho em computador e telemóvel
+- [x] Validar e sincronizar o novo tamanho

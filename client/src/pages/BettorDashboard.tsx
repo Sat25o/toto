@@ -175,7 +175,7 @@ export default function BettorDashboard() {
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3">
-            <img src={SITE_EMBLEM_URL} alt="Emblema da Liga Toto Talho" className="h-11 w-11 shrink-0 rounded-xl border border-slate-200 bg-slate-950 object-cover shadow-sm sm:h-12 sm:w-12" />
+            <img src={SITE_EMBLEM_URL} alt="Emblema da Liga Toto Talho" className="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 bg-slate-950 object-cover shadow-md sm:h-20 sm:w-20" />
             <div>
               <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
               <p className="text-slate-600">Bem-vindo, {user.name}</p>
