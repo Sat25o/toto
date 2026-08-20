@@ -601,3 +601,9 @@
 - [x] Melhorar Classificação, Histórico, Apostas Públicas e Liga dos Campeões para leitura rápida
 - [x] Redesenhar a área administrativa sem alterar os fluxos de gestão
 - [x] Validar todos os ecrãs principais em computador e telemóvel
+
+## Simplificação da Navegação
+
+- [x] Retirar o acesso ao Histórico do menu do Dashboard
+- [x] Preservar os dados e a rota interna para eventual consulta futura
+- [x] Validar a navegação sem o Histórico

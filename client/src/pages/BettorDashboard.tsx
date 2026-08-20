@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -236,13 +236,6 @@ export default function BettorDashboard() {
               title="Consultar o formato e o calendário da Liga dos Campeões"
             >
               <Medal className="mr-2 h-4 w-4" /> Liga dos Campeões
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setLocation("/history")}
-              className="h-9 shrink-0 border-white/20 bg-white/10 px-3 text-xs text-white hover:bg-white/20 hover:text-white"
-            >
-              <History className="mr-2 h-4 w-4" /> Histórico
             </Button>
             <Button
               variant="outline"
