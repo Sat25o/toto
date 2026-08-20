@@ -19,6 +19,7 @@ import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
 import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -173,9 +174,12 @@ export default function BettorDashboard() {
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-            <p className="text-slate-600">Bem-vindo, {user.name}</p>
+          <div className="flex items-center gap-3">
+            <img src={SITE_EMBLEM_URL} alt="Emblema da Liga Toto Talho" className="h-11 w-11 shrink-0 rounded-xl border border-slate-200 bg-slate-950 object-cover shadow-sm sm:h-12 sm:w-12" />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-slate-600">Bem-vindo, {user.name}</p>
+            </div>
           </div>
           <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             {nextOpenRound && dashboardCountdown && (

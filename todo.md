@@ -575,3 +575,9 @@
 - [x] Comparar os sete palpites de cada participante com a tabela fornecida
 - [x] Corrigir diferenças e adicionar palpites em falta sem alterar outras jornadas
 - [x] Validar os 34 registos e gerar resumo completo para conferência
+
+## Emblema no Dashboard
+
+- [x] Mostrar o emblema aprovado no cabeçalho do Dashboard
+- [x] Manter o emblema discreto e legível em computador e telemóvel
+- [x] Validar e sincronizar a atualização visual
