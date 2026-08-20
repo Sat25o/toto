@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins } from "lucide-react";
+import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -21,6 +21,7 @@ import { getBettingCountdown } from "@/lib/bettingCountdown";
 import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function BettorDashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -193,7 +194,7 @@ export default function BettorDashboard() {
               <p className="text-sm text-slate-200">Bem-vindo, {user.name}</p>
             </div>
           </div>
-          <div className="league-nav flex w-full max-w-full items-center gap-2 overflow-x-auto pb-1 lg:w-auto lg:pb-0">
+          <div className="league-nav hidden w-full max-w-full items-center gap-2 overflow-x-auto pb-1 lg:flex lg:w-auto lg:pb-0">
             {nextOpenRound && dashboardCountdown && (
               <div
                 className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md border border-white/15 bg-black/25 px-2.5 text-xs font-medium text-white"
@@ -246,6 +247,68 @@ export default function BettorDashboard() {
               <BookOpen className="mr-2 h-4 w-4" /> Regras
             </Button>
             <InstallAppButton />
+          </div>
+          <div className="flex w-full items-center justify-between gap-2 lg:hidden">
+            {nextOpenRound && dashboardCountdown ? (
+              <div
+                className="inline-flex min-w-0 items-center gap-1.5 rounded-md border border-white/15 bg-black/25 px-2.5 py-2 text-xs font-medium text-white"
+                title={`Jornada ${nextOpenRound.roundNumber}: tempo até ao fecho das apostas`}
+              >
+                <Clock className="h-3.5 w-3.5 shrink-0 text-red-200" />
+                <span className="shrink-0 text-slate-300">J{nextOpenRound.roundNumber}</span>
+                <span className="truncate font-mono font-bold tracking-wide">{dashboardCountdown.days}d {dashboardCountdown.hours}:{dashboardCountdown.minutes}:{dashboardCountdown.seconds}</span>
+              </div>
+            ) : <div />}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-10 w-10 shrink-0 border-white/25 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+                  aria-label="Abrir menu de navegação"
+                  title="Abrir menu"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[86%] border-0 bg-slate-950 p-0 text-white sm:max-w-sm">
+                <SheetHeader className="border-b border-white/10 bg-gradient-to-br from-red-700 to-red-900 px-5 py-6 text-left">
+                  <SheetTitle className="text-lg text-white">Menu da Liga</SheetTitle>
+                  <SheetDescription className="text-red-100">Atalhos para consultar e gerir a competição.</SheetDescription>
+                </SheetHeader>
+                <nav className="flex flex-1 flex-col gap-2 p-4" aria-label="Navegação do dashboard">
+                  {user.role === "admin" && (
+                    <SheetClose asChild>
+                      <Button variant="outline" onClick={() => setLocation("/admin")} className="justify-start border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white" title="Abrir administração">
+                        <ShieldCheck className="mr-3 h-4 w-4 text-red-200" /> Administração
+                      </Button>
+                    </SheetClose>
+                  )}
+                  <SheetClose asChild>
+                    <Button variant="outline" onClick={() => setLocation("/public-predictions")} className="justify-start border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white" title="Consultar apostas públicas">
+                      <Globe2 className="mr-3 h-4 w-4 text-red-200" /> Apostas Públicas
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="outline" onClick={() => setLocation("/standings")} className="justify-start border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white" title="Consultar classificação">
+                      <Trophy className="mr-3 h-4 w-4 text-red-200" /> Classificação
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="outline" onClick={() => setLocation("/champions-league")} className="justify-start border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white" title="Consultar Liga dos Campeões">
+                      <Medal className="mr-3 h-4 w-4 text-red-200" /> Liga dos Campeões
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="outline" onClick={() => setLocation("/rules")} className="justify-start border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white" title="Consultar regras e avisos">
+                      <BookOpen className="mr-3 h-4 w-4 text-red-200" /> Regras e avisos
+                    </Button>
+                  </SheetClose>
+                  <div className="mt-2 border-t border-white/10 pt-4"><InstallAppButton /></div>
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

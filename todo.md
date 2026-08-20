@@ -607,3 +607,10 @@
 - [x] Retirar o acesso ao Histórico do menu do Dashboard
 - [x] Preservar os dados e a rota interna para eventual consulta futura
 - [x] Validar a navegação sem o Histórico
+
+## Menu Hamburger no Mobile
+
+- [x] Manter os atalhos principais visíveis em computador
+- [x] Agrupar os atalhos secundários num menu hamburger em telemóvel
+- [x] Incluir rótulos e descrições acessíveis para cada atalho do menu
+- [x] Validar abertura, fecho e navegação em computador e telemóvel
