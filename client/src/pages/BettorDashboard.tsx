@@ -233,13 +233,25 @@ export default function BettorDashboard() {
 
       {nextOpenRound && dashboardCountdown && (
         <section className="mx-auto mb-6 max-w-6xl">
-          <Card className="max-w-xl border-slate-200 bg-white shadow-sm">
-            <CardContent className="flex items-center justify-between gap-3 p-3 sm:p-4">
-              <div className="flex min-w-0 items-center gap-2.5">
-                <div className="shrink-0 rounded-lg bg-blue-600 p-2 text-white"><Clock className="h-4 w-4" /></div>
-                <div><p className="text-xs font-medium text-slate-500">Jornada {nextOpenRound.roundNumber} · apostas abertas</p><p className="text-sm font-semibold text-slate-900">Fecha em</p></div>
+          <Card className="max-w-2xl overflow-hidden border-slate-800 bg-slate-950 text-white shadow-md">
+            <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-5">
+              <div className="flex shrink-0 items-center gap-2 border-b border-white/15 pb-3 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-5">
+                <Clock className="h-4 w-4 text-blue-300" />
+                <div><p className="text-sm font-semibold uppercase tracking-wide">Jornada <span className="text-red-400">{nextOpenRound.roundNumber}</span></p><p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-400">Fecha em</p></div>
               </div>
-              <p className="shrink-0 rounded-lg bg-slate-900 px-2.5 py-1.5 font-mono text-lg font-bold tracking-wide text-white sm:px-3 sm:text-xl">{dashboardCountdown.label}</p>
+              <div className="grid flex-1 grid-cols-4 gap-2 text-center">
+                {[
+                  [dashboardCountdown.days, "DIAS"],
+                  [dashboardCountdown.hours, "HRS"],
+                  [dashboardCountdown.minutes, "MINS"],
+                  [dashboardCountdown.seconds, "SEGS"],
+                ].map(([value, label]) => (
+                  <div key={label} className="min-w-0 rounded-md bg-white/8 px-1.5 py-1.5">
+                    <p className="font-mono text-lg font-bold leading-none text-white sm:text-xl">{value}</p>
+                    <p className="mt-1 text-[9px] font-medium tracking-wider text-slate-400">{label}</p>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </section>

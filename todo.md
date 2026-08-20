@@ -555,3 +555,10 @@
 - [x] Permitir abrir e fechar a jornada aberta ao tocar no respetivo cartão
 - [x] Tornar o cartão de contagem mais compacto e com melhor contraste
 - [x] Testar o comportamento e a leitura em computador e telemóvel
+
+## Contagem por Blocos e Arquivo de Marca
+
+- [x] Apresentar a contagem em blocos de dias, horas, minutos e segundos
+- [x] Manter a jornada e o fecho identificados no cartão compacto
+- [x] Guardar o emblema e o ícone Cristal aprovados no GitHub
+- [x] Testar a contagem e confirmar os ficheiros de marca no repositório
