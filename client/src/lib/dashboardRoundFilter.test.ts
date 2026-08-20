@@ -14,9 +14,9 @@ describe("dashboard round filtering", () => {
     expect(getNextOpenRound(rounds, now)?.roundNumber).toBe(3);
   });
 
-  it("filters open and settled rounds while keeping closed rounds only in all", () => {
+  it("filters open rounds and groups closed or settled rounds under Finalizadas", () => {
     expect(filterDashboardRounds(rounds, "open", now).map(round => round.roundNumber)).toEqual([3, 4]);
-    expect(filterDashboardRounds(rounds, "settled", now).map(round => round.roundNumber)).toEqual([1]);
+    expect(filterDashboardRounds(rounds, "settled", now).map(round => round.roundNumber)).toEqual([1, 2]);
     expect(filterDashboardRounds(rounds, "all", now).map(round => round.roundNumber)).toEqual([1, 2, 3, 4]);
   });
 

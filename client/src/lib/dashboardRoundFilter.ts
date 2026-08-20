@@ -15,7 +15,7 @@ export function getNextOpenRound<T extends DashboardRoundStatus>(rounds: T[], no
 
 export function filterDashboardRounds<T extends DashboardRoundStatus>(rounds: T[], filter: DashboardRoundFilter, now: Date) {
   if (filter === "open") return rounds.filter(round => !round.isSettled && new Date(round.bettingDeadline) > now);
-  if (filter === "settled") return rounds.filter(round => round.isSettled);
+  if (filter === "settled") return rounds.filter(round => round.isSettled || new Date(round.bettingDeadline) <= now);
   return rounds;
 }
 

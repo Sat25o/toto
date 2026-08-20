@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { BookOpen, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, History, KeyRound, Medal, Coins } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getPredictionProgress } from "@/lib/predictionProgress";
@@ -18,7 +18,7 @@ import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
-import { filterDashboardRounds, getNextOpenRound, toggleDashboardRoundFilter, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
 import { InstallAppButton } from "@/components/InstallAppButton";
 
 export default function BettorDashboard() {
@@ -29,9 +29,10 @@ export default function BettorDashboard() {
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
-  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("all");
+  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const hasSelectedInitialOpenRound = useRef(false);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -85,6 +86,13 @@ export default function BettorDashboard() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (!rounds || hasSelectedInitialOpenRound.current) return;
+    const nextOpenRound = getNextOpenRound(rounds, new Date());
+    if (nextOpenRound) setSelectedRoundId(nextOpenRound.id);
+    hasSelectedInitialOpenRound.current = true;
+  }, [rounds]);
+
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
@@ -135,11 +143,22 @@ export default function BettorDashboard() {
   }
 
   const handleRoundSelection = (roundId: number) => {
-    const nextRoundId = toggleRoundSelection(selectedRoundId, roundId);
+    const nextRoundId = roundFilter === "open" && roundId === nextOpenRound?.id
+      ? roundId
+      : toggleRoundSelection(selectedRoundId, roundId);
     // Reset synchronously while changing or closing a round, never after a prediction click.
     setOptimisticPredictions({});
     setPendingMatchId(null);
     setSelectedRoundId(nextRoundId);
+  };
+
+  const handleRoundFilter = (filter: Exclude<DashboardRoundFilter, "all">) => {
+    setRoundFilter(filter);
+    if (filter === "open") {
+      setSelectedRoundId(nextOpenRound?.id ?? null);
+      return;
+    }
+    setSelectedRoundId(null);
   };
 
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
@@ -273,7 +292,7 @@ export default function BettorDashboard() {
                     type="button"
                     size="sm"
                     variant={roundFilter === filter ? "default" : "ghost"}
-                    onClick={() => { setRoundFilter(current => toggleDashboardRoundFilter(current, filter)); setSelectedRoundId(null); }}
+                    onClick={() => handleRoundFilter(filter)}
                     className={roundFilter === filter ? "bg-blue-600 text-white hover:bg-blue-700" : "text-slate-600 hover:bg-white"}
                   >
                     {label}
@@ -316,6 +335,9 @@ export default function BettorDashboard() {
                     </div>
                     {round.isSettled && (
                       <Badge className="mt-2 bg-green-100 text-green-800">Finalizada</Badge>
+                    )}
+                    {!round.isSettled && new Date(round.bettingDeadline) <= currentTime && (
+                      <Badge className="mt-2 bg-red-100 text-red-800">Apostas encerradas</Badge>
                     )}
                         </>
                       );

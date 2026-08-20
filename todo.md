@@ -541,3 +541,10 @@
 - [x] Retirar o botão Todas dos filtros do dashboard
 - [x] Manter apenas os filtros Abertas e Finalizadas
 - [x] Validar o estado inicial da lista de jornadas
+
+## Jornada Aberta Selecionada
+
+- [x] Abrir o dashboard com o filtro Abertas ativo
+- [x] Selecionar automaticamente a jornada aberta com prazo mais próximo
+- [x] Mostrar as jornadas concluídas apenas após tocar em Finalizadas
+- [x] Preservar a seleção manual depois do carregamento inicial
