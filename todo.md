@@ -679,3 +679,9 @@
 
 - [x] Fazer a Classificação regressar sempre ao Dashboard
 - [x] Validar o retorno para utilizadores administradores e apostadores
+
+## Correção do Ícone Cristal da App
+
+- [x] Substituir a referência incorreta de troféu pelo ícone da lata Cristal
+- [x] Versionar as referências do manifesto e dos ícones para invalidar cache
+- [x] Validar a configuração de instalação e publicar a correção

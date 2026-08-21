@@ -1,5 +1,7 @@
 const CACHE_NAME = "liga-toto-talhao-v4";
 
+const CACHE_NAME = "liga-toto-talho-cristal-icon-v2";
+
 self.addEventListener("install", () => {
   self.skipWaiting();
 });

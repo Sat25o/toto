@@ -9,7 +9,7 @@ import "./index.css";
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    void navigator.serviceWorker.register("/sw.js").then(registration => {
+    void navigator.serviceWorker.register("/sw.js?v=cristal-icon-v2").then(registration => {
       void registration.update();
     }).catch(error => {
       console.warn("[PWA] Service worker registration failed", error);
