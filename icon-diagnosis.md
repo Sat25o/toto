@@ -7,3 +7,9 @@
 - A publicação foi posteriormente confirmada com o caminho novo da lata Cristal. O problema restante é específico do WebAPK/launcher Android: o Chrome verifica o manifesto em intervalos e atualiza o WebAPK quando a app está fechada, o telemóvel está ligado ao carregador e em Wi-Fi. Uma configuração com ícones explícitos de 192 px e 512 px, finalidade `any` e `maskable`, e uma nova identidade de instalação evita a reutilização do atalho anterior.
 
 Fontes consultadas: https://web.dev/articles/manifest-updates e https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/How_to/Define_app_icons
+
+## Safari em iPhone/iPad
+
+O Safari usa a referência `apple-touch-icon` do HTML para o atalho colocado no ecrã principal. A Apple recomenda fornecer uma imagem específica para cada resolução, incluindo 180×180 para iPhone Retina. Será criada uma referência exclusiva e declarada com esse tamanho, para que o Safari não reutilize a versão sem tamanho específico.
+
+Fontes consultadas: https://developer.apple.com/library/archive/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html e https://support.apple.com/en-us/105082

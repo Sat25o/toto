@@ -692,3 +692,9 @@
 - [x] Declarar ícones `any` e `maskable` no manifesto atualizado
 - [x] Renovar a identidade de instalação para evitar reutilização do WebAPK anterior
 - [x] Validar a publicação e orientar a instalação limpa no Android
+
+## Correção do Ícone Apple
+
+- [x] Criar um ícone Cristal específico de 180 px para Safari em iPhone
+- [x] Declarar o `apple-touch-icon` com o tamanho recomendado pela Apple
+- [x] Renovar a referência Apple e validar a publicação
