@@ -698,3 +698,9 @@
 - [x] Criar um ícone Cristal específico de 180 px para Safari em iPhone
 - [x] Declarar o `apple-touch-icon` com o tamanho recomendado pela Apple
 - [x] Renovar a referência Apple e validar a publicação
+
+## Correção do Ícone Apple Sem Imagem
+
+- [x] Remover a query da referência Apple, mantendo o nome de ficheiro único
+- [x] Adicionar a declaração compatível `apple-touch-icon-precomposed`
+- [x] Validar a deteção do ícone pelo Safari após a publicação

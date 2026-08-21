@@ -23,6 +23,7 @@ describe("active brand assets", () => {
 
     const indexPath = fileURLToPath(new URL("../../index.html", import.meta.url));
     const indexHtml = await readFile(indexPath, "utf8");
-    expect(indexHtml).toContain('rel="apple-touch-icon" sizes="180x180" href="/manus-storage/liga-toto-talho-app-icon-cristal-android-v3-180_f1b29039.png?v=apple-cristal-v4"');
+    expect(indexHtml).toContain('rel="apple-touch-icon" sizes="180x180" href="/manus-storage/liga-toto-talho-app-icon-cristal-android-v3-180_f1b29039.png"');
+    expect(indexHtml).toContain('rel="apple-touch-icon-precomposed" sizes="180x180" href="/manus-storage/liga-toto-talho-app-icon-cristal-android-v3-180_f1b29039.png"');
   });
 });
