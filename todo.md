@@ -685,3 +685,10 @@
 - [x] Substituir a referência incorreta de troféu pelo ícone da lata Cristal
 - [x] Versionar as referências do manifesto e dos ícones para invalidar cache
 - [x] Validar a configuração de instalação e publicar a correção
+
+## Reforço do Ícone PWA Android
+
+- [x] Criar ícones Cristal dedicados para Android em 192 px e 512 px
+- [x] Declarar ícones `any` e `maskable` no manifesto atualizado
+- [x] Renovar a identidade de instalação para evitar reutilização do WebAPK anterior
+- [x] Validar a publicação e orientar a instalação limpa no Android
