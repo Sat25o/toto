@@ -393,6 +393,7 @@ export const appRouter = router({
     getByRound: protectedProcedure
       .input(z.object({ roundId: z.number().int().positive() }))
       .query(({ input, ctx }) => db.getPredictionsByRoundAndUser(input.roundId, ctx.user.id)),
+    getProgressByRound: protectedProcedure.query(({ ctx }) => db.getPredictionProgressByRoundForUser(ctx.user.id)),
     submit: protectedProcedure
       .input(z.object({ matchId: z.number().int().positive(), prediction: z.enum(["1", "X", "2"]) }))
       .mutation(async ({ input, ctx }) => {

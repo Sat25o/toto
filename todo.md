@@ -704,3 +704,10 @@
 - [x] Remover a query da referência Apple, mantendo o nome de ficheiro único
 - [x] Adicionar a declaração compatível `apple-touch-icon-precomposed`
 - [x] Validar a deteção do ícone pelo Safari após a publicação
+
+## Destaque de Aposta Completa
+
+- [x] Identificar jornadas abertas com os sete palpites confirmados
+- [x] Destacar a jornada recolhida com estado verde e mensagem de confirmação
+- [x] Manter a possibilidade de abrir, fechar e editar os palpites
+- [x] Validar o destaque em computador e telemóvel

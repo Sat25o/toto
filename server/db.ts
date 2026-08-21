@@ -561,6 +561,27 @@ export async function getPredictionsByRoundAndUser(roundId: number, userId: numb
     .orderBy(matches.matchOrder);
 }
 
+export async function getPredictionProgressByRoundForUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      roundId: matches.roundId,
+      predictionCount: sql<number>`COUNT(${predictions.id})`,
+      matchCount: sql<number>`COUNT(DISTINCT ${matches.id})`,
+    })
+    .from(matches)
+    .leftJoin(predictions, and(eq(predictions.matchId, matches.id), eq(predictions.userId, userId)))
+    .groupBy(matches.roundId);
+
+  return result.map(progress => ({
+    roundId: progress.roundId,
+    predictionCount: Number(progress.predictionCount),
+    matchCount: Number(progress.matchCount),
+  }));
+}
+
 export async function getPredictionsByRound(roundId: number) {
   const db = await getDb();
   if (!db) return [];
