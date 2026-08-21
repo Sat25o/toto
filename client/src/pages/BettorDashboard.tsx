@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { BookOpen, CheckCircle2, ChevronDown, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins, Menu } from "lucide-react";
+import { BookOpen, CheckCircle2, ChevronDown, CircleAlert, Clock, Trophy, AlertCircle, Megaphone, Pin, ShieldCheck, Globe2, KeyRound, Medal, Coins, Menu } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { clearSelectedPrediction, selectPrediction, type PredictionChoice } from "@/lib/predictionSelection";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -22,7 +22,7 @@ import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } fr
 import { shouldAutoCollapseInitiallyOpenRound } from "@/lib/roundAutoCollapse";
 import { toggleExpandedMessage } from "@/lib/expandableMessages";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
-import { hasSevenConfirmedPredictions } from "@/lib/roundCompletion";
+import { getMissingPredictionCount, hasSevenConfirmedPredictions } from "@/lib/roundCompletion";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
@@ -412,7 +412,11 @@ export default function BettorDashboard() {
                 </>
               ) : visibleRounds.length > 0 ? (
                 visibleRounds.map(round => {
-                  const hasCompleteBet = !round.isSettled && hasSevenConfirmedPredictions(progressByRoundId.get(round.id));
+                  const roundProgress = progressByRoundId.get(round.id);
+                  const hasCompleteBet = !round.isSettled && hasSevenConfirmedPredictions(roundProgress);
+                  const isOpenForBetting = !round.isSettled && new Date(round.bettingDeadline) > currentTime;
+                  const missingPredictionCount = getMissingPredictionCount(roundProgress);
+                  const hasIncompleteBet = isOpenForBetting && !hasCompleteBet && missingPredictionCount > 0;
                   return (
                     <button
                       key={round.id}
@@ -420,9 +424,11 @@ export default function BettorDashboard() {
                       className={`w-full text-left p-3 rounded-lg border transition-all ${
                         hasCompleteBet
                           ? "border-emerald-400 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-100 hover:border-emerald-500 hover:bg-emerald-100"
-                          : selectedRoundId === round.id
-                            ? "border-red-300 bg-red-50 text-red-950 shadow-sm"
-                            : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
+                          : hasIncompleteBet
+                            ? "border-orange-400 bg-orange-50 text-orange-950 shadow-sm ring-1 ring-orange-100 hover:border-orange-500 hover:bg-orange-100"
+                            : selectedRoundId === round.id
+                              ? "border-red-300 bg-red-50 text-red-950 shadow-sm"
+                              : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
                       }`}
                     >
                     {/** O montante usa prizeAmount e recupera a acumulação por carriedPrizeAmount se necessário. */}
@@ -452,6 +458,12 @@ export default function BettorDashboard() {
                       <div className="mt-2 flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-100 px-2 py-1.5 text-xs font-bold text-emerald-900">
                         <CheckCircle2 className="h-4 w-4 shrink-0" />
                         <span>7 palpites confirmados</span>
+                      </div>
+                    )}
+                    {hasIncompleteBet && (
+                      <div className="mt-2 flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-100 px-2 py-1.5 text-xs font-bold text-orange-950">
+                        <CircleAlert className="h-4 w-4 shrink-0" />
+                        <span>{missingPredictionCount === 1 ? "Falta 1 palpite" : `Faltam ${missingPredictionCount} palpites`}</span>
                       </div>
                     )}
                         </>

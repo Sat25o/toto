@@ -711,3 +711,10 @@
 - [x] Destacar a jornada recolhida com estado verde e mensagem de confirmação
 - [x] Manter a possibilidade de abrir, fechar e editar os palpites
 - [x] Validar o destaque em computador e telemóvel
+
+## Aviso de Palpites em Falta
+
+- [x] Identificar jornadas abertas com menos de sete palpites
+- [x] Mostrar um estado laranja expressivo com a quantidade de palpites em falta
+- [x] Preservar o destaque verde de aposta completa e os restantes estados
+- [x] Validar a apresentação em computador e telemóvel
