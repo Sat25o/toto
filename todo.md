@@ -727,3 +727,10 @@
 - [x] Manter apenas uma jornada aberta de cada vez e fechar ao clicar novamente
 - [x] Preservar palpites, estados, prémios, avisos de prazo e restantes ações existentes
 - [x] Validar testes, tipos e compilação de produção
+
+## Jogo Suplente nos Copiaços
+
+- [x] Comparar os Copiaços pelos seis jogos principais quando não houver adiamentos
+- [x] Incluir o jogo suplente apenas se um jogo principal estiver adiado
+- [x] Atualizar a explicação e os detalhes da aposta comum
+- [x] Validar grupos de Copiaços com e sem jogo suplente ativo

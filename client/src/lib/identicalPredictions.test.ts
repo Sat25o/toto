@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { findIdenticalPredictionGroups } from "./identicalPredictions";
+import { findIdenticalPredictionGroups, getCopycatComparisonMatches } from "./identicalPredictions";
 
 const matches = [
   { id: 11, matchOrder: 1 },
@@ -57,5 +57,33 @@ describe("findIdenticalPredictionGroups", () => {
 
     expect(groups).toHaveLength(2);
     expect(groups.map(group => group.participants.map(participant => participant.name))).toEqual([["A", "B"], ["C", "D"]]);
+  });
+
+  it("ignora o jogo suplente enquanto nenhum jogo principal estiver adiado", () => {
+    const matchesWithBackup = [...matches, { id: 17, matchOrder: 7, isBackup: true }];
+    const participants = [
+      { id: 1, name: "A", predictions: [...matches.map(match => ({ matchId: match.id, prediction: "1" as const })), { matchId: 17, prediction: "X" as const }] },
+      { id: 2, name: "B", predictions: [...matches.map(match => ({ matchId: match.id, prediction: "1" as const })), { matchId: 17, prediction: "2" as const }] },
+    ];
+
+    expect(getCopycatComparisonMatches(matchesWithBackup).map(match => match.id)).toEqual([11, 12, 13, 14, 15, 16]);
+    expect(findIdenticalPredictionGroups(matchesWithBackup, participants)).toHaveLength(1);
+  });
+
+  it("inclui o suplente quando um jogo principal é adiado", () => {
+    const matchesWithActiveBackup = [
+      { id: 11, matchOrder: 1, isPostponed: true },
+      ...matches.slice(1),
+      { id: 17, matchOrder: 7, isBackup: true },
+    ];
+    const sharedPredictions = matches.slice(1).map(match => ({ matchId: match.id, prediction: "1" as const }));
+    const participants = [
+      { id: 1, name: "A", predictions: [...sharedPredictions, { matchId: 17, prediction: "X" as const }] },
+      { id: 2, name: "B", predictions: [...sharedPredictions, { matchId: 17, prediction: "2" as const }] },
+      { id: 3, name: "C", predictions: [...sharedPredictions, { matchId: 17, prediction: "X" as const }] },
+    ];
+
+    expect(getCopycatComparisonMatches(matchesWithActiveBackup).map(match => match.id)).toEqual([12, 13, 14, 15, 16, 17]);
+    expect(findIdenticalPredictionGroups(matchesWithActiveBackup, participants)[0]?.participants.map(participant => participant.name)).toEqual(["A", "C"]);
   });
 });

@@ -6,7 +6,7 @@ import { putCurrentParticipantFirst } from "@/lib/participantOrder";
 import { shouldShowParticipant, type PublicParticipantStatus } from "@/lib/participantFilters";
 import { summarizePublicRound } from "@/lib/publicRoundSummary";
 import { toggleSummaryFilter } from "@/lib/summaryFilter";
-import { findIdenticalPredictionGroups } from "@/lib/identicalPredictions";
+import { findIdenticalPredictionGroups, getCopycatComparisonMatches } from "@/lib/identicalPredictions";
 import { openAllCopycatsDetails, toggleCopycatsDetail } from "@/lib/copycatsDetail";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -103,6 +103,7 @@ export default function PublicPredictions() {
   const identicalPredictionGroups = publicRound
     ? findIdenticalPredictionGroups(publicRound.matches, publicRound.participants)
     : [];
+  const copycatsMatches = publicRound ? getCopycatComparisonMatches(publicRound.matches) : [];
 
   return (
     <div className="league-page p-3 sm:p-5 lg:p-8">
@@ -300,7 +301,7 @@ export default function PublicPredictions() {
                 <Card className="border-violet-200 bg-violet-50/40">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-slate-900"><Copy className="h-5 w-5 text-violet-700" /> Copiaços</CardTitle>
-                    <CardDescription>Mostra apenas grupos com os mesmos palpites 1/X/2 nos seis jogos desta jornada.</CardDescription>
+                  <CardDescription>Compara apenas os jogos que contam: os 6 principais ou o suplente quando existe um adiamento.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     {identicalPredictionGroups.length > 0 ? (
@@ -359,10 +360,10 @@ export default function PublicPredictions() {
                                         <h3 className="font-bold text-slate-900">Aposta comum</h3>
                                         <p className="text-sm text-slate-600">{group.participants.map(participant => participant.name).join(", ")}</p>
                                       </div>
-                                      <Badge className="w-fit bg-violet-100 text-violet-800">6 palpites iguais</Badge>
+                                      <Badge className="w-fit bg-violet-100 text-violet-800">{group.predictions.length} palpites iguais</Badge>
                                     </div>
                                     <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                                      {publicRound.matches.map((match, matchIndex) => (
+                                      {copycatsMatches.map((match, matchIndex) => (
                                         <div key={match.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2">
                                           <span className="min-w-0 text-sm font-medium text-slate-800">J{match.matchOrder}: {match.homeTeam} vs {match.awayTeam}</span>
                                           <span className="shrink-0 rounded-md border border-violet-200 bg-violet-50 px-2 py-1 text-sm font-bold text-violet-900">{group.predictions[matchIndex]}</span>

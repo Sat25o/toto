@@ -3,6 +3,8 @@ export type PredictionChoice = "1" | "X" | "2";
 type MatchLike = {
   id: number;
   matchOrder: number;
+  isBackup?: boolean;
+  isPostponed?: boolean;
 };
 
 type ParticipantLike = {
@@ -19,11 +21,22 @@ export type IdenticalPredictionGroup = {
   participants: Array<Pick<ParticipantLike, "id" | "name">>;
 };
 
+export function getCopycatComparisonMatches<T extends MatchLike>(matches: T[]): T[] {
+  const mainMatches = matches.filter(match => !match.isBackup && !match.isPostponed);
+  const hasPostponedMainMatch = matches.some(match => !match.isBackup && match.isPostponed);
+  const activeBackupMatch = matches.find(match => match.isBackup && !match.isPostponed);
+  const matchesThatCount = hasPostponedMainMatch && activeBackupMatch
+    ? [...mainMatches, activeBackupMatch]
+    : mainMatches;
+
+  return [...matchesThatCount].sort((first, second) => first.matchOrder - second.matchOrder);
+}
+
 export function findIdenticalPredictionGroups(
   matches: MatchLike[],
   participants: ParticipantLike[],
 ): IdenticalPredictionGroup[] {
-  const orderedMatches = [...matches].sort((first, second) => first.matchOrder - second.matchOrder);
+  const orderedMatches = getCopycatComparisonMatches(matches);
   const groups = new Map<string, IdenticalPredictionGroup>();
 
   participants.forEach(participant => {
