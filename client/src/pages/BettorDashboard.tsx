@@ -428,7 +428,7 @@ export default function BettorDashboard() {
       {/* Rounds List */}
       <div className="mx-auto max-w-6xl space-y-6">
         {dashboardMessages.length > 0 && (
-          <section>
+          <section className="w-full">
             <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
             <div className="grid gap-3">
               {dashboardMessages.map(message => {
@@ -465,22 +465,20 @@ export default function BettorDashboard() {
           </section>
         )}
 
-        {/* Rounds Sidebar */}
-        <div>
-          <Card className="league-panel">
-            <CardHeader>
-              <p className="league-label">Acompanha a época</p>
-              <CardTitle className="text-slate-900">Jornadas</CardTitle>
-              <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {roundsLoading ? (
-                <>
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </>
-              ) : orderedRounds.length > 0 ? (
+        <Card className="league-panel">
+          <CardHeader>
+            <p className="league-label">Acompanha a época</p>
+            <CardTitle className="text-slate-900">Jornadas</CardTitle>
+            <CardDescription>Da mais recente para a mais antiga. Selecione uma jornada para apostar ou consultar.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {roundsLoading ? (
+              <>
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </>
+            ) : orderedRounds.length > 0 ? (
                 orderedRounds.map(round => {
                   const roundProgress = progressByRoundId.get(round.id);
                   const hasCompleteBet = !round.isSettled && hasSevenConfirmedPredictions(roundProgress);
@@ -488,10 +486,13 @@ export default function BettorDashboard() {
                   const missingPredictionCount = getMissingPredictionCount(roundProgress);
                   const hasIncompleteBet = isOpenForBetting && !hasCompleteBet && missingPredictionCount > 0;
                   return (
-                    <div key={round.id}>
-                      <button
-                        onClick={() => handleRoundSelection(round.id)}
-                        className={`w-full text-left p-3 rounded-lg border transition-all ${
+                    <div key={round.id} className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => handleRoundSelection(round.id)}
+                      aria-expanded={selectedRoundId === round.id}
+                      aria-controls={`round-details-${round.id}`}
+                      className={`w-full text-left p-3 rounded-lg border transition-all ${
                         hasCompleteBet
                           ? "border-emerald-400 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-100 hover:border-emerald-500 hover:bg-emerald-100"
                           : hasIncompleteBet
@@ -530,27 +531,160 @@ export default function BettorDashboard() {
                         <span>7 palpites confirmados</span>
                       </div>
                     )}
-                              {hasIncompleteBet && (
-                                <div className="mt-2 flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-100 px-2 py-1.5 text-xs font-bold text-orange-950">
-                                  <CircleAlert className="h-4 w-4 shrink-0" />
-                                  <span>{missingPredictionCount === 1 ? "Falta 1 palpite" : `Faltam ${missingPredictionCount} palpites`}</span>
-                                </div>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </button>
-                      {selectedRoundId === round.id && selectedRoundDetails}
+                    {hasIncompleteBet && (
+                      <div className="mt-2 flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-100 px-2 py-1.5 text-xs font-bold text-orange-950">
+                        <CircleAlert className="h-4 w-4 shrink-0" />
+                        <span>{missingPredictionCount === 1 ? "Falta 1 palpite" : `Faltam ${missingPredictionCount} palpites`}</span>
+                      </div>
+                    )}
+                        </>
+                      );
+                    })()}
+                    </button>
+                    {selectedRoundId === round.id && (
+                      <div id={`round-details-${round.id}`} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:p-4">
+          {roundDataLoading ? (
+            <div className="space-y-4">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ) : roundData ? (
+            <div className="space-y-4">
+              {/* Round Info */}
+              {(() => {
+                const prizeLabel = getRoundPrizeLabel(roundData.round);
+                return (
+              <Card className="league-soft-red">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
+                      <CardDescription className="mt-1 flex items-center gap-1 font-semibold text-emerald-700">
+                        <Coins className="h-4 w-4" /> Prémio acumulado: {prizeLabel}
+                      </CardDescription>
+                    </div>
+                    {isDeadlinePassed ? (
+                      <Badge className="bg-red-100 text-red-800">Prazo Encerrado</Badge>
+                    ) : (
+                      <Badge className="bg-green-100 text-green-800">Aberto</Badge>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Clock className="w-4 h-4" />
+                    Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
+                  </div>
+                  <div className="mt-4 rounded-xl border border-red-100 bg-white/80 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
+                      <Badge className={predictionProgress.completed === predictionProgress.total ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
+                        {predictionProgress.completed}/{predictionProgress.total}
+                      </Badge>
+                    </div>
+                    <Progress value={predictionProgress.percentage} className="h-2" />
+                    <p className="mt-2 text-xs text-slate-600">
+                      {predictionProgress.completed === predictionProgress.total ? "Palpites completos." : `Faltam ${predictionProgress.total - predictionProgress.completed} palpite(s) para concluir a jornada.`}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+                );
+              })()}
+
+              {/* Deadline Warning */}
+              {isDeadlinePassed && (
+                <Card className="border-red-200 bg-red-50">
+                  <CardContent className="pt-4 flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-red-800">O prazo para apostas nesta jornada já passou.</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Matches */}
+              <div className="space-y-3">
+                {roundData.matches.map((match) => {
+                  const savedPrediction = predictions?.find(
+                    (p) => p.match.id === match.id
+                  )?.prediction.prediction;
+                  const userPrediction = optimisticPredictions[match.id] ?? savedPrediction;
+
+                  const backupIsActive = match.isBackup && roundData.matches.some(item => !item.isBackup && item.isPostponed);
+
+                  return (
+                    <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "league-panel hover:border-red-200"}`}>
+                      <CardContent className="pt-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3">
+                              <span className={`text-sm font-semibold ${match.isBackup ? "text-amber-800" : "text-slate-500"}`}>
+                                {match.isBackup ? "Jogo suplente" : `Jogo ${match.matchOrder}`}
+                              </span>
+                              <div className="flex-1">
+                                <p className="font-semibold text-slate-900">
+                                  {match.homeTeam} vs {match.awayTeam}
+                                </p>
+                              </div>
+                            </div>
+                            {match.isBackup && (
+                              <Badge className={backupIsActive ? "bg-amber-200 text-amber-950" : "bg-amber-100 text-amber-900"}>
+                                {backupIsActive ? "Em uso" : "Reserva"}
+                              </Badge>
+                            )}
+                          </div>
+                          {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Há jogos principais adiados: este palpite passa a contar." : "Faça o palpite: só conta se houver jogos principais adiados."}</p>}
+                          {match.result && (
+                            <Badge className="bg-blue-100 text-blue-800 ml-2">
+                              Resultado: {match.result}
+                            </Badge>
+                          )}
+                        </div>
+
+                        {/* Prediction Buttons */}
+                        {!isDeadlinePassed && !match.result ? (
+                          <div className="flex gap-2">
+                            {["1", "X", "2"].map((pred) => (
+                              <button
+                                key={pred}
+                                onClick={() => handlePredictionSubmit(match.id, pred as "1" | "X" | "2")}
+                                disabled={pendingMatchId === match.id}
+                                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
+                                  userPrediction === pred
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                }`}
+                              >
+                                {pred}
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="bg-slate-100 rounded-lg p-3 text-center">
+                            <p className="text-slate-600 text-sm">
+                              Seu palpite: <span className="font-bold text-slate-900">{userPrediction || "—"}</span>
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+                      </div>
+                    )}
                     </div>
                   );
                 })
-              ) : (
-                <p className="text-slate-500 text-sm">Ainda não existem jornadas criadas.</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
+            ) : (
+              <p className="text-sm text-slate-500">Ainda não existem jornadas.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

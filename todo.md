@@ -719,10 +719,11 @@
 - [x] Preservar o destaque verde de aposta completa e os restantes estados
 - [x] Validar a apresentação em computador e telemóvel
 
-## Jornadas em Lista Única e Abertura Contextual
+## Lista Única e Expansão Inline de Jornadas
 
-- [x] Remover os filtros do Dashboard e apresentar uma lista única da mais recente para a mais antiga
-- [x] Abrir os jogos e palpites imediatamente por baixo da jornada selecionada no Dashboard
-- [x] Aplicar a mesma abertura contextual em todas as páginas com jornadas
-- [x] Deslocar automaticamente o ecrã até ao conteúdo aberto em telemóvel
-- [x] Validar os cartões, estados e ações existentes em computador e telemóvel
+- [x] Remover a separação entre jornadas abertas e finalizadas no dashboard do apostador
+- [x] Apresentar todas as jornadas da mais recente para a mais antiga
+- [x] Abrir os detalhes imediatamente por baixo da jornada selecionada
+- [x] Manter apenas uma jornada aberta de cada vez e fechar ao clicar novamente
+- [x] Preservar palpites, estados, prémios, avisos de prazo e restantes ações existentes
+- [x] Validar testes, tipos e compilação de produção
