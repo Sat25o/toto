@@ -18,7 +18,7 @@ import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
-import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { getNextOpenRound } from "@/lib/dashboardRoundFilter";
 import { shouldAutoCollapseInitiallyOpenRound } from "@/lib/roundAutoCollapse";
 import { toggleExpandedMessage } from "@/lib/expandableMessages";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
@@ -34,7 +34,6 @@ export default function BettorDashboard() {
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
-  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [expandedMessageIds, setExpandedMessageIds] = useState<number[]>([]);
@@ -180,11 +179,6 @@ export default function BettorDashboard() {
     setSelectedRoundId(nextRoundId);
   };
 
-  const handleRoundFilter = (filter: Exclude<DashboardRoundFilter, "all">) => {
-    setRoundFilter(filter);
-    setSelectedRoundId(null);
-  };
-
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
     if (isDeadlinePassed) return;
     setOptimisticPredictions(current => selectPrediction(current, matchId, prediction));
@@ -204,7 +198,6 @@ export default function BettorDashboard() {
   const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
   const nextOpenRound = rounds ? getNextOpenRound(rounds, currentTime) : undefined;
   const dashboardCountdown = nextOpenRound ? getBettingCountdown(nextOpenRound.bettingDeadline, currentTime) : null;
-  const visibleRounds = filterDashboardRounds(orderedRounds, roundFilter, currentTime);
   const progressByRoundId = new Map((predictionProgressByRound ?? []).map(progress => [progress.roundId, progress]));
 
   return (
@@ -339,9 +332,9 @@ export default function BettorDashboard() {
       </div>
 
       {/* Rounds List */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         {dashboardMessages.length > 0 && (
-          <section className="lg:col-span-3">
+          <section className="w-full">
             <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
             <div className="grid gap-3">
               {dashboardMessages.map(message => {
@@ -378,49 +371,33 @@ export default function BettorDashboard() {
           </section>
         )}
 
-        {/* Rounds Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="league-panel sticky top-4">
-            <CardHeader>
-              <p className="league-label">Acompanha a época</p>
-              <CardTitle className="text-slate-900">Jornadas</CardTitle>
-              <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
-                {([
-                  ["open", "Abertas"],
-                  ["settled", "Finalizadas"],
-                ] as const).map(([filter, label]) => (
-                  <Button
-                    key={filter}
-                    type="button"
-                    size="sm"
-                    variant={roundFilter === filter ? "default" : "ghost"}
-                    onClick={() => handleRoundFilter(filter)}
-                    className={roundFilter === filter ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-slate-600 hover:bg-white"}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-              {roundsLoading ? (
-                <>
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </>
-              ) : visibleRounds.length > 0 ? (
-                visibleRounds.map(round => {
+        <Card className="league-panel">
+          <CardHeader>
+            <p className="league-label">Acompanha a época</p>
+            <CardTitle className="text-slate-900">Jornadas</CardTitle>
+            <CardDescription>Da mais recente para a mais antiga. Selecione uma jornada para apostar ou consultar.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {roundsLoading ? (
+              <>
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-24 w-full" />
+              </>
+            ) : orderedRounds.length > 0 ? (
+                orderedRounds.map(round => {
                   const roundProgress = progressByRoundId.get(round.id);
                   const hasCompleteBet = !round.isSettled && hasSevenConfirmedPredictions(roundProgress);
                   const isOpenForBetting = !round.isSettled && new Date(round.bettingDeadline) > currentTime;
                   const missingPredictionCount = getMissingPredictionCount(roundProgress);
                   const hasIncompleteBet = isOpenForBetting && !hasCompleteBet && missingPredictionCount > 0;
                   return (
+                    <div key={round.id} className="space-y-3">
                     <button
-                      key={round.id}
+                      type="button"
                       onClick={() => handleRoundSelection(round.id)}
+                      aria-expanded={selectedRoundId === round.id}
+                      aria-controls={`round-details-${round.id}`}
                       className={`w-full text-left p-3 rounded-lg border transition-all ${
                         hasCompleteBet
                           ? "border-emerald-400 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-100 hover:border-emerald-500 hover:bg-emerald-100"
@@ -470,25 +447,9 @@ export default function BettorDashboard() {
                       );
                     })()}
                     </button>
-                  );
-                })
-              ) : (
-                <p className="text-slate-500 text-sm">Não existem jornadas neste filtro</p>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Matches & Predictions */}
-        <div className="lg:col-span-2">
-          {selectedRoundId === null ? (
-            <Card className="league-panel">
-              <CardContent className="pt-12 pb-12 text-center">
-                <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600">Selecione uma jornada para começar</p>
-              </CardContent>
-            </Card>
-          ) : roundDataLoading ? (
+                    {selectedRoundId === round.id && (
+                      <div id={`round-details-${round.id}`} className="rounded-xl border border-slate-200 bg-slate-50/60 p-3 sm:p-4">
+          {roundDataLoading ? (
             <div className="space-y-4">
               <Skeleton className="h-20 w-full" />
               <Skeleton className="h-20 w-full" />
@@ -619,7 +580,17 @@ export default function BettorDashboard() {
               </div>
             </div>
           ) : null}
-        </div>
+
+                      </div>
+                    )}
+                    </div>
+                  );
+                })
+            ) : (
+              <p className="text-sm text-slate-500">Ainda não existem jornadas.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

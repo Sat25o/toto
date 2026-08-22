@@ -718,3 +718,12 @@
 - [x] Mostrar um estado laranja expressivo com a quantidade de palpites em falta
 - [x] Preservar o destaque verde de aposta completa e os restantes estados
 - [x] Validar a apresentação em computador e telemóvel
+
+## Lista Única e Expansão Inline de Jornadas
+
+- [x] Remover a separação entre jornadas abertas e finalizadas no dashboard do apostador
+- [x] Apresentar todas as jornadas da mais recente para a mais antiga
+- [x] Abrir os detalhes imediatamente por baixo da jornada selecionada
+- [x] Manter apenas uma jornada aberta de cada vez e fechar ao clicar novamente
+- [x] Preservar palpites, estados, prémios, avisos de prazo e restantes ações existentes
+- [x] Validar testes, tipos e compilação de produção
