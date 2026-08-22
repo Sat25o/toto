@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Trophy } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { toggleRoundSelection } from "@/lib/roundSelection";
 import { getHistoryPredictionTone } from "@/lib/historyPredictionTone";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
@@ -15,6 +16,9 @@ export default function RoundHistory() {
   const { user, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
+  const roundDetailHosts = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [roundDetailHost, setRoundDetailHost] = useState<HTMLDivElement | null>(null);
+  const historyDetailsRef = useRef<HTMLDivElement>(null);
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: roundData, isLoading: roundDataLoading } = trpc.rounds.getWithMatches.useQuery(
@@ -29,6 +33,16 @@ export default function RoundHistory() {
   useEffect(() => {
     if (!authLoading && !user) setLocation("/");
   }, [authLoading, setLocation, user]);
+
+  useEffect(() => {
+    setRoundDetailHost(selectedRoundId === null ? null : roundDetailHosts.current.get(selectedRoundId) ?? null);
+  }, [rounds, selectedRoundId]);
+
+  useEffect(() => {
+    if (selectedRoundId === null || roundDataLoading || predictionsLoading || !roundData || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const timeout = window.setTimeout(() => historyDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    return () => window.clearTimeout(timeout);
+  }, [predictionsLoading, roundData?.round.id, roundDataLoading, selectedRoundId]);
 
   const completedRounds = rounds ? orderRoundsMostRecentFirst(rounds.filter(round => round.isSettled)) : [];
   const participants = useMemo(() => {
@@ -68,23 +82,27 @@ export default function RoundHistory() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-4">
-        <div className="lg:col-span-1">
-          <Card className="league-panel sticky top-4">
+      <div className="mx-auto max-w-6xl">
+        <div>
+          <Card className="league-panel">
             <CardHeader><CardTitle className="text-slate-900">Jornadas Finalizadas</CardTitle><CardDescription>Selecione para ver os palpites</CardDescription></CardHeader>
-            <CardContent className="max-h-96 space-y-2 overflow-y-auto">
+            <CardContent className="space-y-2">
               {roundsLoading ? <><Skeleton className="h-10 w-full" /><Skeleton className="h-10 w-full" /></> : completedRounds.length > 0 ? completedRounds.map(round => (
-                <button key={round.id} onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-red-300 bg-red-50 text-red-950" : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"}`}>
-                  <div className="font-semibold">Jornada {round.roundNumber}</div>
-                  <div className="text-sm text-slate-600">{new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}</div>
-                  <Badge className="mt-2 bg-yellow-100 text-xs text-yellow-800"><Trophy className="mr-1 h-3 w-3" /> Finalizada</Badge>
-                </button>
+                <div key={round.id}>
+                  <button onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))} className={`w-full rounded-lg border p-3 text-left transition-all ${selectedRoundId === round.id ? "border-red-300 bg-red-50 text-red-950" : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"}`}>
+                    <div className="font-semibold">Jornada {round.roundNumber}</div>
+                    <div className="text-sm text-slate-600">{new Date(round.bettingDeadline).toLocaleDateString("pt-PT")}</div>
+                    <Badge className="mt-2 bg-yellow-100 text-xs text-yellow-800"><Trophy className="mr-1 h-3 w-3" /> Finalizada</Badge>
+                  </button>
+                  <div ref={node => { if (node) roundDetailHosts.current.set(round.id, node); else roundDetailHosts.current.delete(round.id); }} />
+                </div>
               )) : <p className="text-sm text-slate-500">Nenhuma jornada finalizada</p>}
             </CardContent>
           </Card>
         </div>
 
-        <div className="lg:col-span-3">
+        {roundDetailHost && createPortal(
+          <div ref={historyDetailsRef} className="mt-4 scroll-mt-4">
           {selectedRoundId === null ? (
             <Card className="league-panel"><CardContent className="py-12 text-center"><Trophy className="mx-auto mb-4 h-12 w-12 text-slate-300" /><p className="text-slate-600">Selecione uma jornada para ver os palpites de todos os participantes</p></CardContent></Card>
           ) : roundDataLoading || predictionsLoading ? (
@@ -102,7 +120,9 @@ export default function RoundHistory() {
               </CardContent></Card>
             </div>
           ) : null}
-        </div>
+          </div>,
+          roundDetailHost,
+        )}
       </div>
     </div>
   );

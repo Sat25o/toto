@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, ChevronDown, ChevronUp, CircleDotDashed, Copy, Search, Trophy, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const statusAppearance = {
   eligible: {
@@ -54,6 +55,9 @@ export default function PublicPredictions() {
   const [statusFilter, setStatusFilter] = useState<"all" | PublicParticipantStatus>("all");
   const [activeTab, setActiveTab] = useState<"apostadores" | "copycats">("apostadores");
   const [openCopycatsGroupKeys, setOpenCopycatsGroupKeys] = useState<string[]>([]);
+  const roundDetailHosts = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [roundDetailHost, setRoundDetailHost] = useState<HTMLDivElement | null>(null);
+  const publicRoundDetailsRef = useRef<HTMLDivElement>(null);
 
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
   const { data: publicRound, isLoading: predictionsLoading } = trpc.predictions.getPublic.useQuery(
@@ -68,6 +72,16 @@ export default function PublicPredictions() {
   useEffect(() => {
     setOpenCopycatsGroupKeys([]);
   }, [selectedRoundId]);
+
+  useEffect(() => {
+    setRoundDetailHost(selectedRoundId === null ? null : roundDetailHosts.current.get(selectedRoundId) ?? null);
+  }, [rounds, selectedRoundId]);
+
+  useEffect(() => {
+    if (selectedRoundId === null || predictionsLoading || !publicRound || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const timeout = window.setTimeout(() => publicRoundDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    return () => window.clearTimeout(timeout);
+  }, [predictionsLoading, publicRound?.matches.length, selectedRoundId]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">A carregar...</div>;
@@ -107,14 +121,14 @@ export default function PublicPredictions() {
         </Button>
       </header>
 
-      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-5 sm:gap-6">
+      <main className="mx-auto max-w-7xl">
         <aside>
-          <Card className="league-panel lg:sticky lg:top-4">
+          <Card className="league-panel">
             <CardHeader>
               <CardTitle className="text-slate-900">Jornadas Fechadas</CardTitle>
               <CardDescription>Selecione uma jornada para acompanhar os palpites</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 max-h-72 overflow-y-auto">
+            <CardContent className="space-y-2">
               {roundsLoading ? (
                 <>
                   <Skeleton className="h-14 w-full" />
@@ -122,18 +136,20 @@ export default function PublicPredictions() {
                 </>
               ) : closedRounds.length > 0 ? (
                 closedRounds.map(round => (
-                  <button
-                    key={round.id}
-                    onClick={() => setSelectedRoundId(current => current === round.id ? null : round.id)}
-                    className={`w-full rounded-lg border p-3 text-left transition-colors ${
-                      selectedRoundId === round.id
-                        ? "border-red-300 bg-red-50 text-red-950"
-                        : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
-                    }`}
-                  >
-                    <div className="font-semibold">Jornada {round.roundNumber}</div>
-                    <div className="mt-1 text-xs text-slate-600">Prazo: {formatDeadline(round.bettingDeadline)}</div>
-                  </button>
+                  <div key={round.id}>
+                    <button
+                      onClick={() => setSelectedRoundId(current => current === round.id ? null : round.id)}
+                      className={`w-full rounded-lg border p-3 text-left transition-colors ${
+                        selectedRoundId === round.id
+                          ? "border-red-300 bg-red-50 text-red-950"
+                          : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
+                      }`}
+                    >
+                      <div className="font-semibold">Jornada {round.roundNumber}</div>
+                      <div className="mt-1 text-xs text-slate-600">Prazo: {formatDeadline(round.bettingDeadline)}</div>
+                    </button>
+                    <div ref={node => { if (node) roundDetailHosts.current.set(round.id, node); else roundDetailHosts.current.delete(round.id); }} />
+                  </div>
                 ))
               ) : (
                 <p className="text-sm text-slate-500">Nenhuma jornada fechada.</p>
@@ -142,7 +158,8 @@ export default function PublicPredictions() {
           </Card>
         </aside>
 
-        <section>
+        {roundDetailHost && createPortal(
+          <section ref={publicRoundDetailsRef} className="mt-4 scroll-mt-4">
           {selectedRoundId === null ? (
             <Card className="league-panel">
               <CardContent className="py-16 text-center">
@@ -372,7 +389,9 @@ export default function PublicPredictions() {
               </TabsContent>
             </Tabs>
           ) : null}
-        </section>
+          </section>,
+          roundDetailHost,
+        )}
       </main>
     </div>
   );

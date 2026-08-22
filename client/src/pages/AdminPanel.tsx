@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronDown, Clock3, Pencil, Plus, Save, Undo2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { z } from "zod";
 import { createEmptyMatches, LIGA_BETCLIC_TEAMS, updateDraftMatch } from "@/lib/roundForm";
 import { toggleRoundSelection } from "@/lib/roundSelection";
@@ -28,6 +29,9 @@ export default function AdminPanel() {
   const utils = trpc.useUtils();
   const [selectedRoundId, setSelectedRoundId] = useState<number | null>(null);
   const [activeAdminSection, setActiveAdminSection] = useState<"create" | "manage" | null>(null);
+  const roundDetailHosts = useRef<Map<number, HTMLDivElement>>(new Map());
+  const [roundDetailHost, setRoundDetailHost] = useState<HTMLDivElement | null>(null);
+  const adminRoundDetailsRef = useRef<HTMLDivElement>(null);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -208,6 +212,16 @@ export default function AdminPanel() {
       setLocation("/");
     }
   }, [authLoading, setLocation, user]);
+
+  useEffect(() => {
+    setRoundDetailHost(activeAdminSection === "manage" && selectedRoundId !== null ? roundDetailHosts.current.get(selectedRoundId) ?? null : null);
+  }, [activeAdminSection, rounds, selectedRoundId]);
+
+  useEffect(() => {
+    if (activeAdminSection !== "manage" || selectedRoundId === null || roundDataLoading || !roundData || !window.matchMedia("(max-width: 1023px)").matches) return;
+    const timeout = window.setTimeout(() => adminRoundDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    return () => window.clearTimeout(timeout);
+  }, [activeAdminSection, roundData?.round.id, roundDataLoading, selectedRoundId]);
 
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
@@ -500,37 +514,35 @@ export default function AdminPanel() {
 
           {/* Manage Results Tab */}
           {activeAdminSection === "manage" && (<div className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6">
               {/* Rounds List */}
-              <div className="lg:col-span-1">
-                <Card className="border-slate-200/50 sticky top-4">
+              <div>
+                <Card className="border-slate-200/50">
                   <CardHeader>
                     <CardTitle className="text-slate-900">Jornadas</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 max-h-96 overflow-y-auto">
+                  <CardContent className="space-y-2">
                     {roundsLoading ? (
                       <>
                         <Skeleton className="h-10 w-full" />
                         <Skeleton className="h-10 w-full" />
                       </>
                     ) : orderedRounds.length > 0 ? (
-                      orderedRounds.map((round) => (
-                        <button
-                          key={round.id}
-                          onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))}
-                          className={`w-full text-left p-3 rounded-lg border transition-all ${
-                            selectedRoundId === round.id
-                              ? "bg-blue-50 border-blue-300"
-                              : "border-slate-200 hover:border-slate-300"
-                          }`}
-                        >
-                          <div className="font-semibold text-slate-900">Jornada {round.roundNumber}</div>
-                          {round.isSettled && (
-                            <div className="text-xs text-green-600 font-semibold mt-1">
-                              ✓ Finalizada
-                            </div>
-                          )}
-                        </button>
+                      orderedRounds.map(round => (
+                        <div key={round.id}>
+                          <button
+                            onClick={() => setSelectedRoundId(currentRoundId => toggleRoundSelection(currentRoundId, round.id))}
+                            className={`w-full text-left p-3 rounded-lg border transition-all ${
+                              selectedRoundId === round.id
+                                ? "bg-blue-50 border-blue-300"
+                                : "border-slate-200 hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="font-semibold text-slate-900">Jornada {round.roundNumber}</div>
+                            {round.isSettled && <div className="mt-1 text-xs font-semibold text-green-600">✓ Finalizada</div>}
+                          </button>
+                          <div ref={node => { if (node) roundDetailHosts.current.set(round.id, node); else roundDetailHosts.current.delete(round.id); }} />
+                        </div>
                       ))
                     ) : (
                       <p className="text-slate-500 text-sm">Nenhuma jornada criada</p>
@@ -540,7 +552,8 @@ export default function AdminPanel() {
               </div>
 
               {/* Results Form */}
-              <div className="lg:col-span-2">
+              {roundDetailHost && createPortal(
+              <div ref={adminRoundDetailsRef} className="mt-4 scroll-mt-4">
                 {selectedRoundId === null ? (
                   <Card className="border-slate-200/50">
                     <CardContent className="pt-12 pb-12 text-center">
@@ -733,7 +746,9 @@ export default function AdminPanel() {
                     )}
                   </div>
                 ) : null}
-              </div>
+              </div>,
+              roundDetailHost,
+              )}
             </div>
           </div>)}
         </div>

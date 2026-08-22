@@ -18,7 +18,7 @@ import { getDashboardMessages } from "@/lib/dashboardMessages";
 import { getRoundPrizeLabel } from "@/lib/roundPrize";
 import { orderRoundsMostRecentFirst } from "@/lib/roundOrdering";
 import { getBettingCountdown } from "@/lib/bettingCountdown";
-import { filterDashboardRounds, getNextOpenRound, type DashboardRoundFilter } from "@/lib/dashboardRoundFilter";
+import { getNextOpenRound } from "@/lib/dashboardRoundFilter";
 import { shouldAutoCollapseInitiallyOpenRound } from "@/lib/roundAutoCollapse";
 import { toggleExpandedMessage } from "@/lib/expandableMessages";
 import { SITE_EMBLEM_URL } from "@/lib/brandAssets";
@@ -34,12 +34,12 @@ export default function BettorDashboard() {
   const [optimisticPredictions, setOptimisticPredictions] = useState<Record<number, PredictionChoice>>({});
   const [pendingMatchId, setPendingMatchId] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
-  const [roundFilter, setRoundFilter] = useState<DashboardRoundFilter>("open");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [expandedMessageIds, setExpandedMessageIds] = useState<number[]>([]);
   const hasSelectedInitialOpenRound = useRef(false);
   const autoOpenedRoundId = useRef<number | null>(null);
+  const selectedRoundDetailsRef = useRef<HTMLDivElement>(null);
 
   // Fetch rounds
   const { data: rounds, isLoading: roundsLoading } = trpc.rounds.list.useQuery();
@@ -122,6 +122,16 @@ export default function BettorDashboard() {
     setSelectedRoundId(null);
   }, [predictions?.length, roundData?.matches.length, selectedRoundId]);
 
+  useEffect(() => {
+    if (selectedRoundId === null || roundDataLoading || !roundData || !window.matchMedia("(max-width: 1023px)").matches) return;
+
+    const timeout = window.setTimeout(() => {
+      selectedRoundDetailsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+
+    return () => window.clearTimeout(timeout);
+  }, [roundData?.round.id, roundDataLoading, selectedRoundId]);
+
   if (authLoading) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
   }
@@ -180,11 +190,6 @@ export default function BettorDashboard() {
     setSelectedRoundId(nextRoundId);
   };
 
-  const handleRoundFilter = (filter: Exclude<DashboardRoundFilter, "all">) => {
-    setRoundFilter(filter);
-    setSelectedRoundId(null);
-  };
-
   const handlePredictionSubmit = (matchId: number, prediction: "1" | "X" | "2") => {
     if (isDeadlinePassed) return;
     setOptimisticPredictions(current => selectPrediction(current, matchId, prediction));
@@ -204,8 +209,90 @@ export default function BettorDashboard() {
   const orderedRounds = rounds ? orderRoundsMostRecentFirst(rounds) : [];
   const nextOpenRound = rounds ? getNextOpenRound(rounds, currentTime) : undefined;
   const dashboardCountdown = nextOpenRound ? getBettingCountdown(nextOpenRound.bettingDeadline, currentTime) : null;
-  const visibleRounds = filterDashboardRounds(orderedRounds, roundFilter, currentTime);
   const progressByRoundId = new Map((predictionProgressByRound ?? []).map(progress => [progress.roundId, progress]));
+  const selectedRoundDetails = selectedRoundId === null ? null : (
+    <div ref={selectedRoundDetailsRef} className="mt-4 scroll-mt-4 space-y-4" aria-live="polite">
+      {roundDataLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+          <Skeleton className="h-20 w-full" />
+        </div>
+      ) : roundData ? (
+        <>
+          {(() => {
+            const prizeLabel = getRoundPrizeLabel(roundData.round);
+            return (
+              <Card className="league-soft-red">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
+                      <CardDescription className="mt-1 flex items-center gap-1 font-semibold text-emerald-700">
+                        <Coins className="h-4 w-4" /> Prémio acumulado: {prizeLabel}
+                      </CardDescription>
+                    </div>
+                    {isDeadlinePassed ? <Badge className="bg-red-100 text-red-800">Prazo Encerrado</Badge> : <Badge className="bg-green-100 text-green-800">Aberto</Badge>}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-slate-600"><Clock className="h-4 w-4" /> Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}</div>
+                  <div className="mt-4 rounded-xl border border-red-100 bg-white/80 p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
+                      <Badge className={predictionProgress.completed === predictionProgress.total ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>{predictionProgress.completed}/{predictionProgress.total}</Badge>
+                    </div>
+                    <Progress value={predictionProgress.percentage} className="h-2" />
+                    <p className="mt-2 text-xs text-slate-600">{predictionProgress.completed === predictionProgress.total ? "Palpites completos." : `Faltam ${predictionProgress.total - predictionProgress.completed} palpite(s) para concluir a jornada.`}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {isDeadlinePassed && (
+            <Card className="border-red-200 bg-red-50"><CardContent className="flex items-center gap-3 pt-4"><AlertCircle className="h-5 w-5 shrink-0 text-red-600" /><p className="text-red-800">O prazo para apostas nesta jornada já passou.</p></CardContent></Card>
+          )}
+
+          <div className="space-y-3">
+            {roundData.matches.map(match => {
+              const savedPrediction = predictions?.find(prediction => prediction.match.id === match.id)?.prediction.prediction;
+              const userPrediction = optimisticPredictions[match.id] ?? savedPrediction;
+              const backupIsActive = match.isBackup && roundData.matches.some(item => !item.isBackup && item.isPostponed);
+
+              return (
+                <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "league-panel hover:border-red-200"}`}>
+                  <CardContent className="pt-4">
+                    <div className="mb-4 flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <span className={`text-sm font-semibold ${match.isBackup ? "text-amber-800" : "text-slate-500"}`}>{match.isBackup ? "Jogo suplente" : `Jogo ${match.matchOrder}`}</span>
+                          <div className="flex-1"><p className="font-semibold text-slate-900">{match.homeTeam} vs {match.awayTeam}</p></div>
+                        </div>
+                        {match.isBackup && <Badge className={backupIsActive ? "bg-amber-200 text-amber-950" : "bg-amber-100 text-amber-900"}>{backupIsActive ? "Em uso" : "Reserva"}</Badge>}
+                      </div>
+                      {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Há jogos principais adiados: este palpite passa a contar." : "Faça o palpite: só conta se houver jogos principais adiados."}</p>}
+                      {match.result && <Badge className="ml-2 bg-blue-100 text-blue-800">Resultado: {match.result}</Badge>}
+                    </div>
+
+                    {!isDeadlinePassed && !match.result ? (
+                      <div className="flex gap-2">
+                        {["1", "X", "2"].map(prediction => (
+                          <button key={prediction} onClick={() => handlePredictionSubmit(match.id, prediction as "1" | "X" | "2")} disabled={pendingMatchId === match.id} className={`flex-1 rounded-lg px-4 py-2 font-semibold transition-all ${userPrediction === prediction ? "bg-primary text-primary-foreground" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}>{prediction}</button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="rounded-lg bg-slate-100 p-3 text-center"><p className="text-sm text-slate-600">Seu palpite: <span className="font-bold text-slate-900">{userPrediction || "—"}</span></p></div>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
 
   return (
     <div className="league-page p-3 sm:p-5 lg:p-8">
@@ -339,9 +426,9 @@ export default function BettorDashboard() {
       </div>
 
       {/* Rounds List */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         {dashboardMessages.length > 0 && (
-          <section className="lg:col-span-3">
+          <section>
             <div className="mb-3 flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" /><h2 className="font-semibold text-slate-900">Avisos da administração</h2></div>
             <div className="grid gap-3">
               {dashboardMessages.map(message => {
@@ -379,49 +466,32 @@ export default function BettorDashboard() {
         )}
 
         {/* Rounds Sidebar */}
-        <div className="lg:col-span-1">
-          <Card className="league-panel sticky top-4">
+        <div>
+          <Card className="league-panel">
             <CardHeader>
               <p className="league-label">Acompanha a época</p>
               <CardTitle className="text-slate-900">Jornadas</CardTitle>
               <CardDescription>Selecione uma jornada para apostar ou consultar</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2 max-h-96 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-1 rounded-lg bg-slate-100 p-1" aria-label="Filtrar jornadas">
-                {([
-                  ["open", "Abertas"],
-                  ["settled", "Finalizadas"],
-                ] as const).map(([filter, label]) => (
-                  <Button
-                    key={filter}
-                    type="button"
-                    size="sm"
-                    variant={roundFilter === filter ? "default" : "ghost"}
-                    onClick={() => handleRoundFilter(filter)}
-                    className={roundFilter === filter ? "bg-primary text-primary-foreground hover:bg-primary/90" : "text-slate-600 hover:bg-white"}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
+            <CardContent className="space-y-2">
               {roundsLoading ? (
                 <>
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                   <Skeleton className="h-10 w-full" />
                 </>
-              ) : visibleRounds.length > 0 ? (
-                visibleRounds.map(round => {
+              ) : orderedRounds.length > 0 ? (
+                orderedRounds.map(round => {
                   const roundProgress = progressByRoundId.get(round.id);
                   const hasCompleteBet = !round.isSettled && hasSevenConfirmedPredictions(roundProgress);
                   const isOpenForBetting = !round.isSettled && new Date(round.bettingDeadline) > currentTime;
                   const missingPredictionCount = getMissingPredictionCount(roundProgress);
                   const hasIncompleteBet = isOpenForBetting && !hasCompleteBet && missingPredictionCount > 0;
                   return (
-                    <button
-                      key={round.id}
-                      onClick={() => handleRoundSelection(round.id)}
-                      className={`w-full text-left p-3 rounded-lg border transition-all ${
+                    <div key={round.id}>
+                      <button
+                        onClick={() => handleRoundSelection(round.id)}
+                        className={`w-full text-left p-3 rounded-lg border transition-all ${
                         hasCompleteBet
                           ? "border-emerald-400 bg-emerald-50 text-emerald-950 shadow-sm ring-1 ring-emerald-100 hover:border-emerald-500 hover:bg-emerald-100"
                           : hasIncompleteBet
@@ -430,13 +500,13 @@ export default function BettorDashboard() {
                               ? "border-red-300 bg-red-50 text-red-950 shadow-sm"
                               : "border-slate-200 text-slate-700 hover:border-red-200 hover:bg-red-50/40"
                       }`}
-                    >
-                    {/** O montante usa prizeAmount e recupera a acumulação por carriedPrizeAmount se necessário. */}
-                    {(() => {
-                      const prizeLabel = getRoundPrizeLabel(round);
-                      return (
-                        <>
-                    <div className="flex items-center justify-between gap-3">
+                        >
+                        {/** O montante usa prizeAmount e recupera a acumulação por carriedPrizeAmount se necessário. */}
+                        {(() => {
+                          const prizeLabel = getRoundPrizeLabel(round);
+                          return (
+                            <>
+                              <div className="flex items-center justify-between gap-3">
                       <div className="font-semibold">Jornada {round.roundNumber}</div>
                       <Badge className="shrink-0 border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-50">
                         <Coins className="mr-1 h-3.5 w-3.5" /> {prizeLabel}
@@ -460,166 +530,27 @@ export default function BettorDashboard() {
                         <span>7 palpites confirmados</span>
                       </div>
                     )}
-                    {hasIncompleteBet && (
-                      <div className="mt-2 flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-100 px-2 py-1.5 text-xs font-bold text-orange-950">
-                        <CircleAlert className="h-4 w-4 shrink-0" />
-                        <span>{missingPredictionCount === 1 ? "Falta 1 palpite" : `Faltam ${missingPredictionCount} palpites`}</span>
-                      </div>
-                    )}
-                        </>
-                      );
-                    })()}
-                    </button>
+                              {hasIncompleteBet && (
+                                <div className="mt-2 flex items-center gap-1.5 rounded-md border border-orange-200 bg-orange-100 px-2 py-1.5 text-xs font-bold text-orange-950">
+                                  <CircleAlert className="h-4 w-4 shrink-0" />
+                                  <span>{missingPredictionCount === 1 ? "Falta 1 palpite" : `Faltam ${missingPredictionCount} palpites`}</span>
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </button>
+                      {selectedRoundId === round.id && selectedRoundDetails}
+                    </div>
                   );
                 })
               ) : (
-                <p className="text-slate-500 text-sm">Não existem jornadas neste filtro</p>
+                <p className="text-slate-500 text-sm">Ainda não existem jornadas criadas.</p>
               )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Matches & Predictions */}
-        <div className="lg:col-span-2">
-          {selectedRoundId === null ? (
-            <Card className="league-panel">
-              <CardContent className="pt-12 pb-12 text-center">
-                <Trophy className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-600">Selecione uma jornada para começar</p>
-              </CardContent>
-            </Card>
-          ) : roundDataLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-              <Skeleton className="h-20 w-full" />
-            </div>
-          ) : roundData ? (
-            <div className="space-y-4">
-              {/* Round Info */}
-              {(() => {
-                const prizeLabel = getRoundPrizeLabel(roundData.round);
-                return (
-              <Card className="league-soft-red">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-slate-900">Jornada {roundData.round.roundNumber}</CardTitle>
-                      <CardDescription className="mt-1 flex items-center gap-1 font-semibold text-emerald-700">
-                        <Coins className="h-4 w-4" /> Prémio acumulado: {prizeLabel}
-                      </CardDescription>
-                    </div>
-                    {isDeadlinePassed ? (
-                      <Badge className="bg-red-100 text-red-800">Prazo Encerrado</Badge>
-                    ) : (
-                      <Badge className="bg-green-100 text-green-800">Aberto</Badge>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <Clock className="w-4 h-4" />
-                    Limite de aposta: {formatDeadline(roundData.round.bettingDeadline)}
-                  </div>
-                  <div className="mt-4 rounded-xl border border-red-100 bg-white/80 p-3">
-                    <div className="mb-2 flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-slate-800">Os meus palpites</p>
-                      <Badge className={predictionProgress.completed === predictionProgress.total ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
-                        {predictionProgress.completed}/{predictionProgress.total}
-                      </Badge>
-                    </div>
-                    <Progress value={predictionProgress.percentage} className="h-2" />
-                    <p className="mt-2 text-xs text-slate-600">
-                      {predictionProgress.completed === predictionProgress.total ? "Palpites completos." : `Faltam ${predictionProgress.total - predictionProgress.completed} palpite(s) para concluir a jornada.`}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-                );
-              })()}
-
-              {/* Deadline Warning */}
-              {isDeadlinePassed && (
-                <Card className="border-red-200 bg-red-50">
-                  <CardContent className="pt-4 flex items-center gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                    <p className="text-red-800">O prazo para apostas nesta jornada já passou.</p>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Matches */}
-              <div className="space-y-3">
-                {roundData.matches.map((match) => {
-                  const savedPrediction = predictions?.find(
-                    (p) => p.match.id === match.id
-                  )?.prediction.prediction;
-                  const userPrediction = optimisticPredictions[match.id] ?? savedPrediction;
-
-                  const backupIsActive = match.isBackup && roundData.matches.some(item => !item.isBackup && item.isPostponed);
-
-                  return (
-                    <Card key={match.id} className={`transition-all ${match.isBackup ? "border-amber-200 bg-amber-50/40 hover:border-amber-300" : "league-panel hover:border-red-200"}`}>
-                      <CardContent className="pt-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3">
-                              <span className={`text-sm font-semibold ${match.isBackup ? "text-amber-800" : "text-slate-500"}`}>
-                                {match.isBackup ? "Jogo suplente" : `Jogo ${match.matchOrder}`}
-                              </span>
-                              <div className="flex-1">
-                                <p className="font-semibold text-slate-900">
-                                  {match.homeTeam} vs {match.awayTeam}
-                                </p>
-                              </div>
-                            </div>
-                            {match.isBackup && (
-                              <Badge className={backupIsActive ? "bg-amber-200 text-amber-950" : "bg-amber-100 text-amber-900"}>
-                                {backupIsActive ? "Em uso" : "Reserva"}
-                              </Badge>
-                            )}
-                          </div>
-                          {match.isBackup && <p className="mb-3 text-xs text-amber-900">{backupIsActive ? "Há jogos principais adiados: este palpite passa a contar." : "Faça o palpite: só conta se houver jogos principais adiados."}</p>}
-                          {match.result && (
-                            <Badge className="bg-blue-100 text-blue-800 ml-2">
-                              Resultado: {match.result}
-                            </Badge>
-                          )}
-                        </div>
-
-                        {/* Prediction Buttons */}
-                        {!isDeadlinePassed && !match.result ? (
-                          <div className="flex gap-2">
-                            {["1", "X", "2"].map((pred) => (
-                              <button
-                                key={pred}
-                                onClick={() => handlePredictionSubmit(match.id, pred as "1" | "X" | "2")}
-                                disabled={pendingMatchId === match.id}
-                                className={`flex-1 py-2 px-4 rounded-lg font-semibold transition-all ${
-                                  userPrediction === pred
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                }`}
-                              >
-                                {pred}
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="bg-slate-100 rounded-lg p-3 text-center">
-                            <p className="text-slate-600 text-sm">
-                              Seu palpite: <span className="font-bold text-slate-900">{userPrediction || "—"}</span>
-                            </p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </div>
       </div>
     </div>
   );

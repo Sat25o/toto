@@ -718,3 +718,11 @@
 - [x] Mostrar um estado laranja expressivo com a quantidade de palpites em falta
 - [x] Preservar o destaque verde de aposta completa e os restantes estados
 - [x] Validar a apresentação em computador e telemóvel
+
+## Jornadas em Lista Única e Abertura Contextual
+
+- [x] Remover os filtros do Dashboard e apresentar uma lista única da mais recente para a mais antiga
+- [x] Abrir os jogos e palpites imediatamente por baixo da jornada selecionada no Dashboard
+- [x] Aplicar a mesma abertura contextual em todas as páginas com jornadas
+- [x] Deslocar automaticamente o ecrã até ao conteúdo aberto em telemóvel
+- [x] Validar os cartões, estados e ações existentes em computador e telemóvel
